@@ -1,0 +1,37 @@
+CC=gcc
+CX=g++
+RM=-rm -f
+MD=-mkdir -p
+LN=-ln
+AR=-ar
+CP=-cp
+
+# These directories below are changed based upon where you want
+# to INSTALL the files to. They are only copied to on `make install` 
+INSLIBDIR=${shell /bin/sed -n '/^INSLIBDIR/s/.*=//p' ~/.gtkcsv}
+INSBINDIR=${shell /bin/sed -n '/^INSBINDIR/s/.*=//p' ~/.gtkcsv}
+INSEXTDIR=${shell /bin/sed -n '/^INSEXTDIR/s/.*=//p' ~/.gtkcsv}
+
+# These are the project directories and dependency directories.
+PROJDIR=${shell /bin/sed -n '/^PROJDIR/s/.*=//p' ~/.gtkcsv}
+SYSINSPATH=${shell /bin/sed -n '/^SYSINSPATH/s/.*=//p' ~/.gtkcsv}
+LIBDIR=${SYSINSPATH}/lib
+INCDIR=${SYSINSPATH}/include
+OBJDIR=${PROJDIR}/OBJS
+
+LD_LIBRARY_PATH=${PROJDIR}/lib:${LIBDIR}
+export LD_LIBRARY_PATH
+
+INCS = -I${INCDIR}/gtkextra-2.0
+INCS += -I${PROJDIR}/include
+INCS += `pkg-config gtk+-2.0 glib-2.0 --cflags`
+
+LIBS = -lpixman-1
+LIBS += -L${PROJDIR}/lib
+LIBS += -Wl,-rpath ${PROJDIR}/lib
+LIBS += -L${LIBDIR}
+LIBS += -Wl,-rpath ${LIBDIR}
+LIBS += `pkg-config gtk+-2.0 glib-2.0 --libs`
+
+CCFLAGS=-g -O0 -std=c99 -Wall -pthread
+CXFLAGS=-g -O0 -Wall
