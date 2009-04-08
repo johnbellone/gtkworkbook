@@ -115,11 +115,6 @@ Proactor::run (void * null) {
 
   while (this->running == true)
     {
-      
-    }
-
-  while (this->running == true)
-    {
       this->inputQueue.lock();
       while (this->inputQueue.size() > 0)
 	{
