@@ -40,7 +40,7 @@ public:
   }
   
   virtual ~PacketParser (void) {
-    cell->destroy (cell);
+    this->cell->destroy (cell);
   }
 
   void * run (void * null) {

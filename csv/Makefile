@@ -1,5 +1,6 @@
 CC=gcc
 AR=ar
+CP=cp
 
 VERSION=3.0.0
 DESTDIR=
@@ -7,7 +8,7 @@ LIBDIR=/usr/lib
 INCDIR=/usr/include
 MANDIR=/usr/share/man/man3
 
-.PHONY: all install install_headers install_man install_shared install_static clean test
+.PHONnY: all install install_headers install_man install_shared install_static clean test
 
 all: libcsv.so libcsv.a
 
@@ -36,6 +37,8 @@ libcsv.o: libcsv.c csv.h
 
 libcsv.so: libcsv.o
 	$(CC) -shared $< -o $@
+	$(CP) $@ ../lib/$@
+	$(CP) ../lib/$@ ../lib/$@.1
 
 libcsv.a: libcsv.o
 	$(AR) -rc $@ $^
@@ -43,6 +46,7 @@ libcsv.a: libcsv.o
 
 clean:
 	rm libcsv.o libcsv.so libcsv.a
+	rm ../lib/libcsv.*
 
 test: libcsv.o
 	$(CC) test_csv.c $< -o $@
