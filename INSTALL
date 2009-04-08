@@ -1,0 +1,43 @@
+GTKWorkbook Installation
+------------------------
+
+0.	Testing Systems
+
+	CentOS 5.2 (Redhat)
+	GCC 4.1.2
+	Python 2.4.3
+
+1. 	Requirements
+
+	A. GtkExtra
+
+	The libworkbook library wraps the GTK+ calls to the GtkSheet widget
+	which is included inside of the GtkExtra library available on
+	sourceforge.net. Due to the age of the gtkextra2 release I would
+	highly suggest downloading directly from the CVS repository.
+
+	http://gtkextra.cvs.sourceforge.net/viewvc/gtkextra/gtkextra-2/
+
+	B. Pixman
+
+	The GtkExtra library requires this to be installed with the version
+	of GTK that ships with CentOS 5.2. I believe that it is available with
+	newer versions of GTK, but here is the location of the repository if
+	you need to find it. Grab the newest release, compile and install.
+
+	http://cairographics.org/releases/
+		
+2.	Installation
+
+	Once all of the dependencies (above) have been installed you can
+	finally get on to the fun stuff. The compliation of the project is
+	rather easy (and quick).
+
+	Inside of the root directory of the project, type:
+
+	make clean all
+
+	If you wish to install:
+
+	make clean install
+
