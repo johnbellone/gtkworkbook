@@ -1,14 +1,14 @@
 #ifndef HPP_CSVPARSER
 #define HPP_CSVPARSER
 
-#include "proactor/Job.hpp"
+#include "proactor/Worker.hpp"
 #include <workbook/workbook.h>
 #include <workbook/sheet.h>
 #include <workbook/cell.h>
 #include <csv/csv.h>
 #include <iostream>
 
-class CsvParser : public proactor::Job {
+class CsvParser : public proactor::Worker {
 private:
   Workbook * wb;
   FILE * pktlog;

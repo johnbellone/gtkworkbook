@@ -25,7 +25,7 @@
 #include "../concurrent/Map.hpp"
 #include "../concurrent/Queue.hpp"
 #include "../concurrent/List.hpp"
-#include "Job.hpp"
+#include "Worker.hpp"
 #include "Event.hpp"
 #include "Dispatcher.hpp"
 #include <list>
@@ -33,29 +33,26 @@
 
 namespace proactor {
 
-  class Dispatcher;
-
-  class Proactor : public concurrent::Thread {
+  class Proactor : public Dispatcher {
   private:
-    typedef std::list<Job *> EventHandlers;
+    typedef std::list<Worker *> WorkerListType;
     typedef concurrent::List<Dispatcher *> DispatcherList;
-    typedef concurrent::Map<int, EventHandlers *> EventMapType;
-    typedef concurrent::Queue<Event> EventQueueType;
+    typedef concurrent::Map<int, WorkerListType *> EventMapType;
     
     EventMapType eventsToHandlers;
     DispatcherList dispatchers;
-    EventQueueType inputQueue;
   public:
     Proactor (void);
     virtual ~Proactor (void);
 
-    void registerHandler (int e, Job * job);
-    bool unregisterHandler (int e, Job * job);
+    void addWorker (int e, Worker * w);
+    bool removeWorker (int e, Worker * w);
     void addDispatcher (Dispatcher * d);
     bool removeDispatcher (Dispatcher * d);
     
     void * run (void * null);
  
+    void onReadComplete (Event e);
     void onReadComplete (int e, const char * buf);
 
     inline const std::string & peekInputQueue (void) {

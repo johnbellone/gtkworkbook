@@ -31,7 +31,7 @@ Proactor::~Proactor (void) {
     EventMapType::iterator it = this->eventsToHandlers.begin();
     while (it != this->eventsToHandlers.end())
       {
-	EventHandlers * q = (it->second);
+	WorkerListType * q = (it->second);
 	delete q;
 	it++;
       }
@@ -50,16 +50,21 @@ Proactor::~Proactor (void) {
 }
 
 void
-Proactor::registerHandler (int e, Job * job) {
+Proactor::addWorker (int e, Worker * job) {
   this->eventsToHandlers.lock();
   {
     EventMapType::iterator it = this->eventsToHandlers.find (e);
   
     if (it == this->eventsToHandlers.end())
-      this->eventsToHandlers[e] = new EventHandlers;  
+      this->eventsToHandlers[e] = new WorkerListType;  
     this->eventsToHandlers[e]->push_back (job);
   }
   this->eventsToHandlers.unlock();
+}
+
+void
+Proactor::onReadComplete (Event e) {
+  this->inputQueue.push (e);
 }
 
 void 
@@ -68,12 +73,12 @@ Proactor::onReadComplete (int e, const char * buf) {
 }
 
 bool
-Proactor::unregisterHandler (int e, Job * job) {
+Proactor::removeWorker (int e, Worker * job) {
   bool result = false;
 
   this->eventsToHandlers.lock();
   {
-    EventHandlers::iterator it = 
+    WorkerListType::iterator it = 
       std::find (this->eventsToHandlers[e]->begin(),
 		 this->eventsToHandlers[e]->end(),
 		 job);
@@ -111,7 +116,7 @@ void *
 Proactor::run (void * null) {
   this->running = true;
   
-  EventHandlers::iterator it;
+  WorkerListType::iterator it;
 
   while (this->running == true)
     {
@@ -129,7 +134,7 @@ Proactor::run (void * null) {
 	  
 	  while (it != this->eventsToHandlers[e.id]->end())
 	    {
-	      Job * j = (*it);
+	      Worker * j = (*it);
 	      
 	      j->pushInputQueue (e.buf);
 		      

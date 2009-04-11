@@ -1,5 +1,5 @@
 /* 
-   Job.hpp - Job Object Header File
+   Dispatcher.hpp - Dispatcher Object Source File
 
    The GTKWorkbook Project <http://gtkworkbook.sourceforge.net/>
    Copyright (C) 2008, 2009 John Bellone, Jr. <jvb4@njit.edu>
@@ -18,24 +18,28 @@
    License along with the library; if not, write to the Free Software
    Foundation, Inc., 51 Franklin Street, Fifth Floor Boston, MA 02110-1301 USA
 */
-#ifndef HPP_PROACTOR_JOB
-#define HPP_PROACTOR_JOB
+#include "Dispatcher.hpp"
+using namespace proactor;
 
-#include "../concurrent/Queue.hpp"
-#include "../concurrent/Thread.hpp"
-#include <string>
-
-namespace proactor {
-
-  class Job : public concurrent::Thread {
-  protected:
-    concurrent::Queue<std::string> inputQueue;
-  public:
-    inline void pushInputQueue (std::string buf) {
-      this->inputQueue.push (buf);
-    }
-  };
-
+Dispatcher::~Dispatcher (void) {
+  while (this->inputQueue.size() > 0)
+    this->inputQueue.pop();
 }
 
-#endif
+void
+Dispatcher::addWorker (Worker * w) {
+  this->workers.push_back (w);
+}
+
+bool
+Dispatcher::removeWorker (Worker * w) {
+  WorkerListType::iterator it = std::find (this->workers.begin(),
+					   this->workers.end(),
+					   w);
+
+  if (it == this->workers.end())
+    return false;
+  
+  this->workers.erase (it);
+  return true;
+}

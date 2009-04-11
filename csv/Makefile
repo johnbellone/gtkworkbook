@@ -33,7 +33,7 @@ install_static_lib: libcsv.a
 	cp -f $< $(DESTDIR)$(LIBDIR)/$<
 
 libcsv.o: libcsv.c csv.h
-	$(CC) $< -c -o $@
+	$(CC) -fPIC $< -c -o $@
 
 libcsv.so: libcsv.o
 	$(CC) -shared $< -o $@

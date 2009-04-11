@@ -18,15 +18,16 @@
    License along with the library; if not, write to the Free Software
    Foundation, Inc., 51 Franklin Street, Fifth Floor Boston, MA 02110-1301 USA
 */
-#ifndef HPP_CONNECTION
-#define HPP_CONNECTION
+#ifndef HPP_NETWORK
+#define HPP_NETWORK
 
 #include "network/Tcp.hpp"
+#include "proactor/Worker.hpp"
 #include "proactor/Dispatcher.hpp"
 #include "proactor/Proactor.hpp"
 #include <iostream>
 
-#define MAX_INPUT_SIZE 4096
+#define MAX_INPUT_SIZE 4194304
 
 class Connection : public TcpSocket {
 public:
@@ -34,12 +35,31 @@ public:
   virtual ~Connection (void);
 };
 
-class ConnectionThread : public proactor::Dispatcher {
+class NetworkDispatcher : public proactor::Dispatcher {
+public:
+  NetworkDispatcher (proactor::Proactor * pro);
+  virtual ~NetworkDispatcher (void);
+
+  void * run (void * null);
+};
+
+class ConnectionThread : public proactor::Worker {
 private:
   Connection * socket;
 public:
-  ConnectionThread (proactor::Proactor * pro, int newfd); 
+  ConnectionThread (proactor::Dispatcher * dispatcher, int newfd);
   virtual ~ConnectionThread (void);
+  
+  void * run (void * null);
+};
+
+class AcceptThread : public proactor::Worker {
+private:
+  TcpServerSocket::Acceptor * acceptor;
+public:
+  AcceptThread (TcpServerSocket::Acceptor * acceptor,
+		proactor::Dispatcher * dispatcher);
+  virtual ~AcceptThread (void);
 
   void * run (void * null);
 };

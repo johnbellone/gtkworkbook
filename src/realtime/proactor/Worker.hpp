@@ -1,5 +1,5 @@
 /* 
-   Dispatcher.hpp - Dispatcher Object Header File
+   Worker.hpp - Worker Object Header File
 
    The GTKWorkbook Project <http://gtkworkbook.sourceforge.net/>
    Copyright (C) 2008, 2009 John Bellone, Jr. <jvb4@njit.edu>
@@ -18,46 +18,26 @@
    License along with the library; if not, write to the Free Software
    Foundation, Inc., 51 Franklin Street, Fifth Floor Boston, MA 02110-1301 USA
 */
-#ifndef HPP_PROACTOR_DISPATCHER
-#define HPP_PROACTOR_DISPATCHER
+#ifndef HPP_PROACTOR_WORKER
+#define HPP_PROACTOR_WORKER
 
-#include "../concurrent/Thread.hpp"
-#include "../concurrent/List.hpp"
 #include "../concurrent/Queue.hpp"
-#include "Event.hpp"
+#include "../concurrent/Thread.hpp"
+#include <string>
 
 namespace proactor {
 
-  class Proactor;
-  class Worker;
+  class Dispatcher;
 
-  class Dispatcher : public concurrent::Thread {
-  private:
-    typedef concurrent::List<Worker *> WorkerListType;
-
-    WorkerListType workers;
-    int eventId;
+  class Worker : public concurrent::Thread {
   protected:
-    typedef concurrent::Queue<Event> EventQueueType;
+    typedef concurrent::Queue<std::string> InputQueueType;
 
-    Proactor * pro;
-    EventQueueType inputQueue;
+    Dispatcher * dispatcher;
+    InputQueueType inputQueue;
   public:
-    virtual ~Dispatcher (void);
-
-    void addWorker (Worker * w);
-    bool removeWorker (Worker * w);
-
-    inline void onReadComplete (const char * buf) {
-      this->inputQueue.push ( Event (this->eventId, std::string(buf)) );
-    }
-
-    inline void setEventId (int e) {
-      this->eventId = e;
-    }
-
-    inline int getEventId (void) {
-      return this->eventId;
+    inline void pushInputQueue (std::string buf) {
+      this->inputQueue.push (buf);
     }
   };
 

@@ -39,6 +39,17 @@ namespace concurrent {
     Queue (void) { }
     virtual ~Queue (void) { }
 
+    inline void clear (void) {
+      this->lock();
+      while (this->the_queue.size() > 0)
+	this->the_queue.pop();
+      this->unlock();
+    }
+
+    inline std::queue<T> copy (void) {
+      return this->the_queue;
+    }
+
     inline const T & back (void) {
       this->lock();
       T & elem = this->the_queue.back();

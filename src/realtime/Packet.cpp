@@ -63,6 +63,7 @@ Packet::parse (const gchar * buf)
       WORD (this->delimiter, line, value);
       this->fields.push_back (value);
     }
+
   return TRUE;
 }
 

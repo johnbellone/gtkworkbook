@@ -1,5 +1,5 @@
-INSLIBDIR=/home/jbellone/gtkworkbook/lib
-INSBINDIR=/home/jbellone/gtkworkbook/bin
-INSEXTDIR=/home/jbellone/gtkworkbook/lib/gtkcsv
-PROJDIR=/home/jbellone/work/gtkworkbook
-SYSINSPATH=/home/jbellone
+INSLIBDIR=/home/johnb/gtkworkbook/lib
+INSBINDIR=/home/johnb/gtkworkbook/bin
+INSEXTDIR=/home/johnb/gtkworkbook/lib/gtkworkbook
+PROJDIR=/home/johnb/work/gtkworkbook
+SYSINSPATH=/home/johnb

@@ -31,7 +31,7 @@
 #include "concurrent/ThreadArgs.hpp"
 #include "proactor/Proactor.hpp"
 #include "proactor/Event.hpp"
-#include "AcceptThread.hpp"
+#include "Network.hpp"
 #include "PacketParser.hpp"
 #include "Packet.hpp"
 
@@ -49,8 +49,6 @@ append_pidname (const gchar * pre) {
    @wb: The Workbook that the thread will be changing. */
 void
 thread_main (ThreadArgs * args) {
-  g_usleep (5000000); /* 5 seconds - initial startup delay */
-
   Workbook * wb = (Workbook *)args->at(0);
   Config * cfg  = (Config *)args->at(1);
 
@@ -68,6 +66,13 @@ thread_main (ThreadArgs * args) {
       g_critical ("Failed loading tcp->port from configuration file; "
 		  "exiting thread");
       return;
+    }
+
+  ConfigPair * verbosity = cfg->get_pair (cfg, 
+					  "realtime", "debug", "verbosity");
+  if (IS_NULL (verbosity))
+    {
+      g_warning ("Failed loading debug->verbosity from configuration file.");
     }
 
   FILE * pktlog = NULL;
@@ -102,16 +107,24 @@ thread_main (ThreadArgs * args) {
       return;
     }
 
-  PacketParser handler (wb, pktlog);
-  proactor.registerHandler (e, &handler);
+  NetworkDispatcher network (&proactor);
+  network.setEventId(e);
+  if (network.start() == false)
+    {
+      g_critical ("Failed starting network; exiting thread.");
+      return;
+    }
+
+  PacketParser handler (wb, pktlog, atoi(verbosity->value));
+  proactor.addWorker (e, &handler);
   if (handler.start() == false) 
     {
       g_critical ("Failed starting PacketParser; exiting thread.");
       return;
     }
   
-  AcceptThread acceptor ( socket.newAcceptor(), &proactor );
-  acceptor.setEventId (e);
+  AcceptThread acceptor ( socket.newAcceptor(), &network );
+  network.addWorker (&acceptor);
   if (acceptor.start() == false)
     {
       g_critical ("Failed starting Acceptor; exiting thread.");
@@ -126,10 +139,11 @@ thread_main (ThreadArgs * args) {
 
   FCLOSE (pktlog);
 
+  socket.close();  
+
   // Interrupt threads immediately canceling them so we can quit.
   acceptor.interrupt();
   handler.interrupt();
+  network.interrupt();
   proactor.interrupt();
-
-  socket.close();  
 }

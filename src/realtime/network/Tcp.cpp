@@ -68,8 +68,14 @@ TcpServerSocket::~TcpServerSocket (void) {
 
 bool
 TcpServerSocket::start (int backlog = 5) {
+  int opt = 1;
+
   // This is to prevent conflicts with major services' ports.
-  if (this->port < 50)
+  if (this->port < 1024)
+    return false;
+
+  if (::setsockopt (this->sockfd, 
+		    SOL_SOCKET, SO_REUSEADDR, &opt, sizeof (opt)) < 0)
     return false;
 
   if (::bind (this->sockfd,
