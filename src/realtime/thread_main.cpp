@@ -35,6 +35,8 @@
 #include "PacketParser.hpp"
 #include "Packet.hpp"
 
+using namespace realtime;
+
 /* @description: This method creates a filename with the prefix supplied and
    uses the pid of the process as its suffix. 
    @pre: The prefix (should be a file path, obviously). */

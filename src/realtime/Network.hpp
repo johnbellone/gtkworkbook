@@ -29,39 +29,41 @@
 
 #define MAX_INPUT_SIZE 4194304
 
-class Connection : public TcpSocket {
-public:
-  Connection (int sockfd); 
-  virtual ~Connection (void);
-};
+namespace realtime {
 
-class NetworkDispatcher : public proactor::Dispatcher {
-public:
-  NetworkDispatcher (proactor::Proactor * pro);
-  virtual ~NetworkDispatcher (void);
+  class Connection : public TcpSocket {
+  public:
+    Connection (int sockfd); 
+    virtual ~Connection (void);
+  };
 
-  void * run (void * null);
-};
+  class NetworkDispatcher : public proactor::Dispatcher {
+  public:
+    NetworkDispatcher (proactor::Proactor * pro);
+    virtual ~NetworkDispatcher (void);
+    
+    void * run (void * null);
+  };
 
-class ConnectionThread : public proactor::Worker {
-private:
-  Connection * socket;
-public:
-  ConnectionThread (proactor::Dispatcher * dispatcher, int newfd);
-  virtual ~ConnectionThread (void);
+  class ConnectionThread : public proactor::Worker {
+  private:
+    Connection * socket;
+  public:
+    ConnectionThread (proactor::Dispatcher * dispatcher, int newfd);
+    virtual ~ConnectionThread (void);
   
-  void * run (void * null);
-};
+    void * run (void * null);
+  };
 
-class AcceptThread : public proactor::Worker {
-private:
-  TcpServerSocket::Acceptor * acceptor;
-public:
-  AcceptThread (TcpServerSocket::Acceptor * acceptor,
-		proactor::Dispatcher * dispatcher);
-  virtual ~AcceptThread (void);
+  class AcceptThread : public proactor::Worker {
+  private:
+    TcpServerSocket::Acceptor * acceptor;
+  public:
+    AcceptThread (TcpServerSocket::Acceptor * acceptor,
+		  proactor::Dispatcher * dispatcher);
+    virtual ~AcceptThread (void);
 
-  void * run (void * null);
-};
-
+    void * run (void * null);
+  };
+}
 #endif

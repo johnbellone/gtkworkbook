@@ -32,52 +32,49 @@
     }						 \
   }
 
-Packet::Packet (void)
-{
-  this->delimiter = '\0';
-  this->type = -1;
-}
+namespace realtime {
 
-Packet::~Packet (void)
-{
-  this->time.clear();
-  this->fields.clear();
-}
+  Packet::Packet (void) {
+    this->delimiter = '\0';
+    this->type = -1;
+  }
 
-gboolean
-Packet::parse (const gchar * buf)
-{
-  this->fields.clear();
+  Packet::~Packet (void) {
+    this->time.clear();
+    this->fields.clear();
+  }
 
-  if (IS_NULLSTR (buf)) return FALSE;
+  gboolean
+  Packet::parse (const gchar * buf) {
+    this->fields.clear();
 
-  this->delimiter = buf[0];
+    if (IS_NULLSTR (buf)) 
+      return FALSE;
+  
+    this->delimiter = buf[0];
 
-  String line(&buf[1]), value;
+    String line(&buf[1]), value;
 
-  WORD (this->delimiter, line, this->time);
-  WORD (this->delimiter, line, this->type);
+    WORD (this->delimiter, line, this->time);
+    WORD (this->delimiter, line, this->type);
 
-  while (line.length() > 0)
-    {
+    while (line.length() > 0) {
       WORD (this->delimiter, line, value);
       this->fields.push_back (value);
     }
 
-  return TRUE;
-}
+    return TRUE;
+  }
 
-Map<String,String>
-Packet::parseFormatString (const gchar * buf)
-{
-  String fmt(buf);
-  Map<String,String> pairs; pairs.clear();
+  Map<String,String>
+  Packet::parseFormatString (const gchar * buf) {
+    String fmt(buf);
+    Map<String,String> pairs; pairs.clear();
 
-  size_t pos = 0, length = fmt.length(), comma = 0, equal = 0;
-  String key, val;
+    size_t pos = 0, length = fmt.length(), comma = 0, equal = 0;
+    String key, val;
 
-  while (pos < length)
-    {
+    while (pos < length) {
       if ((comma = fmt.find_first_of (',')) == String::npos)
 	comma = length;
       
@@ -95,5 +92,6 @@ Packet::parseFormatString (const gchar * buf)
       fmt = fmt.substr (comma+1, length);
       length = fmt.length();
     }
-  return pairs;
+    return pairs;
+  }
 }

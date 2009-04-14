@@ -1,4 +1,4 @@
-/* 
+/*
    Connection.cpp - Connection Object Source File
 
    The GTKWorkbook Project <http://gtkworkbook.sourceforge.net/>
@@ -23,78 +23,71 @@
 
 #define IS_TERMINAL(c) ((*c == '\n') || (*c == '\r'))
 
-Connection::Connection (int sockfd) {
-  this->sockfd = sockfd;
-}
+namespace realtime {
+  
+  Connection::Connection (int sockfd) {
+    this->sockfd = sockfd;
+  }
 
-Connection::~Connection (void) {
-}
+  Connection::~Connection (void) {
+  }
 
-/*****************************************************************************/
-NetworkDispatcher::NetworkDispatcher (proactor::Proactor * pro) {
-  this->pro = pro;
-}
+  NetworkDispatcher::NetworkDispatcher (proactor::Proactor * pro) {
+    this->pro = pro;
+  }
+  
+  NetworkDispatcher::~NetworkDispatcher (void) {
+  }
 
-NetworkDispatcher::~NetworkDispatcher (void) {
-}
+  void *
+  NetworkDispatcher::run (void * null) {
+    this->running = true;
 
-void *
-NetworkDispatcher::run (void * null) {
-  this->running = true;
-
-  while (this->running == true)
-    {
+    while (this->running == true) {
       // Dispatch all of the input items on the queue.
       this->inputQueue.lock();
 
-      while (this->inputQueue.size() > 0)
-	{
-	  // For right now all we're doing is pushing up the chain.
-	  this->pro->onReadComplete ( this->inputQueue.pop() );
-	}
+      while (this->inputQueue.size() > 0) {
+	// For right now all we're doing is pushing up the chain.
+	this->pro->onReadComplete ( this->inputQueue.pop() );
+      }
 
       this->inputQueue.unlock();
 
       Thread::sleep(100);
     }
   
-  return NULL; 
-}
+    return NULL; 
+  }
 
-/*****************************************************************************/
+  ConnectionThread::ConnectionThread (proactor::Dispatcher * d, int newfd) {
+    this->socket = new Connection (newfd);
+    this->dispatcher = d;
+  }
 
-ConnectionThread::ConnectionThread (proactor::Dispatcher * d, int newfd) {
-  this->socket = new Connection (newfd);
-  this->dispatcher = d;
-}
+  ConnectionThread::~ConnectionThread (void) {
+    delete socket;
+  }
 
-ConnectionThread::~ConnectionThread (void) {
-  delete socket;
-}
+  void *
+  ConnectionThread::run (void * null) {
+    this->running = true;
+    int size = 0;
+    char buf[MAX_INPUT_SIZE];
+    char * p = NULL, * q = NULL;
 
-void *
-ConnectionThread::run (void * null) {
-  this->running = true;
-  int size = 0;
-  char buf[MAX_INPUT_SIZE];
-  char * p = NULL, * q = NULL;
-
-  while (this->running == true) 
-    {
-      if ((size = this->socket->receive (&buf[0], MAX_INPUT_SIZE)) <= 0)
-	{
-	  // 
-	  break;
-	}
+    while (this->running == true) {
+      if ((size = this->socket->receive (&buf[0], MAX_INPUT_SIZE)) <= 0) {
+	// 
+	break;
+      }
 
       buf[size] = 0;
       
       q = p = &buf[0];
 
-      while (p && (*p != '\0'))
-	{
-	  if (IS_TERMINAL (p))
-	    {
+      while (p && (*p != '\0')) {
+	  if (IS_TERMINAL (p)) {
 	      *p = 0;
 
 	      if (*(p+1) == '\n')
@@ -104,54 +97,50 @@ ConnectionThread::run (void * null) {
 	      
 	      q = (++p);
 	      continue;
-	    }
+	  }
 	  p++;
-	}
+      }
       
       Thread::sleep (100);
     }
 
-  this->dispatcher->removeWorker (this);
-  return NULL;
-}
+    this->dispatcher->removeWorker (this);
+    return NULL;
+  }
 
-/*****************************************************************************/
+  AcceptThread::AcceptThread (TcpServerSocket::Acceptor * acceptor,
+			      proactor::Dispatcher * dispatcher) {
+    this->dispatcher = dispatcher;
+    this->acceptor = acceptor;
+  }
 
-AcceptThread::AcceptThread (TcpServerSocket::Acceptor * acceptor,
-			    proactor::Dispatcher * dispatcher) {
-  this->dispatcher = dispatcher;
-  this->acceptor = acceptor;
-}
+  AcceptThread::~AcceptThread (void) {
+    delete this->acceptor;
+  }
 
-AcceptThread::~AcceptThread (void) {
-  delete this->acceptor;
-}
-
-void *
-AcceptThread::run (void * null) {
-  this->running = true;
-  
-  while (this->running == true)
-    {
+  void *
+  AcceptThread::run (void * null) {
+    this->running = true;
+    
+    while (this->running == true) {
       int newfd = -1;
 	
-      if ((newfd = this->acceptor->acceptIncoming()) < 0)
-	{
-	  this->running = false;
-	  break;
-	}
+      if ((newfd = this->acceptor->acceptIncoming()) < 0) {
+	this->running = false;
+	break;
+      }
 
       ConnectionThread * c = new ConnectionThread (this->dispatcher, newfd);
       
-      if (c->start() == false)
-	{
-	  // Failed for some reason; cut out and quit for now.
-	  break;
-	}
-	
-	this->dispatcher->addWorker ( c );
-	Thread::sleep (100);
+      if (c->start() == false) {
+	// Failed for some reason; cut out and quit for now.
+	break;
       }
+	
+      this->dispatcher->addWorker ( c );
+      Thread::sleep (100);
+    }
 
     return NULL;
+  }
 }

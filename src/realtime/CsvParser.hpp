@@ -8,23 +8,25 @@
 #include <csv/csv.h>
 #include <iostream>
 
-class CsvParser : public proactor::Worker {
-private:
-  Workbook * wb;
-  FILE * pktlog;
-  Cell * cell;
-public:
-  CsvParser (Workbook * wb, FILE * pktlog) {
-    this->wb = wb;
-    this->pktlog = pktlog;
-    this->cell = cell_new();
-  }
+namespace realtime {
 
-  virtual ~CsvParser (void) {
-    this->cell->destroy (cell);
-  }
+  class CsvParser : public proactor::Worker {
+  private:
+    Workbook * wb;
+    FILE * pktlog;
+    Cell * cell;
+  public:
+    CsvParser (Workbook * wb, FILE * pktlog) {
+      this->wb = wb;
+      this->pktlog = pktlog;
+      this->cell = cell_new();
+    }
 
-  void * run (void * null);
-};
+    virtual ~CsvParser (void) {
+      this->cell->destroy (cell);
+    }
 
+    void * run (void * null);
+  };
+}
 #endif
