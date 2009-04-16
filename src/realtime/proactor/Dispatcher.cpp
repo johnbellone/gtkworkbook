@@ -19,27 +19,27 @@
    Foundation, Inc., 51 Franklin Street, Fifth Floor Boston, MA 02110-1301 USA
 */
 #include "Dispatcher.hpp"
-using namespace proactor;
+#include "Worker.hpp"
 
-Dispatcher::~Dispatcher (void) {
-  while (this->inputQueue.size() > 0)
-    this->inputQueue.pop();
-}
+namespace proactor {
 
-void
-Dispatcher::addWorker (Worker * w) {
-  this->workers.push_back (w);
-}
+  bool
+  Dispatcher::addWorker (Worker * w) {
+    this->workers.push_back (w);
+    return w->start();
+  }
 
-bool
-Dispatcher::removeWorker (Worker * w) {
-  WorkerListType::iterator it = std::find (this->workers.begin(),
-					   this->workers.end(),
-					   w);
+  bool
+  Dispatcher::removeWorker (Worker * w) {
+    WorkerListType::iterator it = std::find (this->workers.begin(),
+					     this->workers.end(),
+					     w);
 
-  if (it == this->workers.end())
-    return false;
+    if (it == this->workers.end())
+      return false;
   
-  this->workers.erase (it);
-  return true;
-}
+    this->workers.erase (it);
+    return true;
+  }
+
+} // end of namesapce

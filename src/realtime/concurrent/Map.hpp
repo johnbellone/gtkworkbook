@@ -38,5 +38,7 @@ namespace concurrent {
   public:
     Map (void) : RecursiveMutex() { }
   };
-}
+
+} // end of namespace
+
 #endif

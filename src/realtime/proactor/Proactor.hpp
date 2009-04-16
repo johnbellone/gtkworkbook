@@ -28,15 +28,16 @@
 #include "Worker.hpp"
 #include "Event.hpp"
 #include "Dispatcher.hpp"
+#include "InputDispatcher.hpp"
 #include <list>
 #include <queue>
 
 namespace proactor {
 
-  class Proactor : public Dispatcher {
+  class Proactor : public InputDispatcher {
   private:
     typedef std::list<Worker *> WorkerListType;
-    typedef concurrent::List<Dispatcher *> DispatcherList;
+    typedef concurrent::List<InputDispatcher *> DispatcherList;
     typedef concurrent::Map<int, WorkerListType *> EventMapType;
     
     EventMapType eventsToHandlers;
@@ -45,10 +46,10 @@ namespace proactor {
     Proactor (void);
     virtual ~Proactor (void);
 
-    void addWorker (int e, Worker * w);
+    bool addWorker (int e, Worker * w);
     bool removeWorker (int e, Worker * w);
-    void addDispatcher (Dispatcher * d);
-    bool removeDispatcher (Dispatcher * d);
+    void addDispatcher (InputDispatcher * d);
+    bool removeDispatcher (InputDispatcher * d);
     
     void * run (void * null);
  
@@ -60,6 +61,6 @@ namespace proactor {
     }
   };
 
-}
+} // end of namespace
 
 #endif

@@ -19,7 +19,7 @@ def main():
     sock.sendall ("^0^1^sheet1^10000^11\n")
     
     while ii < 10000:
-        sock.sendall ("^%d^0^sheet1^0^0^^0\n" %ii)
+        sock.sendall ("^%d^0^sheet1^%d^0^^0\n" %(ii, ii))
         ii = ii + 1
 
     sock.close()

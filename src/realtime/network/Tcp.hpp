@@ -25,48 +25,52 @@
 #include <arpa/inet.h>
 #include <netinet/in.h>
 
-class TcpSocket : public ISocket {
-public:
-  TcpSocket (void);
-  virtual ~TcpSocket (void);
+namespace network {
 
-  void close (void);
-  int send (const char * bytes, size_t length);
-  int receive (char * bytes, size_t size);
-};
-
-class TcpServerSocket : public TcpSocket {
-private:
-  struct sockaddr_in sockaddr;
-  int port;
-public:
-  class Acceptor {
-  private:
-    TcpServerSocket * socket;
-    int sockfd;
+  class TcpSocket : public ISocket {
+  protected:
+    struct sockaddr_in sockaddr;
   public:
-    Acceptor (TcpServerSocket * server, int sockfd);
+    TcpSocket (void);
+    virtual ~TcpSocket (void);
 
-    int acceptIncoming (void);
+    void close (void);
+    int send (const char * bytes, size_t length);
+    int receive (char * bytes, size_t size);
   };
 
-  TcpServerSocket (int port);
-  virtual ~TcpServerSocket (void);
+  class TcpServerSocket : public TcpSocket {
+  private:
+    int port;
+  public:
+    class Acceptor {
+    private:
+      TcpServerSocket * socket;
+      int sockfd;
+    public:
+      Acceptor (TcpServerSocket * server, int sockfd);
 
-  bool start (int backlog);
-  void close (void);
-  Acceptor * newAcceptor (void);
-};
+      int acceptIncoming (void);
+    };
 
-class TcpClientSocket : public TcpSocket {
-private:
-  struct sockaddr_in sockaddr;
-public:
-  TcpClientSocket (void);
-  virtual ~TcpClientSocket (void);
+    TcpServerSocket (int port);
+    virtual ~TcpServerSocket (void);
+    
+    bool start (int backlog);
+    void close (void);
+    Acceptor * newAcceptor (void);
+  };
+  
+  class TcpClientSocket : public TcpSocket {
+  public:
+    TcpClientSocket (void);
+    TcpClientSocket (int newfd);
+    virtual ~TcpClientSocket (void);
 
-  bool connect (const char * host, int port);
-  void close (void);
-};
+    bool connect (const char * host, int port);
+    void close (void);
+  };
+
+} // end of namespace
 
 #endif

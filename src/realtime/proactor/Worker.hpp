@@ -27,13 +27,13 @@
 
 namespace proactor {
 
-  class Dispatcher;
+  class InputDispatcher;
 
   class Worker : public concurrent::Thread {
   protected:
     typedef concurrent::Queue<std::string> InputQueueType;
 
-    Dispatcher * dispatcher;
+    InputDispatcher * dispatcher;
     InputQueueType inputQueue;
   public:
     inline void pushInputQueue (std::string buf) {
@@ -41,6 +41,6 @@ namespace proactor {
     }
   };
 
-}
+} // end of namespace
 
 #endif

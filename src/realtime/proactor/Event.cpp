@@ -19,16 +19,19 @@
    Foundation, Inc., 51 Franklin Street, Fifth Floor Boston, MA 02110-1301 USA
 */
 #include "Event.hpp"
-using namespace proactor;
 
-int Event::numEvents = 0;
+namespace proactor {
 
-Event::Event (int e, const std::string & buf) {
-  this->id = e;
-  this->buf = buf;
-}
+  int Event::numEvents = 0;
 
-int
-Event::uniqueEventId (void) {
-  return Event::numEvents++;
-}
+  Event::Event (int e, const std::string & buf) {
+    this->id = e;
+    this->buf = buf;
+  }
+
+  int
+  Event::uniqueEventId (void) {
+    return Event::numEvents++;
+  }
+ 
+} // end of namespace

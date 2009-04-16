@@ -21,6 +21,7 @@
 #ifndef HPP_PROACTOR_EVENT
 #define HPP_PROACTOR_EVENT
 
+#include "Dispatcher.hpp"
 #include <string>
 
 namespace proactor {
@@ -35,6 +36,21 @@ namespace proactor {
     Event (int id, const std::string & buf);
 
     static int uniqueEventId (void);
+  };
+
+  class EventDispatcher : public Dispatcher {
+  private:
+    int eventId;
+  public:
+    virtual ~EventDispatcher (void) { }
+
+    inline void setEventId (int e) { 
+      this->eventId = e;
+    }
+
+    inline int getEventId (void) { 
+      return this->eventId;
+    }
   };
 
 }

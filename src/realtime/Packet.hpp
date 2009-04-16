@@ -69,5 +69,7 @@ namespace realtime {
     }
     inline size_t size (void) const { return this->fields.size(); }
   };
-}
+
+} // end of namespace
+
 #endif

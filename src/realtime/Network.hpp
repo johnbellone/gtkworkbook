@@ -23,33 +23,37 @@
 
 #include "network/Tcp.hpp"
 #include "proactor/Worker.hpp"
-#include "proactor/Dispatcher.hpp"
 #include "proactor/Proactor.hpp"
 #include <iostream>
 
-#define MAX_INPUT_SIZE 4194304
+#define MAX_INPUT_SIZE 1024
 
 namespace realtime {
 
-  class Connection : public TcpSocket {
+  class NetworkCsvReceiver : public proactor::InputDispatcher {
   public:
-    Connection (int sockfd); 
-    virtual ~Connection (void);
+    NetworkCsvReceiver (int e, proactor::Proactor * pro) {
+      this->pro = pro;
+      setEventId(e);
+    }
+    virtual ~NetworkCsvReceiver (void) { }
   };
 
-  class NetworkDispatcher : public proactor::Dispatcher {
+  class NetworkPktReceiver : public proactor::InputDispatcher {
   public:
-    NetworkDispatcher (proactor::Proactor * pro);
-    virtual ~NetworkDispatcher (void);
-    
-    void * run (void * null);
+    NetworkPktReceiver (int e, proactor::Proactor * pro) {
+      this->pro = pro;
+      setEventId(e);
+    }
+    virtual ~NetworkPktReceiver (void) { }
   };
 
   class ConnectionThread : public proactor::Worker {
   private:
-    Connection * socket;
+    network::TcpSocket * socket;
   public:
-    ConnectionThread (proactor::Dispatcher * dispatcher, int newfd);
+    ConnectionThread (proactor::InputDispatcher * d, int newfd);
+    ConnectionThread (proactor::InputDispatcher * d, network::TcpSocket * s);
     virtual ~ConnectionThread (void);
   
     void * run (void * null);
@@ -57,13 +61,15 @@ namespace realtime {
 
   class AcceptThread : public proactor::Worker {
   private:
-    TcpServerSocket::Acceptor * acceptor;
+    network::TcpServerSocket::Acceptor * acceptor;
   public:
-    AcceptThread (TcpServerSocket::Acceptor * acceptor,
-		  proactor::Dispatcher * dispatcher);
+    AcceptThread (network::TcpServerSocket::Acceptor * acceptor,
+		  proactor::InputDispatcher * dispatcher);
     virtual ~AcceptThread (void);
 
     void * run (void * null);
   };
-}
+
+} // end of namespace
+
 #endif

@@ -249,5 +249,7 @@ namespace realtime {
       return NULL;
     }
   };
-}
+
+} // end of namespace
+
 #endif

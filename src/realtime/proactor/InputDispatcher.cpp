@@ -1,5 +1,5 @@
 /* 
-   Semaphore.cpp - Semaphore Object Source File
+   InputDispatcher.cpp - Input Dispatcher Object Header File
 
    The GTKWorkbook Project <http://gtkworkbook.sourceforge.net/>
    Copyright (C) 2008, 2009 John Bellone, Jr. <jvb4@njit.edu>
@@ -18,27 +18,37 @@
    License along with the library; if not, write to the Free Software
    Foundation, Inc., 51 Franklin Street, Fifth Floor Boston, MA 02110-1301 USA
 */
-#include "Semaphore.hpp"
+#include "InputDispatcher.hpp"
+#include "Proactor.hpp"
 
-namespace concurrent {
+namespace proactor {
 
-  Semaphore::Semaphore (void) {
-    sem_init (&this->semaphore, 0, 0);
+  InputDispatcher::~InputDispatcher (void) {
+      this->inputQueue.lock();
+      while (this->inputQueue.size() > 0)
+	this->inputQueue.pop();
+      this->inputQueue.unlock();
   }
 
-  Semaphore::~Semaphore (void) {
-    sem_destroy (&this->semaphore);
-  }
+  void *
+  InputDispatcher::run (void * null) {
+    this->running = true;
 
-  void
-  Semaphore::acquire (void) {
-    sem_wait (&this->semaphore);
-  }
+    while (this->running == true) {
+      // Dispatch all of the input items on the queue.
+      this->inputQueue.lock();
 
-  void
-  Semaphore::release (void) {
-    sem_post (&this->semaphore);
+      while (this->inputQueue.size() > 0) {
+	// For right now all we're doing is pushing up the chain.
+	this->pro->onReadComplete ( this->inputQueue.pop() );
+      }
+
+      this->inputQueue.unlock();
+
+      Thread::sleep(100);
+    }
+  
+    return NULL; 
   }
 
 } // end of namespace
-

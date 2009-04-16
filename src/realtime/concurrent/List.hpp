@@ -29,6 +29,7 @@ namespace concurrent {
   template <typename T>
   class List : public RecursiveMutex, public std::list<T> {
   };
-}
+
+} // end of namespace
 
 #endif

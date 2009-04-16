@@ -23,12 +23,9 @@
 
 #include "../concurrent/Thread.hpp"
 #include "../concurrent/List.hpp"
-#include "../concurrent/Queue.hpp"
-#include "Event.hpp"
 
 namespace proactor {
 
-  class Proactor;
   class Worker;
 
   class Dispatcher : public concurrent::Thread {
@@ -36,31 +33,13 @@ namespace proactor {
     typedef concurrent::List<Worker *> WorkerListType;
 
     WorkerListType workers;
-    int eventId;
-  protected:
-    typedef concurrent::Queue<Event> EventQueueType;
-
-    Proactor * pro;
-    EventQueueType inputQueue;
   public:
     virtual ~Dispatcher (void);
 
-    void addWorker (Worker * w);
+    bool addWorker (Worker * w);
     bool removeWorker (Worker * w);
-
-    inline void onReadComplete (const char * buf) {
-      this->inputQueue.push ( Event (this->eventId, std::string(buf)) );
-    }
-
-    inline void setEventId (int e) {
-      this->eventId = e;
-    }
-
-    inline int getEventId (void) {
-      return this->eventId;
-    }
   };
 
-}
+} // end of namespace
 
 #endif

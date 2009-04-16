@@ -32,6 +32,7 @@
 #include "proactor/Proactor.hpp"
 #include "proactor/Event.hpp"
 #include "Network.hpp"
+#include "CsvParser.hpp"
 #include "PacketParser.hpp"
 #include "Packet.hpp"
 
@@ -55,16 +56,14 @@ thread_main (ThreadArgs * args) {
   Config * cfg  = (Config *)args->at(1);
 
   ConfigPair * logpath = cfg->get_pair (cfg, "realtime", "log", "path");
-  if (IS_NULL (logpath))
-    {
+  if (IS_NULL (logpath)) {
       g_critical ("Failed loading log->path from configuration file; "
 		  "exiting thread");
       return;
     }
 
   ConfigPair * servport = cfg->get_pair (cfg, "realtime", "tcp", "port");
-  if (IS_NULL (servport))
-    {
+  if (IS_NULL (servport)) {
       g_critical ("Failed loading tcp->port from configuration file; "
 		  "exiting thread");
       return;
@@ -73,16 +72,13 @@ thread_main (ThreadArgs * args) {
   ConfigPair * verbosity = cfg->get_pair (cfg, 
 					  "realtime", "debug", "verbosity");
   if (IS_NULL (verbosity))
-    {
-      g_warning ("Failed loading debug->verbosity from configuration file.");
-    }
-
+    g_warning ("Failed loading debug->verbosity from configuration file.");
+  
   FILE * pktlog = NULL;
   std::string logname = std::string (logpath->value).append("/");
   logname.append (append_pidname("realtime.").append(".log"));
 
-  if ((pktlog = fopen (logname.c_str(), "w")) == NULL)
-    {
+  if ((pktlog = fopen (logname.c_str(), "w")) == NULL) {
       g_critical ("Failed opening file '%s' for packet logging; exiting"
 		  " thread", logname.c_str());
       return;
@@ -91,50 +87,68 @@ thread_main (ThreadArgs * args) {
   /* Start up the Tcp Socket server on the port specified inside of the
      configuration file. This IS NOT a separate thread. */
   int port = atoi(servport->value);
-  TcpServerSocket socket ( port );
-  if (socket.start(5) == false)
-    {
+  network::TcpServerSocket socket ( port );
+  if (socket.start(5) == false) {
       g_critical ("Failed starting TcpServerSocket on port localhost:%d;"
 		  " exiting thread", port);
       return;
     }
+
+  network::TcpClientSocket client;
+  if (client.connect ("127.0.0.1", 50000) == false)
+    {
+      g_critical ("Failed connecting to TcpClientSocket");
+      return;
+    }
   
   // Get a unique event identifier that will be used throughout.
-  int e = proactor::Event::uniqueEventId();
+  int csvEventID = proactor::Event::uniqueEventId();
+  int pktEventID = proactor::Event::uniqueEventId();
 
   proactor::Proactor proactor;
-  if (proactor.start() == false)
-    {
+  NetworkCsvReceiver csvDispatcher (csvEventID, &proactor);
+  NetworkPktReceiver pktDispatcher (pktEventID, &proactor);
+  AcceptThread acceptor (socket.newAcceptor(), &pktDispatcher);
+  ConnectionThread creader (&csvDispatcher, &client);
+  PacketParser packet_worker (wb, pktlog, atoi(verbosity->value));
+  CsvParser csv_worker (wb, pktlog, atoi(verbosity->value));
+
+  if (proactor.addWorker (pktEventID, &packet_worker) == false) {
+      g_critical ("Failed starting packet parser worker; exiting thread.");
+      return;
+    }
+
+  if (proactor.addWorker (csvEventID, &csv_worker) == false) {
+      g_critical ("Failed starting csv parser worker; exiting thread.");
+      return;
+    }
+
+  if (proactor.start() == false) {
       g_critical ("Failed starting Proactor; exiting thread.");
       return;
     }
 
-  NetworkDispatcher network (&proactor);
-  network.setEventId(e);
-  if (network.start() == false)
-    {
+  if (pktDispatcher.start() == false) {
       g_critical ("Failed starting network; exiting thread.");
       return;
     }
 
-  PacketParser handler (wb, pktlog, atoi(verbosity->value));
-  proactor.addWorker (e, &handler);
-  if (handler.start() == false) 
-    {
-      g_critical ("Failed starting PacketParser; exiting thread.");
+  if (csvDispatcher.start() == false) {
+      g_critical ("Failed starting network; exiting thread.");
       return;
     }
+
+  if (pktDispatcher.addWorker (&acceptor) == false) {
+      g_critical ("Failed starting acceptor; exiting thread.");
+      return;
+    }
+
+  if (csvDispatcher.addWorker (&creader) == false) {
+    g_critical ("Failed starting client; exiting thread.");
+    return;
+  }
   
-  AcceptThread acceptor ( socket.newAcceptor(), &network );
-  network.addWorker (&acceptor);
-  if (acceptor.start() == false)
-    {
-      g_critical ("Failed starting Acceptor; exiting thread.");
-      return;
-    }
- 
-  while (!IS_NULLSTR (wb->filename)) 
-    {
+  while (!IS_NULLSTR (wb->filename)) {
       // Continually sleep basically until our application terminates.
       ::sleep (1);
     }
@@ -145,7 +159,10 @@ thread_main (ThreadArgs * args) {
 
   // Interrupt threads immediately canceling them so we can quit.
   acceptor.interrupt();
-  handler.interrupt();
-  network.interrupt();
+  packet_worker.interrupt();
+  csv_worker.interrupt();
+  csvDispatcher.interrupt();
+  pktDispatcher.interrupt();
   proactor.interrupt();
 }
+

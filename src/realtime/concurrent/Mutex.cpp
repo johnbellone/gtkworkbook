@@ -19,72 +19,73 @@
    Foundation, Inc., 51 Franklin Street, Fifth Floor Boston, MA 02110-1301 USA
 */
 #include "Mutex.hpp"
-using namespace concurrent;
 
-IMutex::IMutex (void) {
-  this->mutex = NULL;
-  this->attrib = NULL;
-}
+namespace concurrent {
 
-IMutex::IMutex (const IMutex & m) {
-  this->mutex = m.mutex;
-  this->attrib = m.attrib;
-}
+  IMutex::IMutex (void) {
+    this->mutex = NULL;
+    this->attrib = NULL;
+  }
 
-IMutex::~IMutex (void) {
-}
+  IMutex::IMutex (const IMutex & m) {
+    this->mutex = m.mutex;
+    this->attrib = m.attrib;
+  }
 
-IMutex & 
-IMutex::operator= (const IMutex & m) {
-  this->mutex = m.mutex;
-  this->attrib = m.attrib;
-  return *this;
-}
+  IMutex::~IMutex (void) {
+  }
 
-void
-IMutex::lock (void) {
-  pthread_mutex_lock (this->mutex);
-}
+  IMutex & 
+  IMutex::operator= (const IMutex & m) {
+    this->mutex = m.mutex;
+    this->attrib = m.attrib;
+    return *this;
+  }
 
-void 
-IMutex::unlock (void) {
-  pthread_mutex_unlock (this->mutex);
-}
+  void
+  IMutex::lock (void) {
+    pthread_mutex_lock (this->mutex);
+  }
 
-bool
-IMutex::trylock (void) {
-  return (pthread_mutex_trylock (this->mutex) == 0) ?
-    true : false;
-}
-		      
-/****************************************************************************/
+  void 
+  IMutex::unlock (void) {
+    pthread_mutex_unlock (this->mutex);
+  }
 
-RecursiveMutex::RecursiveMutex (void) {
-  this->mutex = new pthread_mutex_t;
-  this->attrib = new pthread_mutexattr_t;
-
-  pthread_mutexattr_init (this->attrib);
-  pthread_mutexattr_settype (this->attrib, PTHREAD_MUTEX_RECURSIVE);
+  bool
+  IMutex::trylock (void) {
+    return (pthread_mutex_trylock (this->mutex) == 0) ?
+      true : false;
+  }
   
-  pthread_mutex_init (this->mutex, attrib);
-}
+  RecursiveMutex::RecursiveMutex (void) {
+    this->mutex = new pthread_mutex_t;
+    this->attrib = new pthread_mutexattr_t;
 
-RecursiveMutex::~RecursiveMutex (void) {
-  pthread_mutex_destroy (this->mutex);
-  pthread_mutexattr_destroy (this->attrib);
+    pthread_mutexattr_init (this->attrib);
+    pthread_mutexattr_settype (this->attrib, PTHREAD_MUTEX_RECURSIVE);
+    
+    pthread_mutex_init (this->mutex, attrib);
+  }
 
-  delete this->mutex;
-  delete this->attrib;
-}
+  RecursiveMutex::~RecursiveMutex (void) {
+    pthread_mutex_destroy (this->mutex);
+    pthread_mutexattr_destroy (this->attrib);
 
-Mutex::Mutex (void) {
-  this->mutex = new pthread_mutex_t;
+    delete this->mutex;
+    delete this->attrib;
+  }
 
-  pthread_mutex_init (this->mutex, NULL);
-}
+  Mutex::Mutex (void) {
+    this->mutex = new pthread_mutex_t;
 
-Mutex::~Mutex (void) {
-  pthread_mutex_destroy (this->mutex);
+    pthread_mutex_init (this->mutex, NULL);
+  }
 
-  delete this->mutex;
-}
+  Mutex::~Mutex (void) {
+    pthread_mutex_destroy (this->mutex);
+
+    delete this->mutex;
+  }
+
+} // end of namespace

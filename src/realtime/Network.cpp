@@ -25,43 +25,15 @@
 
 namespace realtime {
   
-  Connection::Connection (int sockfd) {
-    this->sockfd = sockfd;
+  ConnectionThread::ConnectionThread (proactor::InputDispatcher * d, 
+				      int newfd) {
+    this->socket = new network::TcpClientSocket (newfd);
+    this->dispatcher = d;
   }
 
-  Connection::~Connection (void) {
-  }
-
-  NetworkDispatcher::NetworkDispatcher (proactor::Proactor * pro) {
-    this->pro = pro;
-  }
-  
-  NetworkDispatcher::~NetworkDispatcher (void) {
-  }
-
-  void *
-  NetworkDispatcher::run (void * null) {
-    this->running = true;
-
-    while (this->running == true) {
-      // Dispatch all of the input items on the queue.
-      this->inputQueue.lock();
-
-      while (this->inputQueue.size() > 0) {
-	// For right now all we're doing is pushing up the chain.
-	this->pro->onReadComplete ( this->inputQueue.pop() );
-      }
-
-      this->inputQueue.unlock();
-
-      Thread::sleep(100);
-    }
-  
-    return NULL; 
-  }
-
-  ConnectionThread::ConnectionThread (proactor::Dispatcher * d, int newfd) {
-    this->socket = new Connection (newfd);
+  ConnectionThread::ConnectionThread (proactor::InputDispatcher * d,
+				      network::TcpSocket * s) {
+    this->socket = s;
     this->dispatcher = d;
   }
 
@@ -73,43 +45,39 @@ namespace realtime {
   ConnectionThread::run (void * null) {
     this->running = true;
     int size = 0;
-    char buf[MAX_INPUT_SIZE];
-    char * p = NULL, * q = NULL;
+    size_t pos = 0;
+    char * buf = new char[MAX_INPUT_SIZE];
+    std::string packet;
 
     while (this->running == true) {
-      if ((size = this->socket->receive (&buf[0], MAX_INPUT_SIZE)) <= 0) {
-	// 
-	break;
+      packet.clear();
+
+      while ((size = this->socket->receive (buf, MAX_INPUT_SIZE)) > 0) {
+
+	if (size == -1) {
+	  this->running = false;
+	  break;
+	}
+
+	*(buf+size) = 0;
+	packet.append(buf);
+
+	while ((pos = packet.find_first_of('\n')) != std::string::npos) {
+	  this->dispatcher->onReadComplete (packet.substr (0, pos));
+	  packet = packet.substr (pos+1, packet.length());
+	}
       }
 
-      buf[size] = 0;
-      
-      q = p = &buf[0];
-
-      while (p && (*p != '\0')) {
-	  if (IS_TERMINAL (p)) {
-	      *p = 0;
-
-	      if (*(p+1) == '\n')
-		p++;
-
-	      this->dispatcher->onReadComplete (q);
-	      
-	      q = (++p);
-	      continue;
-	  }
-	  p++;
-      }
-      
       Thread::sleep (100);
     }
 
     this->dispatcher->removeWorker (this);
+    delete buf;
     return NULL;
   }
 
-  AcceptThread::AcceptThread (TcpServerSocket::Acceptor * acceptor,
-			      proactor::Dispatcher * dispatcher) {
+  AcceptThread::AcceptThread (network::TcpServerSocket::Acceptor * acceptor,
+			      proactor::InputDispatcher * dispatcher) {
     this->dispatcher = dispatcher;
     this->acceptor = acceptor;
   }
@@ -143,4 +111,5 @@ namespace realtime {
 
     return NULL;
   }
-}
+
+} // end of namespace
