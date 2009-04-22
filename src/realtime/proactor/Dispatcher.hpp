@@ -29,7 +29,7 @@ namespace proactor {
   class Worker;
 
   class Dispatcher : public concurrent::Thread {
-  private:
+  protected:
     typedef concurrent::List<Worker *> WorkerListType;
 
     WorkerListType workers;

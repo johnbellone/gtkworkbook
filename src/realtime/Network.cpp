@@ -24,21 +24,24 @@
 #define IS_TERMINAL(c) ((*c == '\n') || (*c == '\r'))
 
 namespace realtime {
-  
+
   ConnectionThread::ConnectionThread (proactor::InputDispatcher * d, 
 				      int newfd) {
+    this->purge_socket = true;
     this->socket = new network::TcpClientSocket (newfd);
     this->dispatcher = d;
   }
 
   ConnectionThread::ConnectionThread (proactor::InputDispatcher * d,
 				      network::TcpSocket * s) {
+    this->purge_socket = false;
     this->socket = s;
     this->dispatcher = d;
   }
 
   ConnectionThread::~ConnectionThread (void) {
-    delete socket;
+    if (purge_socket == true)
+      delete socket;
   }
 
   void *
@@ -100,12 +103,11 @@ namespace realtime {
 
       ConnectionThread * c = new ConnectionThread (this->dispatcher, newfd);
       
-      if (c->start() == false) {
+      if (this->dispatcher->addWorker (c) == false) {
 	// Failed for some reason; cut out and quit for now.
 	break;
       }
 	
-      this->dispatcher->addWorker ( c );
       Thread::sleep (100);
     }
 

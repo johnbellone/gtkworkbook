@@ -133,7 +133,7 @@ application_init (int * argc, char *** argv)
   gtk_signal_connect (GTK_OBJECT (appstate->gtk_window),
 		      "destroy",
 		      G_CALLBACK (appstate->signals[SIG_DESTROY_EVENT]),
-		      NULL);
+		      (gpointer *)appstate);
   gtk_signal_connect (GTK_OBJECT (appstate->gtk_window),
 		      "delete_event",
 		      G_CALLBACK (appstate->signals[SIG_DELETE_EVENT]),
@@ -161,6 +161,8 @@ application_method_close (ApplicationState *appstate)
 {
   ASSERT (appstate != NULL);
 
+  *appstate->shutdown = TRUE;
+  
   DESTROY (Workbook, appstate->workbook_first);
 
   /* This has to be set so that we have a sentinel variable in separate threads
@@ -169,13 +171,6 @@ application_method_close (ApplicationState *appstate)
      allocated. */
   appstate->workbook_first = appstate->workbook_last = NULL;
 
-  /* Because of a change to the Plugin architecture it will now yield until
-     all threads that were instatiated are closed properly. We use the 
-     appstate->workbook_first variable in order to test for NULL. */
-  DESTROY (Plugin, appstate->plugin_first);
-
-  appstate->plugin_first = appstate->plugin_last = NULL;
-  
   application_object_free (appstate);
 }
 
@@ -280,6 +275,7 @@ application_object_free (ApplicationState *appstate)
 {
   ASSERT (appstate != NULL);
 
+  FREE (appstate->shutdown);
   FREE (appstate->absolute_path);
   FREE (appstate);
   return appstate;
@@ -299,6 +295,8 @@ application_object_init (void)
   app->gtk_window = NULL;
   app->gtk_menu = NULL;
   app->gtk_window_vbox = NULL;
+  app->shutdown = NEW (gboolean);
+  *app->shutdown = FALSE;
 
   /* Set up the signals. */
   app->signals[SIG_NOTEBOOK_SWITCHED]
@@ -439,6 +437,18 @@ application_signal_delete_event (GtkWindow * window,
 static guint
 application_signal_destroy_event (GtkWidget *window, gpointer data)
 {
+  ApplicationState * appstate = (ApplicationState *)data;
+  *appstate->shutdown = TRUE;
+
+  /* Because of a change to the Plugin architecture it will now yield until
+     all threads that were instatiated are closed properly. We use the 
+     appstate->workbook_first variable in order to test for NULL. */
+  gdk_threads_leave();
+  DESTROY (Plugin, appstate->plugin_first);
+  gdk_threads_enter();
+
+  appstate->plugin_first = appstate->plugin_last = NULL;
+
   gtk_main_quit ();
   return FALSE;
 }

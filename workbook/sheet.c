@@ -105,6 +105,8 @@ sheet_object_init (Workbook * book,
   sheet->notices = 0;
   sheet->has_focus = FALSE;
   sheet->next = sheet->prev = NULL;
+  sheet->max_rows = rows;
+  sheet->max_columns = columns;
 
   /* Methods */
   sheet->destroy = sheet_method_destroy;

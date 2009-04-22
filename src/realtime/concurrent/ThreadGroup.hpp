@@ -18,45 +18,42 @@
    License along with the library; if not, write to the Free Software
    Foundation, Inc., 51 Franklin Street, Fifth Floor Boston, MA 02110-1301 USA
 */
-#ifndef HPP_THREAD_THREADGROUP
-#define HPP_THREAD_THREADGROUP
+#ifndef HPP_CONCURRENT_THREADGROUP
+#define HPP_CONCURRENT_THREADGROUP
 
 #include <string>
-#include <list>
+#include "List.hpp"
 #include "Thread.hpp"
 
 namespace concurrent {
 
-class ThreadGroup {
-  friend class Thread;
-  typedef std::list<Thread *> ThreadList;
-private:
-  int maxPriority;
-  ThreadGroup * parent;
-  std::string name;
-  ThreadList threads;
-  bool daemon; 
+  class ThreadGroup {
+  private:
+    typedef concurrent::List<Thread *> ThreadList;
+    
+    ThreadGroup * parent;
+    std::string name;
+    ThreadList threads;
+    bool daemon; 
+  public:
+    ThreadGroup (void);
+    ThreadGroup (ThreadGroup * parent, const std::string & name);
+    ThreadGroup (const std::string & name);
+    virtual ~ThreadGroup (void);
 
-  void addThreadToGroup (Thread *);
-  void removeThreadFromGroup (Thread *);
-public:
-  ThreadGroup (const std::string &);
-  ThreadGroup (ThreadGroup *, const std::string &);
-  ~ThreadGroup (void);
+    bool parentOf (ThreadGroup * parent);
+    bool addThread (Thread * thread);
+    bool removeThread (Thread * thread);
+    void interrupt (void);
+    bool start (void);
+    void stop (void);
+    
+    inline bool isDaemon (void) const { return this->daemon; }
+    inline void setDaemon (bool daemon) { this->daemon = daemon; }
+    inline const std::string & getName (void) const { return this->name; }
+    inline ThreadGroup * getParent (void) const { return this->parent; }
+  };
 
-  bool parentOf (ThreadGroup *);
-  bool checkAccess (void);
-
-  inline bool isDaemon (void) const { return this->daemon; }
-  
-  inline const ThreadGroup * getParent (void) const { return this->parent; }
-  inline const std::string & getName (void) const { return this->name; }
-  inline int getMaxPriority (void) const { return this->maxPriority; }
-
-  inline void setMaxPriority (int priority) { this->maxPriority = priority; }
-  inline void setDaemon (bool daemon) { this->daemon = daemon; }
-};
-
-}
+} // end of namespace
 
 #endif

@@ -24,6 +24,10 @@
 #include "Socket.hpp"
 #include <arpa/inet.h>
 #include <netinet/in.h>
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <unistd.h>
+#include <netdb.h>
 
 namespace network {
 
@@ -62,6 +66,8 @@ namespace network {
   };
   
   class TcpClientSocket : public TcpSocket {
+  private:
+    struct hostent * hp;
   public:
     TcpClientSocket (void);
     TcpClientSocket (int newfd);

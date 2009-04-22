@@ -18,8 +18,8 @@
    License along with the library; if not, write to the Free Software
    Foundation, Inc., 51 Franklin Street, Fifth Floor Boston, MA 02110-1301 USA
 */
-#ifndef HPP_THREAD_THREAD
-#define HPP_THREAD_THREAD
+#ifndef HPP_CONCURRENT_THREAD
+#define HPP_CONCURRENT_THREAD
 
 #include <shared.h>
 #include <string>
@@ -29,43 +29,45 @@
 
 namespace concurrent {
 
-class ThreadGroup;
+  class ThreadGroup;
 
-class Thread : public IRunnable {
-private:
-  ThreadGroup * group;
-  std::string name;
-  IRunnable * runner;
-  pthread_t thread;
-  bool joinable;
-  int priority;
-public:
-  Thread (ThreadGroup * group, 
-	  IRunnable * runner, 
-	  const std::string & name);
-  Thread (IRunnable * runner,
-	  const std::string & name);
-  Thread (const std::string & name);
-  Thread (void);
-  virtual ~Thread (void);
+  class Thread : public IRunnable {
+  private:
+    friend class ThreadGroup;
 
-  bool start (void);
-  void * stop (void);
-  void * join (void);
-  void interrupt (void);
-  void yield (void);
+    ThreadGroup * group;
+    std::string name;
+    IRunnable * runner;
+    pthread_t thread;
+    bool joinable;
+    int priority;
+  public:
+    Thread (ThreadGroup * group, 
+	    IRunnable * runner, 
+	    const std::string & name);
+    Thread (IRunnable * runner,
+	    const std::string & name);
+    Thread (const std::string & name);
+    Thread (void);
+    virtual ~Thread (void);
+
+    bool start (void);
+    void * stop (void);
+    void * join (void);
+    void interrupt (void);
+    void yield (void);
   
-  virtual void * run (void *);
+    virtual void * run (void *);
 
-  inline const std::string & getName (void) const { return this->name; }
-  inline int getPriority (void) const { return this->priority; }
-  inline void setPriority (int priority) { this->priority = priority; }
-  inline const ThreadGroup * getThreadGroup (void) const { 
-    return this->group; 
-  }
+    inline const std::string & getName (void) const { return this->name; }
+    inline int getPriority (void) const { return this->priority; }
+    inline void setPriority (int priority) { this->priority = priority; }
+    inline const ThreadGroup * getThreadGroup (void) const { 
+      return this->group; 
+    }
 
-  static int sleep (unsigned long ms);
-};  
+    static int sleep (unsigned long ms);
+  };  
 
 }
 

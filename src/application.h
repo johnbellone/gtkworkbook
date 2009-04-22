@@ -52,6 +52,7 @@ struct _ApplicationState
   GtkWidget * gtk_menu;
   GtkWidget * gtk_window_vbox;
   gchar * absolute_path;
+  gboolean * shutdown;
 
   /* Methods */
   int (*run) (ApplicationState *);

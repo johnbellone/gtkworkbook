@@ -59,8 +59,8 @@ namespace concurrent {
   }
 
   Thread::~Thread (void) {
-    if (this->running == true)
-      this->interrupt();
+    this->running = false;
+    this->join();
   }
 
   void 

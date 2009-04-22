@@ -21,14 +21,15 @@
 #include "CsvParser.hpp"
 #include <workbook/sheet.h>
 #include <workbook/cell.h>
+#include <iostream>
 
 namespace realtime {
 
   struct csv_column {
     Sheet * sheet;
     Cell * cell;
-    long unsigned row;
-    long unsigned field;
+    int row;
+    int field;
     char * value;
   };
 
@@ -42,8 +43,8 @@ namespace realtime {
     Sheet * sheet = column->sheet;
 
     cell->set_row (cell, column->row);
-    cell->set_column (cell, ++column->field);
-    cell->set_value (cell, column->value);
+    cell->set_column (cell, column->field++);
+    cell->set_value_length (cell, s, length);
     sheet->apply_cell (sheet, cell);
   }
 
@@ -59,7 +60,10 @@ namespace realtime {
     this->running = true;
     struct csv_parser csv;
     struct csv_column column = {this->wb->sheet_first,
-			    this->cell, 0, 0, new char[1024]};
+				this->cell, 
+				0, 
+				0, 
+				new char[1024]};
     
     if (csv_init (&csv, CSV_STRICT) != 0) {
       std::cerr << "Failed initializing libcsv parser\n";
@@ -70,19 +74,22 @@ namespace realtime {
       while (this->inputQueue.size() > 0) {
 	std::string buf = this->inputQueue.pop();
 	size_t bytes = buf.length();
-	 
+ 
 	// Parse the CSV input
 	if ((bytes = csv_parse(&csv, 
 			       buf.c_str(), 
 			       bytes, 
 			       cb1,
 			       cb2,
-			       &column)) != buf.length()) {
-	  // Something went wrong here. Discard and continue.
-	  if (csv_error (&csv) == CSV_EPARSE) 
-	    std::cerr << "Parsing error on input:\n" << buf;
-	  continue;
+			       &column)) == bytes) {
+	  if (csv_error (&csv) == CSV_EPARSE)
+	    std::cerr << "Parsing error on input: " << buf << "\n";
 	}
+
+	csv_fini (&csv, cb1, cb2, &column);
+
+	if (column.row >= (column.sheet)->max_rows)
+	  column.row = 0;
       }
       Thread::sleep(100);
     }

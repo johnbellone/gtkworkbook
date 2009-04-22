@@ -23,12 +23,23 @@
 
 namespace proactor {
 
+  Dispatcher::~Dispatcher (void) {
+      
+  }
+   
   bool
   Dispatcher::addWorker (Worker * w) {
-    this->workers.push_back (w);
-    return w->start();
+    WorkerListType::iterator it = std::find (this->workers.begin(),
+					     this->workers.end(),
+					     w);
+    if (it == this->workers.end())
+      {
+	this->workers.push_back (w);
+	return w->start();
+      }
+    return false;
   }
-
+  
   bool
   Dispatcher::removeWorker (Worker * w) {
     WorkerListType::iterator it = std::find (this->workers.begin(),

@@ -90,6 +90,7 @@ workbook_method_get_sheet (Workbook * wb, const gchar * sheet)
     {
       ITERATE_BEGIN (Sheet, wb->sheet_first);
       {
+	if (!sheet) return NULL;
 	if (!strcmp (sheet, it->name))
 	  return it;
       }
@@ -114,7 +115,7 @@ workbook_method_remove_sheet (Workbook * wb, Sheet * sheet)
 		 sheet->name, wb->filename);
       return;
     }
-
+  
   ITERATE_BEGIN (Sheet, wb->sheet_first);
   {
     /* Remove the sheet from the GtkNotebook */

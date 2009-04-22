@@ -61,6 +61,8 @@ typedef struct _Sheet Sheet;
     gint page;
     gint attention;
     gint notices;
+    gint max_rows;
+    gint max_columns;
     gboolean has_focus;
 
     /* Methods */

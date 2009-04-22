@@ -18,12 +18,12 @@
    License along with the library; if not, write to the Free Software
    Foundation, Inc., 51 Franklin Street, Fifth Floor Boston, MA 02110-1301 USA
 */
-#ifndef HPP_THREAD_RUNNABLE
-#define HPP_THREAD_RUNNABLE
+#ifndef HPP_CONCURRENT_RUNNABLE
+#define HPP_CONCURRENT_RUNNABLE
 
 class IRunnable {
 protected:
-  bool running;
+  volatile bool running;
 public:
   IRunnable (void) { this->running = false; }
   virtual ~IRunnable (void) { }

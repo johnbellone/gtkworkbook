@@ -5,6 +5,7 @@
 static Cell *cell_object_init (void);
 static void cell_object_free (Cell *);
 static void cell_method_set_value (Cell *, const gchar *);
+static void cell_method_set_value_length (Cell *, void *, size_t);
 static void cell_method_set_column (Cell *, gint);
 static void cell_method_set_row (Cell *, gint);
 static void cell_method_set_all (Cell *, gint, gint, const gchar *);
@@ -39,6 +40,7 @@ cell_object_init (void)
   cell->set_attributes = cell_method_set_attributes;
   cell->set_range = cell_method_set_range;
   cell->set_value = cell_method_set_value;
+  cell->set_value_length = cell_method_set_value_length;
   cell->set_column = cell_method_set_column;
   cell->set_row = cell_method_set_row;
   cell->set = cell_method_set_all;
@@ -170,6 +172,14 @@ cell_method_set_value (Cell * cell,
   ASSERT (cell != NULL);
   
   g_string_assign (cell->value, value);
+}
+
+static void
+cell_method_set_value_length (Cell * cell, void * s, size_t length) {
+  ASSERT (cell != NULL);
+
+  g_string_assign (cell->value, "");
+  g_string_append_len (cell->value, (const char *)s, length);
 }
 
 static void

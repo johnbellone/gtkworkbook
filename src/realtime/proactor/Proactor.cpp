@@ -30,24 +30,24 @@ namespace proactor {
     // Remove all of the lists of event handlers.
     {
       EventMapType::iterator it = this->eventsToHandlers.begin();
-      while (it != this->eventsToHandlers.end())
-	{
+      while (it != this->eventsToHandlers.end()) {
 	  WorkerListType * q = (it->second);
 	  delete q;
 	  it++;
 	}
     }
-
+ 
     // Handle the dispatchers that have not been manually removed.
     {
       DispatcherList::iterator it = this->dispatchers.begin();
       while (it != this->dispatchers.end())
 	{
-	  InputDispatcher * d = (*it);
+	  Dispatcher * d = (*it);
 	  delete d;
 	  it++;
 	}
     }
+  
   }
 
   bool
@@ -67,12 +67,12 @@ namespace proactor {
 
   void
   Proactor::onReadComplete (Event e) {
-    this->inputQueue.push (e);
+    this->events.push (e);
   }
 
   void 
   Proactor::onReadComplete (int e, const char * buf) {
-    this->inputQueue.push ( Event (e, std::string (buf)) );   
+    this->events.push ( Event (e, std::string (buf)) );   
   }
 
   bool
@@ -98,12 +98,12 @@ namespace proactor {
   }
 
   void
-  Proactor::addDispatcher (InputDispatcher * d) {
+  Proactor::addDispatcher (Dispatcher * d) {
     this->dispatchers.push_back (d);
   }
 
   bool
-  Proactor::removeDispatcher (InputDispatcher * d) {
+  Proactor::removeDispatcher (Dispatcher * d) {
     DispatcherList::iterator it = std::find (this->dispatchers.begin(),
 					     this->dispatchers.end(),
 					     d);
@@ -121,12 +121,11 @@ namespace proactor {
   
     WorkerListType::iterator it;
 
-    while (this->running == true)
-      {
-	this->inputQueue.lock();
-	while (this->inputQueue.size() > 0)
-	  {
-	    Event e = this->inputQueue.pop();
+    while (this->running == true) {
+	this->events.lock();
+
+	while (this->events.size() > 0) {
+	    Event e = this->events.pop();
 
 	    // We are throwing events with no handlers to catch them.
 	    if (this->eventsToHandlers.find (e.id) == 
@@ -135,8 +134,7 @@ namespace proactor {
  
 	    it = this->eventsToHandlers[e.id]->begin();
 	  
-	    while (it != this->eventsToHandlers[e.id]->end())
-	      {
+	    while (it != this->eventsToHandlers[e.id]->end()) {
 		Worker * j = (*it);
 	      
 		j->pushInputQueue (e.buf);
@@ -144,7 +142,7 @@ namespace proactor {
 		it++;
 	      }
 	  }
-	this->inputQueue.unlock();
+	this->events.unlock();
       
 	Thread::sleep(100);
       }

@@ -28,6 +28,7 @@
 #include <iostream>
 #include <sstream>
 #include <string>
+#include "concurrent/Thread.hpp"
 #include "concurrent/ThreadArgs.hpp"
 #include "proactor/Proactor.hpp"
 #include "proactor/Event.hpp"
@@ -54,6 +55,7 @@ void
 thread_main (ThreadArgs * args) {
   Workbook * wb = (Workbook *)args->at(0);
   Config * cfg  = (Config *)args->at(1);
+  gboolean * SHUTDOWN = (gboolean *)args->at(2);
 
   ConfigPair * logpath = cfg->get_pair (cfg, "realtime", "log", "path");
   if (IS_NULL (logpath)) {
@@ -95,7 +97,7 @@ thread_main (ThreadArgs * args) {
     }
 
   network::TcpClientSocket client;
-  if (client.connect ("127.0.0.1", 50000) == false)
+  if (client.connect ("localhost", 50000) == false)
     {
       g_critical ("Failed connecting to TcpClientSocket");
       return;
@@ -104,65 +106,59 @@ thread_main (ThreadArgs * args) {
   // Get a unique event identifier that will be used throughout.
   int csvEventID = proactor::Event::uniqueEventId();
   int pktEventID = proactor::Event::uniqueEventId();
-
+  
   proactor::Proactor proactor;
   NetworkCsvReceiver csvDispatcher (csvEventID, &proactor);
   NetworkPktReceiver pktDispatcher (pktEventID, &proactor);
   AcceptThread acceptor (socket.newAcceptor(), &pktDispatcher);
   ConnectionThread creader (&csvDispatcher, &client);
-  PacketParser packet_worker (wb, pktlog, atoi(verbosity->value));
+  PacketParser pkt_worker (wb, pktlog, atoi(verbosity->value));
   CsvParser csv_worker (wb, pktlog, atoi(verbosity->value));
-
-  if (proactor.addWorker (pktEventID, &packet_worker) == false) {
-      g_critical ("Failed starting packet parser worker; exiting thread.");
-      return;
-    }
-
-  if (proactor.addWorker (csvEventID, &csv_worker) == false) {
-      g_critical ("Failed starting csv parser worker; exiting thread.");
-      return;
-    }
 
   if (proactor.start() == false) {
       g_critical ("Failed starting Proactor; exiting thread.");
       return;
     }
 
+  if (proactor.addWorker (pktEventID, &pkt_worker) == false) {
+    g_critical ("Failed starting packet parser worker; exiting thread.");
+    return;
+  }
+
+  if (proactor.addWorker (csvEventID, &csv_worker) == false) {
+    g_critical ("Failed starting csv parser worker; exiting thread.");
+    return;
+  }
+  
   if (pktDispatcher.start() == false) {
       g_critical ("Failed starting network; exiting thread.");
       return;
     }
 
+  if (pktDispatcher.addWorker (&acceptor) == false) {
+    g_critical ("Failed starting acceptor; exiting thread.");
+    return;
+  }
+  
   if (csvDispatcher.start() == false) {
       g_critical ("Failed starting network; exiting thread.");
       return;
     }
-
-  if (pktDispatcher.addWorker (&acceptor) == false) {
-      g_critical ("Failed starting acceptor; exiting thread.");
-      return;
-    }
-
+  
+  
   if (csvDispatcher.addWorker (&creader) == false) {
-    g_critical ("Failed starting client; exiting thread.");
+    g_critical ("Failed starting client reader; exiting thread.");
     return;
   }
-  
-  while (!IS_NULLSTR (wb->filename)) {
-      // Continually sleep basically until our application terminates.
-      ::sleep (1);
-    }
 
-  FCLOSE (pktlog);
+  while (*SHUTDOWN == FALSE) {
+    // Continually sleep basically until our application terminates.
+    concurrent::Thread::sleep (100);
+  }
 
   socket.close();  
+  client.close();
 
-  // Interrupt threads immediately canceling them so we can quit.
-  acceptor.interrupt();
-  packet_worker.interrupt();
-  csv_worker.interrupt();
-  csvDispatcher.interrupt();
-  pktDispatcher.interrupt();
-  proactor.interrupt();
+
+  FCLOSE (pktlog);
 }
-

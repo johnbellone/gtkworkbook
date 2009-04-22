@@ -1,5 +1,5 @@
 /* 
-   Event.hpp - Event Object Header File
+   Worker.cpp - Worker Object Source File
 
    The GTKWorkbook Project <http://gtkworkbook.sourceforge.net/>
    Copyright (C) 2008, 2009 John Bellone, Jr. <jvb4@njit.edu>
@@ -18,41 +18,11 @@
    License along with the library; if not, write to the Free Software
    Foundation, Inc., 51 Franklin Street, Fifth Floor Boston, MA 02110-1301 USA
 */
-#ifndef HPP_PROACTOR_EVENT
-#define HPP_PROACTOR_EVENT
-
-#include "Dispatcher.hpp"
-#include <string>
+#include "Worker.hpp"
 
 namespace proactor {
 
-  class Event {
-  private:
-    static int numEvents;
-  public:
-    int id;
-    std::string buf;
+  Worker::~Worker (void) {
+  }
 
-    Event (int id, const std::string & buf);
-
-    static int uniqueEventId (void);
-  };
-
-  class EventDispatcher : public Dispatcher {
-  private:
-    int eventId;
-  public:
-    virtual ~EventDispatcher (void);
-
-    inline void setEventId (int e) { 
-      this->eventId = e;
-    }
-
-    inline int getEventId (void) { 
-      return this->eventId;
-    }
-  };
-
-}
-
-#endif
+} // end of namesapce

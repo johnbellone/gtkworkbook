@@ -56,6 +56,7 @@ extern "C"
     ThreadArgs args;
     args.push_back( (void *)wb );
     args.push_back( (void *)app->cfg );
+    args.push_back( (void *)app->shutdown );
 
     if (plugin->create_thread (plugin, 
 			       (GThreadFunc)thread_main,

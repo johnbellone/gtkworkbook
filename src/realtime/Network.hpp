@@ -50,6 +50,7 @@ namespace realtime {
 
   class ConnectionThread : public proactor::Worker {
   private:
+    bool purge_socket;
     network::TcpSocket * socket;
   public:
     ConnectionThread (proactor::InputDispatcher * d, int newfd);

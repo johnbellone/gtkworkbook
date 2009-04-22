@@ -29,27 +29,26 @@
 #include "Event.hpp"
 #include "Dispatcher.hpp"
 #include "InputDispatcher.hpp"
-#include <list>
-#include <queue>
 
 namespace proactor {
 
-  class Proactor : public InputDispatcher {
+  class Proactor : public Dispatcher {
   private:
-    typedef std::list<Worker *> WorkerListType;
-    typedef concurrent::List<InputDispatcher *> DispatcherList;
+    typedef concurrent::List<Dispatcher *> DispatcherList;
     typedef concurrent::Map<int, WorkerListType *> EventMapType;
-    
+    typedef concurrent::Queue<Event> EventQueueType;
+
     EventMapType eventsToHandlers;
     DispatcherList dispatchers;
+    EventQueueType events;
   public:
     Proactor (void);
     virtual ~Proactor (void);
 
     bool addWorker (int e, Worker * w);
     bool removeWorker (int e, Worker * w);
-    void addDispatcher (InputDispatcher * d);
-    bool removeDispatcher (InputDispatcher * d);
+    void addDispatcher (Dispatcher * d);
+    bool removeDispatcher (Dispatcher * d);
     
     void * run (void * null);
  
@@ -57,7 +56,7 @@ namespace proactor {
     void onReadComplete (int e, const char * buf);
 
     inline const std::string & peekInputQueue (void) {
-      return (this->inputQueue.front()).buf;
+      return (this->events.front()).buf;
     }
   };
 

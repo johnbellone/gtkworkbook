@@ -75,6 +75,7 @@ extern "C" {
     /* Methods */
     void (*set) (Cell * cell, gint row, gint column, const gchar * value);
     void (*set_value) (Cell * cell, const gchar * value);  
+    void (*set_value_length) (Cell * cell, void * s, size_t length);
     void (*set_column) (Cell * cell, gint column);
     void (*set_row) (Cell * cell, gint row);
     void (*set_range) (Cell * cell, const GtkSheetRange * range);

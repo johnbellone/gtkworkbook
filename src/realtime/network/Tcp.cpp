@@ -20,10 +20,6 @@
 */
 #include "Tcp.hpp"
 #include <iostream>
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <unistd.h>
-#include <netdb.h>
 
 namespace network {
 
@@ -130,34 +126,25 @@ namespace network {
 
   bool
   TcpClientSocket::connect (const char * host, int port) {
-    struct sockaddr_in servAddr;
-    struct hostent * h;
-
     if (!host || (*host == '\0'))
       return false;
 
-    if (this->sockfd < 0)
+    if ((this->hp = ::gethostbyname (host)) == NULL)
       return false;
-    
-    if ((h = ::gethostbyname (host)) == NULL)
-      return false;
+ 
+    // Copy over the hostname address.
+    memset (&(this->sockaddr),0, sizeof (this->sockaddr));
+    this->sockaddr.sin_family = AF_INET;
+    this->sockaddr.sin_addr.s_addr 
+      = ((struct in_addr *)(this->hp->h_addr))->s_addr;
+    this->sockaddr.sin_port = htons (port);
 
-    servAddr.sin_family = h->h_addrtype;
-    memcpy ((char *)&(servAddr.sin_addr.s_addr),
-	    h->h_addr_list[0],
-	    h->h_length);
-    servAddr.sin_port = htons (port);
-    
-    if (::bind (this->sockfd,
-		(struct sockaddr *)&(this->sockaddr),
-		sizeof (this->sockaddr)) < 0)
-      return false;
-    
     if (::connect (this->sockfd,
 		   (struct sockaddr *)&(this->sockaddr),
-		   sizeof (this->sockaddr)) < 0)
+		   sizeof (struct sockaddr)) < 0)
       return false;
-    return true;  
+    
+    return true;
   }
 
   void

@@ -36,6 +36,8 @@ namespace proactor {
     InputDispatcher * dispatcher;
     InputQueueType inputQueue;
   public:
+    virtual ~Worker (void);
+
     inline void pushInputQueue (std::string buf) {
       this->inputQueue.push (buf);
     }

@@ -8,7 +8,7 @@ all: 	realtime
 
 realtime: ${OBJS}
 	${CX} -shared -Wl -o ${PROJDIR}/bin/realtime.so ${OBJS} ${LIBS} \
-	-lgthread-2.0 -lpthread
+	-lgthread-2.0 -lpthread -lcsv
 
 clean:		
 	${MD} ${OBJDIR}/realtime/concurrent ${OBJDIR}/realtime/network \

@@ -33,5 +33,8 @@ namespace proactor {
   Event::uniqueEventId (void) {
     return Event::numEvents++;
   }
+
+  EventDispatcher::~EventDispatcher (void) {
+  }
  
 } // end of namespace
