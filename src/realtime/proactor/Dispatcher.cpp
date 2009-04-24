@@ -20,6 +20,7 @@
 */
 #include "Dispatcher.hpp"
 #include "Worker.hpp"
+#include <algorithm>
 
 namespace proactor {
 

@@ -24,6 +24,7 @@
 #include <workbook/cell.h>
 #include <glib.h>
 #include <string>
+#include <cstdlib>
 #include <vector>
 #include <map>
 

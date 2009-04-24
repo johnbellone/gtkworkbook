@@ -20,6 +20,7 @@
 */
 #include "Proactor.hpp"
 #include <iostream>
+#include <algorithm>
 
 namespace proactor {
 

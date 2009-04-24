@@ -19,16 +19,18 @@ LIBDIR=${SYSINSPATH}/lib
 INCDIR=${SYSINSPATH}/include
 OBJDIR=${PROJDIR}/OBJS
 
-LD_LIBRARY_PATH=${PROJDIR}/lib:${LIBDIR}
+LD_LIBRARY_PATH=${PROJDIR}/lib:${LIBDIR}:/usr/local/lib
 export LD_LIBRARY_PATH
 
 INCS = -I${INCDIR}/gtkextra-2.0
 INCS += -I${PROJDIR}/include
+INCS += -I/usr/local/include/gtkextra-2.0
 INCS += `pkg-config gtk+-2.0 glib-2.0 --cflags`
 
 LIBS = -lpixman-1
 LIBS += -L${PROJDIR}/lib
 LIBS += -Wl,-rpath ${PROJDIR}/lib
+LIBS += -L/usr/local/lib
 LIBS += -L${LIBDIR}
 LIBS += -Wl,-rpath ${LIBDIR}
 LIBS += `pkg-config gtk+-2.0 glib-2.0 --libs`
