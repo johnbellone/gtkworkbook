@@ -31,6 +31,16 @@ namespace proactor {
   }
 
   void *
+  InputDispatcher::stop (void) {
+    WorkerListType::iterator it = this->workers.begin();
+    while (it != this->workers.end()) {
+      (*it)->stop();
+      it = this->workers.erase(it);
+    }
+    return Thread::stop();
+  }
+
+  void *
   InputDispatcher::run (void * null) {
     this->running = true;
 
@@ -39,6 +49,10 @@ namespace proactor {
       this->inputQueue.lock();
 
       while (this->inputQueue.size() > 0) {
+
+	if (this->running == false)
+	  break;
+
 	// For right now all we're doing is pushing up the chain.
 	this->pro->onReadComplete ( this->inputQueue.pop() );
       }

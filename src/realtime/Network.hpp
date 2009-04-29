@@ -36,6 +36,7 @@ namespace realtime {
       this->pro = pro;
       setEventId(e);
     }
+
     virtual ~NetworkCsvReceiver (void) { }
   };
 
@@ -45,6 +46,7 @@ namespace realtime {
       this->pro = pro;
       setEventId(e);
     }
+
     virtual ~NetworkPktReceiver (void) { }
   };
 

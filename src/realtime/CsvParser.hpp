@@ -34,18 +34,21 @@ namespace realtime {
   private:
     Workbook * wb;
     FILE * pktlog;
-    Cell * cell;
+    Cell * cell[10];
     int verbosity;
   public:
     CsvParser (Workbook * wb, FILE * pktlog, int verbosity) {
       this->wb = wb;
       this->pktlog = pktlog;
-      this->cell = cell_new();
       this->verbosity = verbosity;
+
+      for (unsigned int ii = 0; ii < 10; ii++)
+	this->cell[ii] = cell_new();
     }
 
     virtual ~CsvParser (void) {
-      this->cell->destroy (cell);
+      for (unsigned int ii = 0; ii < 10; ii++)
+	this->cell[ii]->destroy (this->cell[ii]);
     }
 
     void * run (void * null);

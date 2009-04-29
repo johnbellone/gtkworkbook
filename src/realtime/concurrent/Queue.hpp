@@ -23,6 +23,7 @@
 
 #include "Mutex.hpp"
 #include <queue>
+#include <algorithm>
 
 namespace concurrent {
   
@@ -46,8 +47,10 @@ namespace concurrent {
       this->unlock();
     }
 
-    inline std::queue<T> copy (void) {
-      return this->the_queue;
+    inline void copy (std::queue<T> & Q) {
+      this->lock();
+      Q = this->the_queue;
+      this->unlock();
     }
 
     inline const T & back (void) {

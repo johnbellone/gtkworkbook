@@ -27,21 +27,22 @@ namespace realtime {
 
   ConnectionThread::ConnectionThread (proactor::InputDispatcher * d, 
 				      int newfd) {
-    this->purge_socket = true;
     this->socket = new network::TcpClientSocket (newfd);
     this->dispatcher = d;
   }
 
   ConnectionThread::ConnectionThread (proactor::InputDispatcher * d,
 				      network::TcpSocket * s) {
-    this->purge_socket = false;
     this->socket = s;
     this->dispatcher = d;
   }
 
   ConnectionThread::~ConnectionThread (void) {
-    if (purge_socket == true)
-      delete socket;
+    if (this->socket != NULL) {
+      this->socket->close();
+      delete this->socket;
+      this->socket = NULL;
+    }
   }
 
   void *
@@ -55,9 +56,9 @@ namespace realtime {
     while (this->running == true) {
       packet.clear();
 
-      while ((size = this->socket->receive (buf, MAX_INPUT_SIZE)) > 0) {
+      while ((size = this->socket->receive (buf, MAX_INPUT_SIZE)) >= 0) {
 
-	if (size == -1) {
+	if ((this->running == false) || (size == 0)) {
 	  this->running = false;
 	  break;
 	}
@@ -66,6 +67,10 @@ namespace realtime {
 	packet.append(buf);
 
 	while ((pos = packet.find_first_of('\n')) != std::string::npos) {
+	  
+	  if (this->running == false)
+	    break;
+
 	  this->dispatcher->onReadComplete (packet.substr (0, pos));
 	  packet = packet.substr (pos+1, packet.length());
 	}

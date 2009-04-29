@@ -59,12 +59,15 @@ namespace concurrent {
   }
 
   Thread::~Thread (void) {
-    this->running = false;
-    this->join();
+    if (this->running == true) {
+      this->running = false;
+      this->join();
+    }
   }
 
   void 
   Thread::interrupt (void) {
+    this->running = false;
     pthread_cancel (this->thread);
     pthread_detach (this->thread);
   }

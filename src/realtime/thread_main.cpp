@@ -96,9 +96,8 @@ thread_main (ThreadArgs * args) {
       return;
     }
 
-  network::TcpClientSocket client;
-  if (client.connect ("localhost", 50000) == false)
-    {
+  network::TcpClientSocket * client = new network::TcpClientSocket;
+  if (client->connect ("localhost", 50000) == false) {
       g_critical ("Failed connecting to TcpClientSocket");
       return;
     }
@@ -111,7 +110,7 @@ thread_main (ThreadArgs * args) {
   NetworkCsvReceiver csvDispatcher (csvEventID, &proactor);
   NetworkPktReceiver pktDispatcher (pktEventID, &proactor);
   AcceptThread acceptor (socket.newAcceptor(), &pktDispatcher);
-  ConnectionThread creader (&csvDispatcher, &client);
+  ConnectionThread creader (&csvDispatcher, client);
   PacketParser pkt_worker (wb, pktlog, atoi(verbosity->value));
   CsvParser csv_worker (wb, pktlog, atoi(verbosity->value));
 
@@ -145,7 +144,6 @@ thread_main (ThreadArgs * args) {
       return;
     }
   
-  
   if (csvDispatcher.addWorker (&creader) == false) {
     g_critical ("Failed starting client reader; exiting thread.");
     return;
@@ -156,9 +154,11 @@ thread_main (ThreadArgs * args) {
     concurrent::Thread::sleep (100);
   }
 
+  csv_worker.stop();
+  pkt_worker.stop();
+  creader.interrupt();
+  acceptor.interrupt();
   socket.close();  
-  client.close();
-
 
   FCLOSE (pktlog);
 }

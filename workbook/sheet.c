@@ -8,7 +8,7 @@ static void sheet_object_free (Sheet *);
 static void sheet_method_destroy (Sheet *);
 static void sheet_method_set_cell (Sheet *, gint, gint, const gchar *);
 static void sheet_method_apply_cell (Sheet *, const Cell *);
-static void sheet_method_apply_cellarray (Sheet *, const Cell **, gint);
+static void sheet_method_apply_cellarray (Sheet *, Cell **, gint);
 static void sheet_method_apply_cellrange (Sheet *, 
 					  const GtkSheetRange *,
 					  const CellAttributes *);
@@ -335,14 +335,40 @@ sheet_method_apply_cellrange (Sheet * sheet,
 
 static void
 sheet_method_apply_cellarray (Sheet * sheet, 
-			      const Cell ** array,
+			      Cell ** array,
 			      gint size)
 {
   ASSERT (sheet != NULL);
   g_return_if_fail (array != NULL);
 
   gdk_threads_enter ();
-  
+
+  /* We'll see how this performs for now. In the future we may want to go
+     directly into the GtkSheet structures to get a little more performance
+     boost (mainly because we should not have to check all the bounds each
+     time we want to update). */
+  for (gint ii = 0; ii < size; ii++) {
+    gtk_sheet_set_cell_text (GTK_SHEET (sheet->gtk_sheet),
+			     array[ii]->row,
+			     array[ii]->column,
+			     array[ii]->value->str);
+
+    if (!IS_NULLSTR (array[ii]->attributes.bgcolor->str))
+      sheet->range_set_background (sheet, 
+				   &array[ii]->range, 
+				   array[ii]->attributes.bgcolor->str);
+
+    if (!IS_NULLSTR (array[ii]->attributes.fgcolor->str))
+      sheet->range_set_foreground (sheet, 
+				   &array[ii]->range, 
+				   array[ii]->attributes.fgcolor->str);
+
+    /* Clear all of the strings */
+    g_string_assign (array[ii]->value, "");
+    g_string_assign (array[ii]->attributes.bgcolor, "");
+    g_string_assign (array[ii]->attributes.fgcolor, "");
+  }
+
   gdk_threads_leave ();
 }
 

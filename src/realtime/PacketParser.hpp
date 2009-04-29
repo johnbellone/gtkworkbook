@@ -58,13 +58,21 @@ namespace realtime {
 
       while (this->running == true) {
 	if (this->inputQueue.size() > 0) {
+
+	  if (this->running == false)
+	    break;
+
 	  // Lock, copy, clear, unlock. - Free this up.
 	  this->inputQueue.lock();
-	  queue = this->inputQueue.copy();
+	  this->inputQueue.copy (queue);
 	  this->inputQueue.clear();
 	  this->inputQueue.unlock();
 	  
 	  while (queue.size() > 0) {
+
+	    if (this->running == false)
+	      break;
+
 	    // Never understood why pop() doesn't return the element.
 	    std::string buf = queue.front(); queue.pop();
 	    p = buf.c_str();

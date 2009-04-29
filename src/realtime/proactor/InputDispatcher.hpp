@@ -36,6 +36,8 @@ namespace proactor {
     InputQueueType inputQueue;
   public:
     virtual ~InputDispatcher (void);
+
+    void * stop (void);
     
     inline void onReadComplete (const char * buf) {
       this->inputQueue.push ( Event (getEventId(), std::string(buf)) );

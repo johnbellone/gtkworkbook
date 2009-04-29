@@ -126,6 +126,10 @@ namespace proactor {
 	this->events.lock();
 
 	while (this->events.size() > 0) {
+
+	  if (this->running == false)
+	    break;
+
 	    Event e = this->events.pop();
 
 	    // We are throwing events with no handlers to catch them.
@@ -136,6 +140,10 @@ namespace proactor {
 	    it = this->eventsToHandlers[e.id]->begin();
 	  
 	    while (it != this->eventsToHandlers[e.id]->end()) {
+
+	      if (this->running == false)
+		break;
+
 		Worker * j = (*it);
 	      
 		j->pushInputQueue (e.buf);

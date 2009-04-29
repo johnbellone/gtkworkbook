@@ -39,12 +39,12 @@ namespace network {
 	
   int
   TcpSocket::send (const char * bytes, size_t length) {
-    return ::send (this->sockfd, bytes, length, 0);
+    return ::write (this->sockfd, bytes, length);
   }
 
   int
   TcpSocket::receive (char * bytes, size_t size) {
-    return ::recv (this->sockfd, bytes, size, 0);
+    return ::read (this->sockfd, bytes, size);
   }
 
   TcpServerSocket::TcpServerSocket (int port) : TcpSocket() {

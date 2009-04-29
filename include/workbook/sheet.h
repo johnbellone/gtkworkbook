@@ -71,7 +71,7 @@ typedef struct _Sheet Sheet;
     void (*apply_range) (Sheet *, 
 			 const GtkSheetRange *, 
 			 const CellAttributes *);
-    void (*apply_array) (Sheet *, const Cell **, gint);
+    void (*apply_array) (Sheet *, Cell **, gint);
     void (*apply_cell) (Sheet *, const Cell *);
 
     void (*set_cell) (Sheet *, gint, gint, const gchar *);  

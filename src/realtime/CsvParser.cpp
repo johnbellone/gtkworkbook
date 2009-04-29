@@ -27,7 +27,7 @@ namespace realtime {
 
   struct csv_column {
     Sheet * sheet;
-    Cell * cell;
+    Cell ** array;
     int row;
     int field;
     char * value;
@@ -39,13 +39,11 @@ namespace realtime {
   static void 
   cb1 (void * s, size_t length, void * data) {
     struct csv_column * column = (struct csv_column *)data;
-    Cell * cell = column->cell;
-    Sheet * sheet = column->sheet;
+    Cell * cell = column->array[column->field];
 
     cell->set_row (cell, column->row);
     cell->set_column (cell, column->field++);
     cell->set_value_length (cell, s, length);
-    sheet->apply_cell (sheet, cell);
   }
 
   static void
@@ -72,6 +70,10 @@ namespace realtime {
 
     while (this->running == true) {
       while (this->inputQueue.size() > 0) {
+
+	if (this->running == false)
+	  break;
+
 	std::string buf = this->inputQueue.pop();
 	size_t bytes = buf.length();
  
@@ -88,11 +90,18 @@ namespace realtime {
 
 	csv_fini (&csv, cb1, cb2, &column);
 
+	this->wb->sheet_first->apply_array (this->wb->sheet_first,
+					    this->cell,
+					    10);
+
 	if (column.row >= (column.sheet)->max_rows)
 	  column.row = 0;
       }
+
       Thread::sleep(100);
+
     }
+
     csv_free (&csv);
     delete column.value;
     return NULL;
