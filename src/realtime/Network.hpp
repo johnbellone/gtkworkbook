@@ -21,9 +21,9 @@
 #ifndef HPP_NETWORK
 #define HPP_NETWORK
 
-#include "network/Tcp.hpp"
-#include "proactor/Worker.hpp"
-#include "proactor/Proactor.hpp"
+#include <network/Tcp.hpp>
+#include <proactor/Worker.hpp>
+#include <proactor/Proactor.hpp>
 #include <iostream>
 
 #define MAX_INPUT_SIZE 1024

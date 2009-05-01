@@ -2,7 +2,11 @@ MD=mkdir -p
 MAKE=-make -C
 PWD=`pwd`
 
-all:	libconfig libworkbook libcsv gtkworkbook
+all:	libshared libconfig libworkbook libcsv gtkworkbook
+
+libshared:
+	${MD} OBJS/libshared
+	${MAKE} shared/ all
 
 libcsv:
 	${MD} OBJS/libcsv
@@ -21,12 +25,14 @@ gtkworkbook:
 	$(MAKE) src/ all
 
 clean:
+	${MAKE} shared/ clean
 	$(MAKE) config/ clean
 	${MAKE} workbook/ clean
 	${MAKE} csv/ clean
 	$(MAKE) src/ clean
 
 install: all
+	${MAKE} shared/ install
 	$(MAKE) config/ install
 	${MAKE} workbook/ install
 	${MAKE} csv/ install

@@ -1,18 +1,17 @@
 include ../../Makefile.base
 
-SRCS=$(wildcard *.cpp) $(wildcard concurrent/*.cpp) $(wildcard network/*.cpp) \
-	$(wildcard proactor/*.cpp)
-OBJS=$(patsubst %.cpp,${OBJDIR}/realtime/%.o,${SRCS})
+INCS += -I${PROJDIR}/shared
+SRCS = $(wildcard *.cpp) 
+OBJS = $(patsubst %.cpp,${OBJDIR}/realtime/%.o,${SRCS}) 
 
 all: 	realtime
 
 realtime: ${OBJS}
 	${CX} -shared -Wl -o ${PROJDIR}/bin/realtime.so ${OBJS} ${LIBS} \
-	-lgthread-2.0 -lpthread -lcsv
+	-lgthread-2.0 -lpthread -lcsv -lshared
 
 clean:		
-	${MD} ${OBJDIR}/realtime/concurrent ${OBJDIR}/realtime/network \
-	${OBJDIR}/realtime/proactor
+	${MD} ${OBJDIR}/realtime
 	${RM} ${OBJS} ${PROJDIR}/bin/realtime.so
 
 install: all
@@ -23,4 +22,4 @@ ${OBJDIR}/realtime/%.o: %.cpp
 	${CX} ${INCS} -c -fPIC ${CXFLAGS} $< -o $@
 
 .cpp.o:
-	${CX} ${INCS} -c -fPIC ${CXFLAGS} $<ls
+	${CX} ${INCS} -c -fPIC ${CXFLAGS} $<

@@ -21,7 +21,7 @@
 #ifndef HPP_CSVPARSER
 #define HPP_CSVPARSER
 
-#include "proactor/Worker.hpp"
+#include <proactor/Worker.hpp>
 #include <workbook/workbook.h>
 #include <workbook/sheet.h>
 #include <workbook/cell.h>

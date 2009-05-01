@@ -21,7 +21,7 @@
 #ifndef HPP_PACKETHANDLER
 #define HPP_PACKETHANDLER
 
-#include "proactor/Worker.hpp"
+#include <proactor/Worker.hpp>
 #include "Packet.hpp"
 #include <workbook/cell.h>
 #include <workbook/sheet.h>

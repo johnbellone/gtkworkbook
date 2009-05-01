@@ -21,7 +21,7 @@
 #include <iostream>
 #include <glib/gthread.h>
 #include <workbook/workbook.h>
-#include "concurrent/ThreadArgs.hpp"
+#include <concurrent/ThreadArgs.hpp>
 #include "../application.h"
 #include "../plugin.h"
 
