@@ -20,9 +20,12 @@
 */
 #include <iostream>
 #include <workbook/workbook.h>
-#include <glib/gthread.h>
+#include <concurrent/ThreadArgs.hpp>
 #include "../application.h"
 #include "../plugin.h"
+
+/* Prototypes */
+extern void thread_main (ThreadArgs *);
 
 extern "C" {
 
@@ -46,6 +49,18 @@ extern "C" {
     wb->gtk_box = hbox;
     
     wb->add_new_sheet (wb, "sheet0", 100, 15);
+
+    ThreadArgs args;
+    args.push_back ( (void *)wb );
+    args.push_back ( (void *)appstate->cfg );
+    args.push_back ( (void *)appstate->shutdown );
+
+    if (plugin->create_thread (plugin,
+			       (GThreadFunc)thread_main,
+			       (gpointer)new ThreadArgs (args)) == NULL) {
+      g_critical ("Failed creating thread; exiting 'largefile' plugin");
+      return NULL;
+    }
 
     gtk_widget_show (hbox);
     return wb;

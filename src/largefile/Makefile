@@ -1,5 +1,6 @@
 include ../../Makefile.base
 
+INCS += -I${PROJDIR}/shared
 SRCS=$(wildcard *.cpp) 
 OBJS=$(patsubst %.cpp,${OBJDIR}/largefile/%.o,${SRCS})
 
@@ -7,7 +8,7 @@ all: 	largefile
 
 largefile: ${OBJS}
 	${CX} -shared -Wl -o ${PROJDIR}/bin/largefile.so ${OBJS} ${LIBS} \
-	-lgthread-2.0 -lpthread -lcsv
+	-lgthread-2.0 -lpthread -lcsv -lshared
 
 clean:		
 	${MD} ${OBJDIR}/largefile

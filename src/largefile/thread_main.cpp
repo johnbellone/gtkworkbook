@@ -20,4 +20,46 @@
 */
 #include <workbook/workbook.h>
 #include <config/config.h>
+#include <concurrent/Thread.hpp>
+#include <concurrent/ThreadArgs.hpp>
+#include <proactor/Proactor.hpp>
+#include <proactor/Event.hpp>
+#include <gtkextra/gtksheet.h>
+#include <fstream>
+#include "File.hpp"
+#include <iostream>
+#include <string>
+#include <sstream>
 
+using namespace largefile;
+
+void
+thread_main (ThreadArgs * args) {
+  Workbook * wb = (Workbook *)args->at(0);
+  Config * cfg  = (Config *)args->at(1);
+  gboolean * SHUTDOWN = (gboolean *)args->at(2);
+  GtkSheet * sheet = (GtkSheet *)wb->sheet_first->gtk_sheet;
+
+  std::clog << "Indexing... " << std::flush;
+
+  FILE * fp = fopen ("/home/johnb/work/20by10MM.csv", "r");
+  Lines L;
+  File file (fp);
+
+  std::clog << "Done!\n" << std::flush;
+  
+
+  while (*SHUTDOWN == FALSE) {
+    double delta = gtk_adjustment_get_value (sheet->vadjustment);
+    std::ostringstream o; o<<delta;
+
+    wb->sheet_first->set_cell (wb->sheet_first,
+			       0, 0,
+			       o.str().c_str());
+    
+    // Continually sleep basically until our application terminates.
+    concurrent::Thread::sleep (100);
+  }
+
+  delete args;
+}
