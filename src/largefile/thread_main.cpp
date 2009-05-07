@@ -47,6 +47,12 @@ thread_main (ThreadArgs * args) {
   File file (fp);
 
   std::clog << "Done!\n" << std::flush;
+
+  for (int ii = 0; ii < 100; ii++) {
+    wb->sheet_first->set_cell (wb->sheet_first,
+			       ii, 0,
+			       L[ii].getLine().c_str());
+  }
   
 
   while (*SHUTDOWN == FALSE) {
