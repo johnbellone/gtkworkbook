@@ -72,11 +72,11 @@ namespace largefile {
     pos = std::ftell (this->fp);
     
     while (std::fgets (buf, 4096, this->fp) != NULL) {
-      this->lineIndex.push_back (pos);
+	  //   this->lineIndex.push_back (pos);
       pos = std::ftell (this->fp);
     }
 
-    this->lineIndex.push_back (pos);
+	//    this->lineIndex.push_back (pos);
   
     std::fseek (this->fp, 0, SEEK_SET);
   }

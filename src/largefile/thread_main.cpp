@@ -22,6 +22,7 @@
 #include <config/config.h>
 #include <concurrent/Thread.hpp>
 #include <concurrent/ThreadArgs.hpp>
+#include <concurrent/SharedMemoryLock.hpp>
 #include <proactor/Proactor.hpp>
 #include <proactor/Event.hpp>
 #include <gtkextra/gtksheet.h>
@@ -42,7 +43,8 @@ thread_main (ThreadArgs * args) {
 
   std::clog << "Indexing... " << std::flush;
 
-  FILE * fp = fopen ("/home/johnb/work/20by10MM.csv", "r");
+  FILE * fp = fopen ("/home/johnb/largefile.csv", "r");
+  concurrent::SharedMemoryLock::addMemoryLock (fp);
   Lines L;
   File file (fp);
 
@@ -67,5 +69,6 @@ thread_main (ThreadArgs * args) {
     concurrent::Thread::sleep (100);
   }
 
+  concurrent::SharedMemoryLock::removeMemoryLock (fp);
   delete args;
 }
