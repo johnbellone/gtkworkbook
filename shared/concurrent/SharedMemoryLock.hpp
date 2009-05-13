@@ -9,23 +9,24 @@ namespace concurrent {
 
   class SharedMemoryLock : public ILockable {
   private:
-    typedef Map<std::string,Mutex *> AddressToMutexMap;
+    typedef Map<long int,Mutex *> AddressToMutexMap;
     static AddressToMutexMap addressMutexMap;
 
     bool hasLock;
-    std::string address;
+	unsigned long address;
     Mutex * mutex;
   public:
-    SharedMemoryLock (const void * pointer, bool engage = false);
+    SharedMemoryLock (unsigned long address, bool engage = false);
     virtual ~SharedMemoryLock (void);
  
     void lock (void);
     void unlock (void);
     bool trylock (void);
+	bool remove (void);
 
-    static bool addMemoryLock (const void * pointer);
-    static bool removeMemoryLock (const void * pointer);
+    static bool addMemoryLock (unsigned long address);
+    static bool removeMemoryLock (unsigned long address);
   };
-}
+} // end of namespace
 
 #endif 

@@ -4,10 +4,9 @@
 namespace concurrent {
   SharedMemoryLock::AddressToMutexMap SharedMemoryLock::addressMutexMap;
 
-  SharedMemoryLock::SharedMemoryLock (const void * pointer, bool engage) {
-    std::stringstream ss; ss<<pointer;
-    this->address = ss.str();
+  SharedMemoryLock::SharedMemoryLock (unsigned long address, bool engage) {
     this->hasLock = false;
+	this->address = address;
 
     SharedMemoryLock::addressMutexMap.lock();
 
@@ -22,7 +21,7 @@ namespace concurrent {
     if (it == SharedMemoryLock::addressMutexMap.end()) 
       this->mutex = NULL;
     else
-      this->mutex = (*it).second;
+      this->mutex = it->second;
 
     if (engage == true)
       this->lock();
@@ -51,13 +50,32 @@ namespace concurrent {
     return this->hasLock;
   }
 
+  bool
+  SharedMemoryLock::remove (void) {
+	if (this->hasLock == false) {
+ 	  return false;
+	}
+
+	addressMutexMap.lock();
+
+	AddressToMutexMap::iterator it = addressMutexMap.find (this->address);
+	if (it == addressMutexMap.end()) {
+	  addressMutexMap.unlock();
+	  return false;
+	}
+
+	delete it->second;
+	addressMutexMap.end();
+
+	addressMutexMap.unlock();
+	return true;
+  }
+
   bool 
-  SharedMemoryLock::addMemoryLock (const void * pointer) {
+  SharedMemoryLock::addMemoryLock (unsigned long address) {
     addressMutexMap.lock();
 
-    std::stringstream ss; ss << pointer;
-    std::string the_address = ss.str();
-    AddressToMutexMap::iterator it = addressMutexMap.find (the_address);
+    AddressToMutexMap::iterator it = addressMutexMap.find (address);
 
     // Already exists inside of the map; we're going to return an error here.
     if (it == addressMutexMap.end()) {
@@ -65,25 +83,23 @@ namespace concurrent {
       return false;
     }
     
-    addressMutexMap.insert (std::make_pair (the_address, new Mutex));
+    addressMutexMap.insert (std::make_pair (address, new Mutex));
 
     addressMutexMap.unlock();
     return true;
   }
 
   bool 
-  SharedMemoryLock::removeMemoryLock (const void * pointer) {
+  SharedMemoryLock::removeMemoryLock (unsigned long address) {
     addressMutexMap.lock();
 
-    std::stringstream ss; ss << pointer;
-    std::string the_address = ss.str();
-    AddressToMutexMap::iterator it = addressMutexMap.find (the_address);
+	AddressToMutexMap::iterator it = addressMutexMap.find (address);
     if (it == addressMutexMap.end()) {
       addressMutexMap.unlock();
       return false;
     }
 
-    delete (*it).second;
+    delete it->second;
     addressMutexMap.erase(it);
 
     addressMutexMap.unlock();

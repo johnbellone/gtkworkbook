@@ -41,34 +41,14 @@ thread_main (ThreadArgs * args) {
   gboolean * SHUTDOWN = (gboolean *)args->at(2);
   GtkSheet * sheet = (GtkSheet *)wb->sheet_first->gtk_sheet;
 
-  std::clog << "Indexing... " << std::flush;
-
-  FILE * fp = fopen ("/home/johnb/largefile.csv", "r");
-  concurrent::SharedMemoryLock::addMemoryLock (fp);
-  Lines L;
-  File file (fp);
-
-  std::clog << "Done!\n" << std::flush;
-
-  for (int ii = 0; ii < 100; ii++) {
-    wb->sheet_first->set_cell (wb->sheet_first,
-			       ii, 0,
-			       L[ii].getLine().c_str());
-  }
-  
+  proactor::Proactor proactor;
+  FileDispatcher fd (&proactor);
 
   while (*SHUTDOWN == FALSE) {
-    double delta = gtk_adjustment_get_value (sheet->vadjustment);
-    std::ostringstream o; o<<delta;
-
-    wb->sheet_first->set_cell (wb->sheet_first,
-			       0, 0,
-			       o.str().c_str());
     
     // Continually sleep basically until our application terminates.
     concurrent::Thread::sleep (100);
   }
 
-  concurrent::SharedMemoryLock::removeMemoryLock (fp);
   delete args;
 }

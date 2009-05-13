@@ -9,18 +9,29 @@ namespace largefile {
   }
 
   Indexer::~Indexer (void) {
+
   }
 
   void *
-  Indexer::run (void * index) {
-    this->running = true;
+  Indexer::run (void * null) {
+    char buf[4096];
+	this->running = true;
 
-    while (this->running == true) {
-      //      concurrent::SharedMemoryLock mutex (this->fp, true);
-      
-      
-    }
+	concurrent::SharedMemoryLock mutex ((unsigned long int)this->fp, true);
 
+	if (!feof (this->fp)) {
+
+	  fseek (this->fp, this->startOffset, SEEK_SET);
+	  
+	  while (this->windowSize > 0) {
+		if (fgets (buf, 4096, this->fp) == NULL)
+		  break;
+
+		index->push_back ( ftell (this->fp) );
+
+		this->windowSize--;
+	  }
+	}
     return index;
   }
 
