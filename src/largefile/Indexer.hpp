@@ -15,11 +15,7 @@ namespace largefile {
 	long int startOffset;
 	long int windowSize;
   public:
-    Indexer (proactor::InputDispatcher *d, 
-			 FILE * fp, 
-			 FileIndex * index, 
-			 long int offset, 
-			 long int window);
+    Indexer (proactor::InputDispatcher *d, FILE * fp);
     virtual ~Indexer (void);
 
     void * run (void * null);

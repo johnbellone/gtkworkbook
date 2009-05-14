@@ -9,6 +9,7 @@ namespace largefile {
 
   class FileDispatcher : public proactor::InputDispatcher {
   private:
+	FILE * fp;
   public:
 	FileDispatcher (int e, proactor::Proactor * pro);
 	virtual ~FileDispatcher (void);

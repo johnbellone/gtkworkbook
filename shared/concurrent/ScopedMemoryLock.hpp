@@ -1,5 +1,5 @@
-#ifndef HPP_CONCURRENT_SHAREDMEMORYLOCK
-#define HPP_CONCURRENT_SHAREDMEMORYLOCK
+#ifndef HPP_CONCURRENT_SCOPEDMEMORYLOCK
+#define HPP_CONCURRENT_SCOPEDMEMORYLOCK
 
 #include "Map.hpp"
 #include "Mutex.hpp"
@@ -7,7 +7,7 @@
 
 namespace concurrent {
 
-  class SharedMemoryLock : public ILockable {
+  class ScopedMemoryLock : public ILockable {
   private:
     typedef Map<long int,Mutex *> AddressToMutexMap;
     static AddressToMutexMap addressMutexMap;
@@ -16,8 +16,8 @@ namespace concurrent {
 	unsigned long address;
     Mutex * mutex;
   public:
-    SharedMemoryLock (unsigned long address, bool engage = false);
-    virtual ~SharedMemoryLock (void);
+    ScopedMemoryLock (unsigned long address, bool engage = false);
+    virtual ~ScopedMemoryLock (void);
  
     void lock (void);
     void unlock (void);

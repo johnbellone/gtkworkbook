@@ -1,5 +1,5 @@
 #include "Indexer.hpp"
-#include <concurrent/SharedMemoryLock.hpp>
+#include <concurrent/ScopedMemoryLock.hpp>
 
 namespace largefile {
 
@@ -17,7 +17,7 @@ namespace largefile {
     char buf[4096];
 	this->running = true;
 
-	concurrent::SharedMemoryLock mutex ((unsigned long int)this->fp, true);
+	concurrent::ScopedMemoryLock mutex ((unsigned long int)this->fp, true);
 
 	if (!feof (this->fp)) {
 

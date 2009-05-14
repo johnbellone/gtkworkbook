@@ -1,24 +1,23 @@
-#include "SharedMemoryLock.hpp"
-#include <sstream>
+#include "ScopedMemoryLock.hpp"
 
 namespace concurrent {
-  SharedMemoryLock::AddressToMutexMap SharedMemoryLock::addressMutexMap;
+  ScopedMemoryLock::AddressToMutexMap ScopedMemoryLock::addressMutexMap;
 
-  SharedMemoryLock::SharedMemoryLock (unsigned long address, bool engage) {
+  ScopedMemoryLock::ScopedMemoryLock (unsigned long address, bool engage) {
     this->hasLock = false;
 	this->address = address;
 
-    SharedMemoryLock::addressMutexMap.lock();
+    ScopedMemoryLock::addressMutexMap.lock();
 
-    AddressToMutexMap::iterator it = SharedMemoryLock::addressMutexMap.find (this->address);
+    AddressToMutexMap::iterator it = addressMutexMap.find (this->address);
 
-    SharedMemoryLock::addressMutexMap.unlock();
+    ScopedMemoryLock::addressMutexMap.unlock();
 
     /* Now the reason behind setting this pointer to NULL is to force a coredump. Because
        if someone is passing a pointer that has not been formally added via the static method
        calls then that means it is very unlikely that they are not removing it either. We do
        not want a memory leak therefore this seems like the best method. */
-    if (it == SharedMemoryLock::addressMutexMap.end()) 
+    if (it == ScopedMemoryLock::addressMutexMap.end()) 
       this->mutex = NULL;
     else
       this->mutex = it->second;
@@ -27,31 +26,31 @@ namespace concurrent {
       this->lock();
   }
 
-  SharedMemoryLock::~SharedMemoryLock (void) {
+  ScopedMemoryLock::~ScopedMemoryLock (void) {
     if (this->hasLock == true)
       unlock();
   }
 
   void
-  SharedMemoryLock::lock (void) {
+  ScopedMemoryLock::lock (void) {
     this->mutex->lock();
     this->hasLock = true;
   }
 
   void 
-  SharedMemoryLock::unlock (void) {
+  ScopedMemoryLock::unlock (void) {
     this->mutex->unlock();
     this->hasLock = false;
   }
 
   bool
-  SharedMemoryLock::trylock (void) {
+  ScopedMemoryLock::trylock (void) {
     this->hasLock = this->mutex->trylock();
     return this->hasLock;
   }
 
   bool
-  SharedMemoryLock::remove (void) {
+  ScopedMemoryLock::remove (void) {
 	if (this->hasLock == false) {
  	  return false;
 	}
@@ -72,7 +71,7 @@ namespace concurrent {
   }
 
   bool 
-  SharedMemoryLock::addMemoryLock (unsigned long address) {
+  ScopedMemoryLock::addMemoryLock (unsigned long address) {
     addressMutexMap.lock();
 
     AddressToMutexMap::iterator it = addressMutexMap.find (address);
@@ -90,7 +89,7 @@ namespace concurrent {
   }
 
   bool 
-  SharedMemoryLock::removeMemoryLock (unsigned long address) {
+  ScopedMemoryLock::removeMemoryLock (unsigned long address) {
     addressMutexMap.lock();
 
 	AddressToMutexMap::iterator it = addressMutexMap.find (address);

@@ -22,7 +22,7 @@
 #include <config/config.h>
 #include <concurrent/Thread.hpp>
 #include <concurrent/ThreadArgs.hpp>
-#include <concurrent/SharedMemoryLock.hpp>
+#include <concurrent/ScopedMemoryLock.hpp>
 #include <proactor/Proactor.hpp>
 #include <proactor/Event.hpp>
 #include <gtkextra/gtksheet.h>
@@ -41,12 +41,13 @@ thread_main (ThreadArgs * args) {
   gboolean * SHUTDOWN = (gboolean *)args->at(2);
   GtkSheet * sheet = (GtkSheet *)wb->sheet_first->gtk_sheet;
 
-  proactor::Proactor proactor;
-  FileDispatcher fd (&proactor);
+  FILE * fp = NULL;
+  if ((fp = fopen ("/home/johnb/largefile.csv", "r")) == NULL) {
+	return;
+  }
 
   while (*SHUTDOWN == FALSE) {
-    
-    // Continually sleep basically until our application terminates.
+	   
     concurrent::Thread::sleep (100);
   }
 
