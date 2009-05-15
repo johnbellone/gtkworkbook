@@ -161,4 +161,5 @@ thread_main (ThreadArgs * args) {
   socket.close();  
 
   FCLOSE (pktlog);
+  delete args;
 }

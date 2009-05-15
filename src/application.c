@@ -499,9 +499,6 @@ application_method_openextension (ApplicationState * app,
 	}
       else
 	{
-	  gtk_box_pack_end (GTK_BOX (app->gtk_window_vbox),
-			    wb->gtk_box, 1,1,1);
-
 	  /* Attach all of the signals for the Workbook object. */
 	  gtk_signal_connect (GTK_OBJECT (wb->gtk_notebook),
 			      "switch-page",

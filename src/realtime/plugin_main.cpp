@@ -66,7 +66,8 @@ extern "C"
 	g_critical ("Failed creating thread; exiting plugin");
 	return NULL;
       }
-   
+
+    gtk_box_pack_start (GTK_BOX (app->gtk_window_vbox), hbox, FALSE,FALSE, 0);
     gtk_widget_show (hbox);
     return wb;
   }

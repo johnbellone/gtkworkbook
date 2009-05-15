@@ -27,29 +27,79 @@
 #include <proactor/Event.hpp>
 #include <gtkextra/gtksheet.h>
 #include <fstream>
-#include "File.hpp"
 #include <iostream>
 #include <string>
 #include <sstream>
+#include "File.hpp"
+#include "WorkbookUpdater.hpp"
 
 using namespace largefile;
+
+/* @description: This method creates a filename with the prefix supplied and
+   uses the pid of the process as its suffix. 
+   @pre: The prefix (should be a file path, obviously). */
+static std::string
+append_pidname (const gchar * pre) {
+  std::stringstream s;
+  s << pre << getppid();
+  return s.str();
+}
 
 void
 thread_main (ThreadArgs * args) {
   Workbook * wb = (Workbook *)args->at(0);
   Config * cfg  = (Config *)args->at(1);
   gboolean * SHUTDOWN = (gboolean *)args->at(2);
-  GtkSheet * sheet = (GtkSheet *)wb->sheet_first->gtk_sheet;
 
-  FILE * fp = NULL;
-  if ((fp = fopen ("/home/johnb/largefile.csv", "r")) == NULL) {
-	return;
+  ConfigPair * logpath = cfg->get_pair (cfg, "largefile", "log", "path");
+  if (IS_NULL (logpath)) {
+      g_critical ("Failed loading log->path from configuration file; "
+		  "exiting thread");
+      return;
+    }
+
+  FILE * pktlog = NULL;
+  std::string logname = std::string (logpath->value).append("/");
+  logname.append (append_pidname("realtime.").append(".log"));
+
+  if ((pktlog = fopen (logname.c_str(), "w")) == NULL) {
+      g_critical ("Failed opening file '%s' for packet logging; exiting"
+		  " thread", logname.c_str());
+      return;
+    }
+
+  int fdEventId = proactor::Event::uniqueEventId(); 
+  
+  proactor::Proactor proactor;
+  FileDispatcher fdispatcher (fdEventId, &proactor);
+  WorkbookUpdater wbupdater (wb, pktlog, 0);
+
+  if (proactor.start() == false) {
+    g_critical ("Failed starting Proactor; exiting thread.");
+    return;
+  }
+
+  if (proactor.addWorker (fdEventId, &wbupdater) == false) {
+    g_critical ("Failed starting workbook updater; exiting thread.");
+    return;
+  }
+
+  if (fdispatcher.open ("/home/johnb/largefile.csv") == false) {
+    g_critical ("Failed opening /home/johnb/largefile.csv");
+    return;
+  }
+
+  if (fdispatcher.start() == false) {
+    g_critical ("Failed starting file dispatcher; exiting thread.");
+    return;
   }
 
   while (*SHUTDOWN == FALSE) {
-	   
     concurrent::Thread::sleep (100);
   }
 
+  wbupdater.stop();
+  
+  FCLOSE (pktlog);
   delete args;
 }

@@ -29,26 +29,29 @@
 extern void thread_main (ThreadArgs *);
 
 static void
-print_hello (GtkWidget * widget, gpointer data) {
-  g_message ("Hello, world!\n");
+open_csv_file (GtkWidget * w, gpointer data) {
+  ApplicationState * app = (ApplicationState *)data;
+  Config * cfg = app->cfg;
+  
 }
 
 static GtkWidget *
-largefile_mainmenu_new (GtkWidget * window) {
+largefile_mainmenu_new (ApplicationState * appstate, GtkWidget * window) {
   GtkItemFactoryEntry menu_items[] = {
-	{ "/_File",		NULL,			NULL, 				0, 		"<Branch>" },
-	{ "/File/_Open",	"<CTRL>O",		NULL,		1,		"<Item>" },
-	{ "/File/_Close", "<CTRL>C",		NULL,		1,		"<Item>" },
-	{ "/File/sep1", 	NULL,			NULL,				0,		"<Separator>" },
-	{ "/File/_Quit", 	"<CTRL>Q", 		gtk_main_quit,		0,		"<StockItem>", GTK_STOCK_QUIT},
+    {"/_File",         NULL,		NULL, 		0, 	"<Branch>"},
+    {"/File/_Open",    "<CTRL>O",	(GtkItemFactoryCallback)open_csv_file,	0,	"<StockItem>", GTK_STOCK_OPEN},
+    {"/File/_Close",   "<CTRL>C",	NULL,		0,	"<Item>"},
+    {"/File/sep1",     NULL,		NULL,		0,	"<Separator>"},
+    {"/File/_Quit",    "<CTRL>Q", 	gtk_main_quit,	0,	"<StockItem>", GTK_STOCK_QUIT},
   };
+  
   gint nmenu_items = sizeof (menu_items) / sizeof (menu_items[0]);
   GtkAccelGroup * accel = gtk_accel_group_new ();	
   GtkItemFactory * item_factory 
 	= gtk_item_factory_new (GTK_TYPE_MENU_BAR, "<main>", accel);
   
-  gtk_item_factory_create_items (item_factory, nmenu_items, menu_items, NULL);
-  
+  gtk_item_factory_create_items (item_factory, nmenu_items, menu_items, appstate);
+
   gtk_window_add_accel_group (GTK_WINDOW (window), accel);
 
   GtkWidget * menu = gtk_item_factory_get_widget (item_factory, "<main>");
@@ -63,19 +66,18 @@ extern "C" {
   plugin_main (ApplicationState * appstate, Plugin * plugin) {
     ASSERT (appstate != NULL);
     ASSERT (plugin != NULL);
-
-    GtkWidget * box = gtk_vbox_new (FALSE, 0);
 	
-	GtkWidget * mainmenu = largefile_mainmenu_new (appstate->gtk_window);
-	gtk_box_pack_start (GTK_BOX (box), mainmenu, FALSE, FALSE, 0);
+    GtkWidget * box = gtk_vbox_new (FALSE, 0);
+    GtkWidget * mainmenu = largefile_mainmenu_new (appstate, appstate->gtk_window);
+    gtk_box_pack_start (GTK_BOX (box), mainmenu, FALSE, FALSE, 0);
 
-	Workbook * wb = NULL;
+    Workbook * wb = NULL;
     if ((wb = workbook_open (appstate->gtk_window, "largefile")) == NULL) {
       g_critical ("Failed opening workbook; exiting largefile plugin");
       return NULL;
     }
 
-	gtk_box_pack_end (GTK_BOX (box), wb->gtk_notebook, FALSE, FALSE, 0);
+    gtk_box_pack_end (GTK_BOX (box), wb->gtk_notebook, FALSE, FALSE, 0);
 
     wb->signals[SIG_WORKBOOK_CHANGED] = appstate->signals[SIG_SHEET_CHANGED];
         
@@ -95,8 +97,8 @@ extern "C" {
       return NULL;
     }
 
-	gtk_box_pack_start (GTK_BOX (appstate->gtk_window_vbox), box, FALSE, FALSE, 0);
-	gtk_widget_show (box);	
+    gtk_box_pack_start (GTK_BOX (appstate->gtk_window_vbox), box, FALSE, FALSE, 0);
+    gtk_widget_show (box);	
     return wb;
   }
 

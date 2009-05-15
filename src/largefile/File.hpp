@@ -22,6 +22,7 @@
 #define FILE_HPP
 
 #include <proactor/InputDispatcher.hpp>
+#include <proactor/Proactor.hpp>
 #include <proactor/Worker.hpp>
 #include <cstdio>
 #include <vector>
@@ -29,36 +30,47 @@
 
 namespace largefile {
 
-  class Line {
+  class FileDispatcher : public proactor::InputDispatcher {
   private:
     FILE * fp;
-    int position;
-    std::string line;
+    std::string filename;
   public:
-    Line (int startByte, FILE * fp);
-    ~Line (void);
-    
-    void read (void);
+    FileDispatcher (int e, proactor::Proactor * pro);
+    virtual ~FileDispatcher (void);
 
-    int getByteStart (void) const { return this->position; }
-    std::string getLine (void) const { return this->line; }
+    bool open (const std::string & filename);
+    bool close (void);
+    void * run (void * null);
   };
 
-  typedef std::vector<Line> Lines;
-
-  class File {
+  class LineIndexer : public proactor::Worker {
   private:
-    typedef std::vector<long int> LineIndexMap;
-    
     FILE * fp;
-    LineIndexMap lineIndex;
+    long int numberOfLinesToRead;
+    long int startOffset; 
   public:
-    File (FILE * fp);
-    File (const std::string & path);
-    ~File (void);
+    LineIndexer (proactor::InputDispatcher * d, 
+		 FILE * fp, 
+		 long int start,
+		 long int N);
+    virtual ~LineIndexer (void);
 
-    void reindex (void);
-    Lines & getLines (long int S, long int T, Lines & V);
+    void * run (void * null);
+  };
+
+  class LineReader : public proactor::Worker {
+  private:
+    FILE * fp;
+    long int numberOfLinesToRead;
+    long int startOffset;
+  public:
+    LineReader (proactor::InputDispatcher * d, 
+		 FILE * fp, 
+		 long int start,
+		 long int N);
+    virtual ~LineReader (void);
+
+    void * run (void * null);
   };
 
 } // end of namespace

@@ -19,84 +19,149 @@
    Foundation, Inc., 51 Franklin Street, Fifth Floor Boston, MA 02110-1301 USA
 */
 #include "File.hpp"
+#include <concurrent/ScopedMemoryLock.hpp>
 #include <cstdio>
 
 namespace largefile {
 
-  Line::Line (int startByte, FILE * fp) {
-    this->position = startByte;
-    this->fp = fp;
-    
-    this->read();
+  FileDispatcher::FileDispatcher (int e, proactor::Proactor * pro) {
+    this->fp = NULL;
+    this->pro = pro;
+    setEventId(e);
   }
 
-  Line::~Line (void) {
-    this->line.clear();
+  FileDispatcher::~FileDispatcher (void) {
+    if (this->fp != NULL)
+      this->close();
   }
 
-  void
-  Line::read (void) {
-    char buf[4096];
+  bool
+  FileDispatcher::open (const std::string & filename) {
+    if (filename.length() == 0)
+      return false;
 
-    if (this->line.length() > 0)
-      return;
-
-    std::fgets (buf, 4096, this->fp);
-
-    this->line = buf;
-  }
-
-  File::File (FILE * fp) {
-    this->fp = fp;
-    
-    reindex();
-  }
-
-  File::File (const std::string & path) {
-    this->fp = std::fopen (path.c_str(), "r");
-
-    reindex();
-  }
-
-  File::~File (void) {
-  }
-
-  void 
-  File::reindex (void) {
-    char buf[4096];
-    long int pos = 0;
-
-    this->lineIndex.clear();
-
-    std::fseek (this->fp, 0, SEEK_SET);
-    pos = std::ftell (this->fp);
-    
-    while (std::fgets (buf, 4096, this->fp) != NULL) {
-	  //   this->lineIndex.push_back (pos);
-      pos = std::ftell (this->fp);
+    if ((this->fp = fopen (filename.c_str(), "r")) == NULL) {
+      // stub: throw an error somewhere
+      return false;
     }
 
-	//    this->lineIndex.push_back (pos);
-  
-    std::fseek (this->fp, 0, SEEK_SET);
+    concurrent::ScopedMemoryLock::addMemoryLock ((unsigned long int)this->fp);
+    this->filename = filename;
+    return true;
   }
 
-  Lines &
-  File::getLines (long int S, long int T, Lines & V) {
-    V.clear();
+  bool 
+  FileDispatcher::close (void) {
+    concurrent::ScopedMemoryLock mutex ((unsigned long int)this->fp);
+    if (this->fp == NULL)
+      return false;
 
-    if (S < 0) S = 0;
-    
-    if ((S < T) && (S < (signed)this->lineIndex.size())) {
+    ::fclose (this->fp); this->fp = NULL;
+    mutex.remove();
+    return true;
+  }
 
-      // Make sure we're not going out of bounds of the array.
-      if (T > (signed)this->lineIndex.size()) T = this->lineIndex.size();
+  void *
+  FileDispatcher::run (void * null) {
+    this->running = true;
+
+    while (this->running == true) {
+
+      if (this->fp == NULL) {
+	this->running = false;
+	break;
+      }
+
+      Thread::sleep (100);
+    }
+
+    return NULL;
+  }
+
+  LineIndexer::LineIndexer (proactor::InputDispatcher * d,
+			    FILE * fp,
+			    long int start,
+			    long int N) {
+    this->fp = fp;
+    this->dispatcher = d;
+    this->startOffset = start;
+    this->numberOfLinesToRead = N;
+  }
+
+  LineIndexer::~LineIndexer (void) {
+
+  }
+
+  void *
+  LineIndexer::run (void * null) {
+    this->running = true;
+    char buf[4096];
+
+    concurrent::ScopedMemoryLock mutex ((unsigned long int)this->fp, true);
+
+    // Record current position and seek to where we're going to start.
+    long int cursor = ::ftell (this->fp);
+    ::fseek (this->fp, this->startOffset, SEEK_SET);
+
+    for (long int ii = 0; ii < this->numberOfLinesToRead; ii++) {
       
-      for (long int ii = S; ii < T; ii++)
-	V.push_back ( Line (this->lineIndex[ ii ], this->fp) );
+      if (fgets (buf, 4096, this->fp) == NULL) {
+	
+	break;
+      }
+      
+      long int pos = ::ftell (this->fp);
     }
-   
-    return V;
+
+    // stub: Push up to our pappy.
+
+    this->running = false;
+    ::fseek (this->fp, cursor, SEEK_SET);
+    return NULL;
   }
 
-}
+  LineReader::LineReader (proactor::InputDispatcher * d,
+			  FILE * fp,
+			  long int start,
+			  long int N) {
+    this->fp = fp;
+    this->dispatcher = dispatcher;
+    this->startOffset = start;
+    this->numberOfLinesToRead = N;
+  }
+
+  LineReader::~LineReader (void) {
+  
+  }
+
+  void *
+  LineReader::run (void * null) {
+    this->running = false;
+    char buf[4096];
+
+    concurrent::ScopedMemoryLock mutex ((unsigned long int)this->fp, true);
+
+    // Record current position and seek to where we're going to start.
+    long int cursor = ::ftell (this->fp);
+    ::fseek (this->fp, this->startOffset, SEEK_SET);
+
+    for (long int ii = 0; ii < this->numberOfLinesToRead; ii++) {
+      
+      if (fgets (buf, 4096, this->fp) == NULL) {
+	
+	break;
+      }
+      
+      long int pos = ::ftell (this->fp);
+      
+      // stub: store index and buf
+    }
+
+    // stub: Push up to our pappy.
+
+    this->running = false;
+    ::fseek (this->fp, cursor, SEEK_SET);
+    return NULL;
+  }
+
+} // end of namespace
