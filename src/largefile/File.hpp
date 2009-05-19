@@ -73,6 +73,11 @@ namespace largefile {
     void * run (void * null);
   };
 
+  struct LineStruct {
+	std::string line;
+	long int position;
+  };
+
 } // end of namespace
 
 #endif

@@ -31,7 +31,7 @@
 #include <string>
 #include <sstream>
 #include "File.hpp"
-#include "WorkbookUpdater.hpp"
+#include "CsvParser.hpp"
 
 using namespace largefile;
 
@@ -72,15 +72,15 @@ thread_main (ThreadArgs * args) {
   
   proactor::Proactor proactor;
   FileDispatcher fdispatcher (fdEventId, &proactor);
-  WorkbookUpdater wbupdater (wb, pktlog, 0);
+  CsvParser csv_parser (wb, pktlog, 0);
 
   if (proactor.start() == false) {
     g_critical ("Failed starting Proactor; exiting thread.");
     return;
   }
 
-  if (proactor.addWorker (fdEventId, &wbupdater) == false) {
-    g_critical ("Failed starting workbook updater; exiting thread.");
+  if (proactor.addWorker (fdEventId, &csv_parser) == false) {
+    g_critical ("Failed starting CsvParser; exiting thread.");
     return;
   }
 
@@ -98,7 +98,7 @@ thread_main (ThreadArgs * args) {
     concurrent::Thread::sleep (100);
   }
 
-  wbupdater.stop();
+  csv_parser.stop();
   
   FCLOSE (pktlog);
   delete args;
