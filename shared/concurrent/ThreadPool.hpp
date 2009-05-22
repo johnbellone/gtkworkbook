@@ -1,6 +1,4 @@
 /* 
-   ThreadPool.hpp - ThreadPool Object Header File
-
    The GTKWorkbook Project <http://gtkworkbook.sourceforge.net/>
    Copyright (C) 2008, 2009 John Bellone, Jr. <jvb4@njit.edu>
 
@@ -35,48 +33,31 @@ namespace concurrent {
      @author: John `jb Bellone (jvb4@njit.edu)
      @basis: http://ibm.com/developerworks/java/library/j-jtp0730.html */
   class ThreadPool {
-    /* @description: This object is an individual task that will be spawned at
-       the start of the ThreadPool. Each thread periodically checks the pool
-       object for any available Runnable objects from the queue. If there are
-       such objects it will take them off, run them and delete them. */
+  private:
+    typedef std::list<Thread *> ThreadList;
+    
     class Task : public IRunnable {
     private:
       ThreadPool * pool;
     public:
-      Task (ThreadPool * pool) {
-	this->pool = pool;
-      }
+      Task (ThreadPool * pool);
       
-      void * run (void *) {
-	this->running = true;
-
-	while (this->running == true)
-	  {
-	    if (pool->isRunning() == false)
-	      break;
-
-	    if (pool->getQueueSize() > 0)
-	      {
-		IRunnable * runner = pool->removeFromQueue();
-		runner->run(NULL);
-		delete runner;
-	      }
-	    ::sleep (1);
-	  }
-	return NULL;
-      }
+      void * run (void * null);
     };
-  private:
+    
     concurrent::Queue<IRunnable *> runQueue;
-    std::list<Thread *> threads;
+    ThreadList threads;
     bool running;
-  public:  
-    ThreadPool (int);
+  public:
+    static int defaultTaskMax;
+
+    ThreadPool (void);
+    ThreadPool (int N);
     ~ThreadPool (void);
 
     /* Thread un-Safe Methods */
     void start (void);
-    void stop (bool);
+    void stop (bool join = false);
 
     /* Thread-Safe Methods */
     void execute (IRunnable *);

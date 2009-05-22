@@ -1,6 +1,4 @@
 /* 
-   ThreadPool.cpp - ThreadPool Object Source File
-
    The GTKWorkbook Project <http://gtkworkbook.sourceforge.net/>
    Copyright (C) 2008, 2009 John Bellone, Jr. <jvb4@njit.edu>
 
@@ -21,11 +19,46 @@
 #include "ThreadPool.hpp"
 
 namespace concurrent {
+  int ThreadPool::defaultTaskMax = 5;
 
-  ThreadPool::ThreadPool (int nMaxThreads) {
+  ThreadPool::Task::Task (ThreadPool * pool) {
+    this->pool = pool;
+  }
+
+  void *
+  ThreadPool::Task::run (void * null) {
+    this->running = true;
+
+    while (this->running == true) {
+      if (this->pool->isRunning() == false)
+	break;
+      
+      if (this->pool->getQueueSize() > 0) {
+	IRunnable * runner = this->pool->removeFromQueue();
+	runner->run (NULL);
+	delete runner;
+      }
+      Thread::sleep (1);
+    }
+
+    return NULL;
+  }
+
+  ThreadPool::ThreadPool (void) {
     this->running = false;
 
-    for (int ii = 0; ii < nMaxThreads; ii++) {
+    for (int ii = 0; ii < ThreadPool::defaultTaskMax; ii++) {
+      std::string name = std::string("Thread ");
+      name.push_back (ii);
+      Thread * t = new Thread (new Task (this), name);
+      this->threads.push_back (t);
+    }
+  }
+
+  ThreadPool::ThreadPool (int N) {
+    this->running = false;
+
+    for (int ii = 0; ii < N; ii++) {
       std::string name = std::string("Thread ");
       name.push_back (ii);
       Thread * t = new Thread (new Task (this), name);
@@ -37,9 +70,9 @@ namespace concurrent {
     if (this->running == true)
       this->stop(true);
 
-    std::list<Thread *>::iterator it = this->threads.begin();
+    ThreadList::iterator it = this->threads.begin();
     while (it != this->threads.end()) {
-      Thread * t = (*it++);
+      Thread * t = (*it); it++;
       delete t;
     }
 
@@ -53,7 +86,7 @@ namespace concurrent {
   ThreadPool::start (void) {
     this->running = true;
     
-  std::list<Thread *>::iterator it = this->threads.begin();
+  ThreadList::iterator it = this->threads.begin();
   while (it != this->threads.end())
     {
       (*it)->start();
@@ -62,7 +95,7 @@ namespace concurrent {
   }
 
   void 
-  ThreadPool::stop (bool join = false) {
+  ThreadPool::stop (bool join) {
     this->running = false;
 
     /* Waiting to join all of the threads will mean that the thread that the
@@ -73,9 +106,9 @@ namespace concurrent {
        of one of the Task threads then you are going to hit a deadlock. Never
        pass the join parameter if this is being called from inside the Tasks.*/
     if (join == true) {
-      std::list<Thread *>::iterator it = this->threads.begin();
+      ThreadList::iterator it = this->threads.begin();
       while (it != this->threads.end()) {
-	(*it)->join ();
+	(*it)->stop();
 	it++;
       }
     }
