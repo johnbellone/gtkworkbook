@@ -1,6 +1,4 @@
 /* 
-   File.cpp
-
    The GTKWorkbook Project <http://gtkworkbook.sourceforge.net/>
    Copyright (C) 2009 John Bellone, Jr. <jvb4@njit.edu>
 
@@ -28,11 +26,29 @@ namespace largefile {
     this->fp = NULL;
     this->pro = pro;
     setEventId(e);
+
+    this->pool.start();
   }
 
   FileDispatcher::~FileDispatcher (void) {
     if (this->fp != NULL)
       this->close();
+
+    this->pool.stop();
+  }
+
+  void
+  FileDispatcher::read (long int start, long int N) {
+    // WARNING: Need some form of a lock on this method.
+    LineReader * reader = new LineReader (this, this->fp, start, N);
+    this->pool.execute (reader);
+  }
+
+  void
+  FileDispatcher::index (long int start, long int N) {
+    // WARNING: Need some form fo a lock on this method.
+    LineIndexer * indexer = new LineIndexer (this, this->fp, start, N);
+    this->pool.execute (indexer);
   }
 
   bool
@@ -40,7 +56,7 @@ namespace largefile {
     if (filename.length() == 0)
       return false;
 
-    if ((this->fp = fopen (filename.c_str(), "r")) == NULL) {
+    if ((this->fp = std::fopen (filename.c_str(), "r")) == NULL) {
       // stub: throw an error somewhere
       return false;
     }
@@ -56,7 +72,7 @@ namespace largefile {
     if (this->fp == NULL)
       return false;
 
-    ::fclose (this->fp); this->fp = NULL;
+    std::fclose (this->fp); this->fp = NULL;
     mutex.remove();
     return true;
   }
@@ -66,7 +82,6 @@ namespace largefile {
     this->running = true;
 
     while (this->running == true) {
-
       if (this->fp == NULL) {
 	this->running = false;
 	break;
@@ -100,23 +115,21 @@ namespace largefile {
     concurrent::ScopedMemoryLock mutex ((unsigned long int)this->fp, true);
 
     // Record current position and seek to where we're going to start.
-    long int cursor = ::ftell (this->fp);
-    ::fseek (this->fp, this->startOffset, SEEK_SET);
+    long int cursor = std::ftell (this->fp);
+    long int & read_max = this->numberOfLinesToRead;
+    std::fseek (this->fp, this->startOffset, SEEK_SET);
 
-    for (long int ii = 0; ii < this->numberOfLinesToRead; ii++) {
-      
-      if (fgets (buf, 4096, this->fp) == NULL) {
-	
+    for (long int ii = 0; ii < read_max; ii++) {
+      if (std::fgets (buf, 4096, this->fp) == NULL) 
 	break;
-      }
-      
-      long int pos = ::ftell (this->fp);
+          
+      //long int pos = std::ftell (this->fp);
     }
 
     // stub: Push up to our pappy.
 
     this->running = false;
-    ::fseek (this->fp, cursor, SEEK_SET);
+    std::fseek (this->fp, cursor, SEEK_SET);
     return NULL;
   }
 
@@ -142,17 +155,16 @@ namespace largefile {
     concurrent::ScopedMemoryLock mutex ((unsigned long int)this->fp, true);
 
     // Record current position and seek to where we're going to start.
-    long int cursor = ::ftell (this->fp);
-    ::fseek (this->fp, this->startOffset, SEEK_SET);
+    long int cursor = std::ftell (this->fp);
+    long int & read_max = this->numberOfLinesToRead;
+    std::fseek (this->fp, this->startOffset, SEEK_SET);
 
-    for (long int ii = 0; ii < this->numberOfLinesToRead; ii++) {
+    for (long int ii = 0; ii < read_max; ii++) {
       
-      if (fgets (buf, 4096, this->fp) == NULL) {
-	
+      if (std::fgets (buf, 4096, this->fp) == NULL)		
 	break;
-      }
-      
-      long int pos = ::ftell (this->fp);
+         
+      //long int pos = std::ftell (this->fp);
       
       // stub: store index and buf
     }
@@ -160,7 +172,7 @@ namespace largefile {
     // stub: Push up to our pappy.
 
     this->running = false;
-    ::fseek (this->fp, cursor, SEEK_SET);
+    std::fseek (this->fp, cursor, SEEK_SET);
     return NULL;
   }
 

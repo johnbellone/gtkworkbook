@@ -1,6 +1,4 @@
 /* 
-   File.hpp - File Object handlers
-
    The GTKWorkbook Project <http://gtkworkbook.sourceforge.net/>
    Copyright (C) 2009 John Bellone, Jr. <jvb4@njit.edu>
 
@@ -21,6 +19,7 @@
 #ifndef FILE_HPP
 #define FILE_HPP
 
+#include <concurrent/ThreadPool.hpp>
 #include <proactor/InputDispatcher.hpp>
 #include <proactor/Proactor.hpp>
 #include <proactor/Worker.hpp>
@@ -34,6 +33,7 @@ namespace largefile {
   private:
     FILE * fp;
     std::string filename;
+    concurrent::ThreadPool pool;
   public:
     FileDispatcher (int e, proactor::Proactor * pro);
     virtual ~FileDispatcher (void);
@@ -41,6 +41,9 @@ namespace largefile {
     bool open (const std::string & filename);
     bool close (void);
     void * run (void * null);
+
+    void read (long int start, long int N);
+    void index (long int start, long int N);
   };
 
   class LineIndexer : public proactor::Worker {
@@ -71,11 +74,6 @@ namespace largefile {
     virtual ~LineReader (void);
 
     void * run (void * null);
-  };
-
-  struct LineStruct {
-	std::string line;
-	long int position;
   };
 
 } // end of namespace
