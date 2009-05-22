@@ -1,6 +1,4 @@
 /*
-   Connection.cpp - Connection Object Source File
-
    The GTKWorkbook Project <http://gtkworkbook.sourceforge.net/>
    Copyright (C) 2008, 2009 John Bellone, Jr. <jvb4@njit.edu>
 

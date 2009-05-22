@@ -1,6 +1,4 @@
 /* 
-   thread_main.cpp - Largefile Main Thread Source File
-
    The GTKWorkbook Project <http://gtkworkbook.sourceforge.net/>
    Copyright (C) 2008, 2009 John Bellone, Jr. <jvb4@njit.edu>
 
@@ -93,6 +91,9 @@ thread_main (ThreadArgs * args) {
     g_critical ("Failed starting file dispatcher; exiting thread.");
     return;
   }
+
+  // read first 10,000 lines
+  fdispatcher.read (0, 10000);
 
   while (*SHUTDOWN == FALSE) {
     concurrent::Thread::sleep (100);

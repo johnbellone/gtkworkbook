@@ -1,6 +1,4 @@
 /* 
-   plugin_main.cpp - Largefile Plugin DLL Entry Point
-
    The GTKWorkbook Project <http://gtkworkbook.sourceforge.net/>
    Copyright (C) 2008, 2009 John Bellone, Jr. <jvb4@njit.edu>
 
@@ -31,8 +29,24 @@ extern void thread_main (ThreadArgs *);
 static void
 open_csv_file (GtkWidget * w, gpointer data) {
   ApplicationState * app = (ApplicationState *)data;
-  Config * cfg = app->cfg;
+  //Config * cfg = app->cfg;
   
+  GtkWidget * dialog = gtk_file_chooser_dialog_new ("Open File",
+						    GTK_WINDOW (app->gtk_window),
+						    GTK_FILE_CHOOSER_ACTION_OPEN,
+						    GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
+						    GTK_STOCK_OPEN, GTK_RESPONSE_ACCEPT,
+						    NULL);  
+  
+  gtk_file_chooser_set_do_overwrite_confirmation (GTK_FILE_CHOOSER (dialog), TRUE);
+
+  if (gtk_dialog_run (GTK_DIALOG (dialog)) == GTK_RESPONSE_ACCEPT) {
+    gchar * filename = gtk_file_chooser_get_filename (GTK_FILE_CHOOSER (dialog));
+
+    g_free (filename);
+  }
+
+  gtk_widget_destroy (dialog);
 }
 
 static GtkWidget *
@@ -46,9 +60,11 @@ largefile_mainmenu_new (ApplicationState * appstate, GtkWidget * window) {
   };
   
   gint nmenu_items = sizeof (menu_items) / sizeof (menu_items[0]);
-  GtkAccelGroup * accel = gtk_accel_group_new ();	
+  GtkAccelGroup * accel 
+    = gtk_accel_group_new ();
+	
   GtkItemFactory * item_factory 
-	= gtk_item_factory_new (GTK_TYPE_MENU_BAR, "<main>", accel);
+    = gtk_item_factory_new (GTK_TYPE_MENU_BAR, "<main>", accel);
   
   gtk_item_factory_create_items (item_factory, nmenu_items, menu_items, appstate);
 

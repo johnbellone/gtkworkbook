@@ -29,10 +29,10 @@ namespace largefile {
   private:
     Workbook * wb;
     Cell ** fields;
-	FILE * log;
+    FILE * log;
     int verbosity;
-	int maxOfFields;
-	int sizeOfFields;
+    int maxOfFields;
+    int sizeOfFields;
   public:
     CsvParser (Workbook * wb, FILE * log, int verbosity, int maxOfFields = 10);
     virtual ~CsvParser (void);

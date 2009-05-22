@@ -1,6 +1,4 @@
 /* 
-   Thread.cpp - Thread Object Source File
-
    The GTKWorkbook Project <http://gtkworkbook.sourceforge.net/>
    Copyright (C) 2008, 2009 John Bellone, Jr. <jvb4@njit.edu>
 
@@ -37,7 +35,6 @@ namespace concurrent {
     this->group = group;
     this->runner = runner;
     this->name = name;
-    this->running = false;
   }
 
   Thread::Thread (IRunnable * runner,
@@ -45,17 +42,14 @@ namespace concurrent {
     : group(NULL) {
     this->runner = runner;
     this->name = name;
-    this->running = false;
   }
 
   Thread::Thread (const std::string & name) 
     : group(NULL), runner(NULL) {
     this->name = name;
-    this->running = false;
   }
 
   Thread::Thread (void) : group(NULL), runner(NULL) {
-    this->running = false;
   }
 
   Thread::~Thread (void) {
