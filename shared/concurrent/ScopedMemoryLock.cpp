@@ -30,9 +30,9 @@ namespace concurrent {
     AddressToMutexMap::iterator it = addressMutexMap.find (this->address);
     ScopedMemoryLock::addressMutexMap.unlock();
 
-    /* Now the reason behind setting this pointer to NULL is to force a coredump. Because
-       if someone is passing a pointer that has not been formally added via the static method
-       calls then that means it is very unlikely that they are not removing it either. We do
+    /* Now the reason behind keeping this pointer to NULL is to force a coredump. Because
+       if someone is passing an address that has not been formally added via the static method
+       call then that means it is very unlikely that they are not removing it either. We do
        not want a memory leak therefore this seems like the best method. */
     if (it != ScopedMemoryLock::addressMutexMap.end()) 
       this->mutex = it->second;
