@@ -1,0 +1,67 @@
+GTKWorkbook Installation on Fedora 8
+
+Installation Instructions From Clean Fedora 8 DVD Image
+
+1. yum install git-core     	  
+       	       gtk+extra-devel
+	       subversion
+       update
+
+2. git clone git://gtkworkbook.git.sourceforge.net/gitroot/gtkworkbook gtkworkbook-sf
+
+3. cd gtkworkbook-sf
+
+4. cp .gtkworkbook ~/.gtkworkbook
+
+5. [Edit directory paths inside of ~/.gtkworkbook to match where you want the 
+    libraries to compile to, where your project directory is located, and 
+    where any external libraries are.]
+
+6. [Yum installs the gtkextra headers into the following directory:
+    /usr/include/gtkextra-2.0
+
+    You must change the Makefile.base include from:
+    /usr/local/include/gtkextra-2.0 
+    
+    To that directory.]
+
+6. make clean all
+
+7. [Edit the configuration file in (project root)/bin/application.cfg to the proper
+    locations where you will be loading the .so libraries, and writing log files to.
+
+    For example:
+
+    %block newplugin {
+    	   onLoad :: run=1;
+	   linux :: filename=/home/johnb/realtime.so;
+	   log :: path=/home/johnb/logs;
+    }
+
+    Tells the loader to look for the plugin at that *absolute path* and:
+
+    %block newplugin {
+    	   onLoad :: run=1;
+	   linux :: filename=../realtime.so;
+	   log :: path=/home/johnb/logs;
+    }
+
+    Tells the loader to look for the plugin at the *relative path to EXECUTION* which
+    means if you are executing from your home directory it will assume the plugin is
+    in /home (in the above example).
+
+    If you execute in ~/work/gtkworkbook it will assume realtime.so is in ~/work.
+
+    Generally you will always want to use absolute paths.]
+
+8. [Execute gtkworkbook with the -c parameter to include the application.cfg:
+
+   ./bin/gtkworkbook -c ./bin/application.cfg 
+   
+    (OR) 
+   
+   ./gtkworkbook -c (some path to application config)]
+
+9. Enjoy!
+
+(Tested on Sun VirtualBox 2.2 on or about May 22nd 2009 with image from fedoraproject.org)

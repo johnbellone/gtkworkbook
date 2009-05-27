@@ -1,0 +1,2 @@
+;; Do not leave backup files inside of directories!
+(setq make-backup-files nil)

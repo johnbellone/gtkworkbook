@@ -1,0 +1,7 @@
+Testing
+
+Unless otherwise specified testing has been done via Sun's VirtualBox virtual machine software. This lets me quickly
+test the different configurations that are needed for each branch of the project. If you have any specific problems
+with runtime (or compliation) please remember to indicate if you are running it in a virtual machine, which software,
+and any other information that may be needed (version of GTK+, etc).
+
