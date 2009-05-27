@@ -76,23 +76,34 @@ namespace largefile {
     mutex.remove();
     return true;
   }
-
+  
   void *
   FileDispatcher::run (void * null) {
     this->running = true;
 
     while (this->running == true) {
       if (this->fp == NULL) {
-	this->running = false;
-	break;
+		this->running = false;
+		break;
       }
 
-      Thread::sleep (100);
+      this->inputQueue.lock();
+      
+      while (this->inputQueue.size() > 0) {
+	if (this->running == false)
+	  break;
+
+	this->pro->onReadComplete (this->inputQueue.pop());
+      }
+
+      this->inputQueue.unlock();
+
+      Thread::sleep (5);
     }
 
     return NULL;
   }
-
+  
   LineIndexer::LineIndexer (proactor::InputDispatcher * d,
 			    FILE * fp,
 			    long int start,
@@ -130,6 +141,7 @@ namespace largefile {
 
     this->running = false;
     std::fseek (this->fp, cursor, SEEK_SET);
+    this->dispatcher->removeWorker (this);
     return NULL;
   }
 
@@ -138,7 +150,7 @@ namespace largefile {
 			  long int start,
 			  long int N) {
     this->fp = fp;
-    this->dispatcher = dispatcher;
+    this->dispatcher = d;
     this->startOffset = start;
     this->numberOfLinesToRead = N;
   }
@@ -163,16 +175,14 @@ namespace largefile {
       
       if (std::fgets (buf, 4096, this->fp) == NULL)		
 	break;
-         
-      //long int pos = std::ftell (this->fp);
       
-      // stub: store index and buf
-    }
-
-    // stub: Push up to our pappy.
+      // Eventually store index here?
+      this->dispatcher->onReadComplete (std::string (buf));
+     }
 
     this->running = false;
     std::fseek (this->fp, cursor, SEEK_SET);
+    this->dispatcher->removeWorker (this);
     return NULL;
   }
 

@@ -1,6 +1,6 @@
 /*
    The GTKWorkbook Project <http://gtkworkbook.sourceforge.net/>
-   Copyright (C) 2008, 2009 John Bellone, Jr. <jvb4@njit.edu>
+   Copyright (C) 2009 John Bellone, Jr. <jvb4@njit.edu>
 
    This library is free software; you can redistribute it and/or
    modify it under the terms of the GNU Lesser General Public
@@ -45,6 +45,7 @@ namespace largefile {
 	int & array_size = column->array_size;
 
 	// Resize the cell array here.
+	/*
 	if (array_max >= array_size) {
 	  int max = array_max * 2;
 	  Cell ** new_array = (Cell **)malloc (max * sizeof (Cell*));
@@ -59,6 +60,7 @@ namespace largefile {
 	  (column->array) = new_array;
 	  array_max = max;
 	}
+	*/
 
 	if (array_size >= column->field)
 	  array_size++;
@@ -127,12 +129,12 @@ namespace largefile {
 	this->inputQueue.clear();
 	this->inputQueue.unlock();
 
-	if (this->running == false)
-	  break;
-
 	while (queue.size() > 0) {
 	  std::string buf = queue.front(); queue.pop();
 	  size_t bytes = buf.length();
+
+	  if (this->running == false)
+	    break;
 
 	  if ((bytes = csv_parse (&csv, buf.c_str(), bytes, cb1, cb2, &column)) == bytes) {
 	    if (csv_error (&csv) == CSV_EPARSE)	
@@ -150,7 +152,7 @@ namespace largefile {
 	}
       }
 	  
-      concurrent::Thread::sleep (100);
+      concurrent::Thread::sleep (5);
     }
 
     return NULL;
