@@ -1,47 +1,25 @@
-GTKWorkbook README
-------------------
+Copyright (C) 2008, 2009 John Bellone, Jr.
+See the file etc/TERMS for more information on this software's license.
 
-0. Project Website
+The file INSTALL in this directory says how to build and install
+GTKWorkbook on various systems, and if you are reading this document we are
+making the assumption that you have the whole source tree.
 
-	The project has moved to sourceforge.net:
+See the file etc/NEWS for information on new features, and other user-visible
+changes in the recent versions of GTKWorkbook.
 
-	http://gtkworkbook.sourceforge.net/
+The file etc/PROBLEMS contains information on common problems that may occur
+during the use of GTKWorkbook, which may include, compiling, runtime, and
+writing extensions.
 
-	The subversion repository has moved there as well:
+The file etc/BUGS contains known bugs that are being worked on. If you find
+any bugs please report them on sourceforge.net so that they can be added
+to the queue.
 
-	https://gtkworkbook.svn.sourceforge.net/svnroot/gtkworkbook
-	
-1. Installation
-	
-	Please see the INSTALL file in the root directory of the project for
-	more details on how to properly install this project.
+`etc'  holds miscellaneous files that are useful for development purposes but
+       not critical to the application itself.
 
-2. License
-	
-	There should be a file entitled LICENSE in the root directory of the
-	project. All of the code, unless otherwise specified, is licensed
-	under the GNU Lesser General Public License 2.1. There may be
-	individual scripts or files that are licensed under the GNU General
-	Public License 2, but those should be far and few between.
+`src' holds the C/C++ code for the GTKWorkbook application.
 
-	The <libcsv> library included is licensed under the LGPL 2.1 and all
-	the documentation information is included in the library's directory.
 
-3. Documentation
-	
-	Most of the library code is commented pretty well, but much of the
-	example application code has not been documented yet. Any specific
-	questions should be directly asked on the project's forum on the
-	sourceforge.net website.
-
-	In the future there will be an API PDF. 
-
-4. Contact
-	
-	The best means of contact would be through the sourceforge.net project
-	website (information at the top of this document) but if it is urgent
-	then you may contact me directly via email.
-
-	John Bellone, Jr.
-	<https://blogs.njit.edu/jvb4>
-	<jvb4@njit.edu>
+       
