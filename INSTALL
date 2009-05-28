@@ -1,43 +1,79 @@
-GTKWorkbook Installation
-------------------------
+GTKWorkbook Installation Guide
+Copyright (C) 2008, 2009 John Bellone, Jr.
+ See etc/TERMS for license information.
 
-0.	Testing Systems
+This file contains general information on the installation of GTKWorkbook.
+Right now there are not any build tools used other than GNU Make so
+dependency checking must be done manually. In the future this will change
+but I do not have the time to get acquantied with automake yet.
 
-	CentOS 5.2 (Redhat)
-	GCC 4.1.2
-	Python 2.4.3
+DEPENDENCIES
 
-1. 	Requirements
+	A. GTK	
 
-	A. GtkExtra
+	   This is obvious but I figured I should state it anyway. 
+	   	
+	B. GtkExtra
 
-	The libworkbook library wraps the GTK+ calls to the GtkSheet widget
-	which is included inside of the GtkExtra library available on
-	sourceforge.net. Due to the age of the gtkextra2 release I would
-	highly suggest downloading directly from the CVS repository.
+	   The libworkbook library wraps GTK+ calls to the GtkSheet widget
+	   which is included inside of the GtkExtra library available on
+	   the FEDORA REPOSITORY, and the SOURCEFORGE.NET project website.
+	   
+	   I have been performing development on gtkextra3 and gtkextra2
+	   which both work with GTKWorkbook; but I would suggest downloading
+	   the latest version of either depending on which version of GTK+
+	   you have installed. You can use their CVS repository on their
+	   project's website:
 
-	http://gtkextra.cvs.sourceforge.net/viewvc/gtkextra/gtkextra-2/
+	   http://gtkextra.cvs.sourceforge.net/viewvc/gtkextra
 
-	B. Pixman
+	C. Pixman
 
-	The GtkExtra library requires this to be installed with the version
-	of GTK that ships with CentOS 5.2. I believe that it is available with
-	newer versions of GTK, but here is the location of the repository if
-	you need to find it. Grab the newest release, compile and install.
+	   The GtkExtra library requires this to be installed with the version	
+	   of GTK+ that ships with CentOS 5.2; but later versions of Fedora 
+	   seem to include this in their distribution. If you are using either
+	   CentOS 5.2 (or the equivalient RedHat distribution) you'll need to
+	   grab this release and go through the motions.
 
-	http://cairographics.org/releases/
-		
-2.	Installation
+	   http://cairographics.org/releases/
 
-	Once all of the dependencies (above) have been installed you can
-	finally get on to the fun stuff. The compliation of the project is
-	rather easy (and quick).
+	   The newest version should suffice as long as it compiles and installs.
 
-	Inside of the root directory of the project, type:
+BASIC INSTALLATION
 
-	make clean all
+      So as I stated before my build system merely uses some shell commands, and a
+      set of Makefiles. I do not use automake as of the writing of this document
+      therefore some care may have to be taken when linking dependencies. The only
+      issue I have ran into is that YUM properly installs GtkExtra include files
+      into: /usr/include instead of /usr/local/include
 
-	If you wish to install:
+      This can be easily (and quickly) changed inside of the Makefile.base which 
+      has a specific include line for the GtkExtra headers. Once this change is
+      made and as long as the dependencies have all been installed you are ready
+      to rock on compliation/installation of this project.
 
-	make clean install
+      1. Copy the .gtkworkbook file from the project directory, and change the
+      paths to where you would like the compiled libraries to be installed to
+      and where your project directory is located.
 
+      You will get compliation errors if your project directory is not correct.
+
+      2. make clean all
+
+      3. Modify the application.cfg file inside of the `bin' directory to account
+      for any changes for the application; this includes the absolute path of the
+      example .so files.
+
+      4. The binaries and .so files are located in the `bin' directory for testing.
+
+      5. Execute with ./bin/gtkworkbook -c ./bin/application.cfg and enjoy!
+
+ADVANCED INSTALLATION
+
+ 	 If you have plans to install the application in a separate directory than
+	 the .so plugin files be sure to remember that the application.cfg input
+	 file must point to the absolute path of the individual files. Relative paths
+	 will work but are currently tied to the execution path of the binary. 
+
+
+      

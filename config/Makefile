@@ -16,6 +16,7 @@ install:
 #	chcon -t textrel_shlib_t ${INSLIBDIR}/libconfig.so.1	
 
 libconfig: ${OBJS}
+	${MD} ${PROJDIR}/lib 
 	${RM} ${PROJDIR}/lib/libconfig.so.1
 	${CC} -shared -Wl,-soname,libconfig.so.1 \
 	-o ${PROJDIR}/lib/libconfig.so ${OBJS} ${LIBS} ${LFLAGS}

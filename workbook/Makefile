@@ -14,6 +14,7 @@ install:
 #	chcon -t textrel_shlib_t ${INSLIBDIR}/libworkbook.so.1
 
 libworkbook: ${OBJS}
+	${MD} ${PROJDIR}/lib
 	${RM} ${PROJDIR}/lib/libworkbook.so.1 ${PROJDIR}/lib/libworkbook.so
 	${CC} -shared -Wl,-soname,libworkbook.so.1 \
 	-o ${PROJDIR}/lib/libworkbook.so ${OBJS} ${LIBS} \
