@@ -45,7 +45,6 @@ namespace largefile {
 	int & array_size = column->array_size;
 
 	// Resize the cell array here.
-	/*
 	if (array_max >= array_size) {
 	  int max = array_max * 2;
 	  Cell ** new_array = (Cell **)malloc (max * sizeof (Cell*));
@@ -60,8 +59,7 @@ namespace largefile {
 	  (column->array) = new_array;
 	  array_max = max;
 	}
-	*/
-
+	
 	if (array_size >= column->field)
 	  array_size++;
 
@@ -108,12 +106,12 @@ namespace largefile {
     std::queue<std::string> queue;
     struct csv_parser csv;
     struct csv_column column = {this->wb->sheet_first,
-				this->fields,
-				this->maxOfFields,
-				this->sizeOfFields,
-				0,
-				0,
-				new char [1024]};
+								this->fields,
+								this->maxOfFields,
+								this->sizeOfFields,
+								0,
+								0,
+								new char [1024]};
     
     if (csv_init (&csv, CSV_STRICT) != 0) {
       std::cerr << "Failed initializing libcsv parser library\n";
@@ -123,37 +121,37 @@ namespace largefile {
     while (this->running == true) {
       if (this->inputQueue.size() > 0) {
 	
-	// Lock, copy, clear, unlock. - Free this up.
-	this->inputQueue.lock();
-	this->inputQueue.copy (queue);
-	this->inputQueue.clear();
-	this->inputQueue.unlock();
+		// Lock, copy, clear, unlock. - Free this up.
+		this->inputQueue.lock();
+		this->inputQueue.copy (queue);
+		this->inputQueue.clear();
+		this->inputQueue.unlock();
 
-	while (queue.size() > 0) {
-	  std::string buf = queue.front(); queue.pop();
-	  size_t bytes = buf.length();
+		while (queue.size() > 0) {
+		  std::string & buf = queue.front(); queue.pop();
+		  size_t bytes = buf.length();
 
-	  if (this->running == false)
-	    break;
+		  if (this->running == false)
+			break;
 
-	  if ((bytes = csv_parse (&csv, buf.c_str(), bytes, cb1, cb2, &column)) == bytes) {
-	    if (csv_error (&csv) == CSV_EPARSE)	
-	      std::cerr << "Parsing error on input: "<<buf<<"\n";
-	  }
-		  
-	  csv_fini (&csv, cb1, cb2, &column);
-	  
-	  this->wb->sheet_first->apply_array (this->wb->sheet_first,
-					      this->fields,
-					      this->sizeOfFields);
+		  if ((bytes = csv_parse (&csv, buf.c_str(), bytes, cb1, cb2, &column)) == bytes) {
+			if (csv_error (&csv) == CSV_EPARSE)	
+			  std::cerr << "Parsing error on input: "<<buf<<"\n";
+		  }
 
-	  if (column.row >= (column.sheet)->max_rows)
-	    column.row = 0;
+		  csv_fini (&csv, cb1, cb2, &column);
+
+		  this->wb->sheet_first->apply_array (this->wb->sheet_first,
+											  this->fields,
+											  this->sizeOfFields);
+
+		  if (column.row >= (column.sheet)->max_rows)
+			column.row = 0;
+		}
+	  }	
+
+	  concurrent::Thread::sleep (5);
 	}
-      }
-	  
-      concurrent::Thread::sleep (5);
-    }
 
     return NULL;
   }

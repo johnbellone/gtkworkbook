@@ -132,7 +132,7 @@ namespace largefile {
 
     for (long int ii = 0; ii < read_max; ii++) {
       if (std::fgets (buf, 4096, this->fp) == NULL) 
-	break;
+		break;
           
       //long int pos = std::ftell (this->fp);
     }
@@ -146,9 +146,9 @@ namespace largefile {
   }
 
   LineReader::LineReader (proactor::InputDispatcher * d,
-			  FILE * fp,
-			  long int start,
-			  long int N) {
+						  FILE * fp,
+						  long int start,
+						  long int N) {
     this->fp = fp;
     this->dispatcher = d;
     this->startOffset = start;
@@ -172,9 +172,8 @@ namespace largefile {
     std::fseek (this->fp, this->startOffset, SEEK_SET);
 
     for (long int ii = 0; ii < read_max; ii++) {
-      
-      if (std::fgets (buf, 4096, this->fp) == NULL)		
-	break;
+	  if (std::fgets (buf, 4096, this->fp) == NULL)		
+		break;
       
       // Eventually store index here?
       this->dispatcher->onReadComplete (std::string (buf));
