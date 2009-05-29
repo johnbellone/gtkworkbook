@@ -9,3 +9,6 @@ lib/
 
 # Ignore specific library outputs.
 csv/libcsv.*
+
+# Valgrind files
+massif*
