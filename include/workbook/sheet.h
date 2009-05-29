@@ -1,6 +1,4 @@
 /* 
-   sheet.h - Sheet Object Header File
-
    The GTKWorkbook Project <http://gtkworkbook.sourceforge.net/>
    Copyright (C) 2008, 2009 John Bellone, Jr. <jvb4@njit.edu>
 
@@ -73,6 +71,7 @@ typedef struct _Sheet Sheet;
 			 const CellAttributes *);
     void (*apply_array) (Sheet *, Cell **, gint);
     void (*apply_cell) (Sheet *, const Cell *);
+    void (*apply_row) (Sheet *, Cell **, gint, gint);
 
     void (*set_cell) (Sheet *, gint, gint, const gchar *);  
     void (*range_set_background) (Sheet *, 
