@@ -70,7 +70,7 @@ thread_main (ThreadArgs * args) {
   
   proactor::Proactor proactor;
   FileDispatcher fdispatcher (fdEventId, &proactor);
-  CsvParser csv_parser (wb, pktlog, 20);
+  CsvParser csv_parser (wb, pktlog, 0, 20);
 
   if (proactor.start() == false) {
     g_critical ("Failed starting Proactor; exiting thread.");
@@ -93,7 +93,7 @@ thread_main (ThreadArgs * args) {
   }
 
   // read first 10,000 lines
-  fdispatcher.read (0, 10);
+  fdispatcher.read (0, 10000);
 
   while (*SHUTDOWN == FALSE) {
     concurrent::Thread::sleep (100);
