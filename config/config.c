@@ -87,24 +87,24 @@ configblock_method_parse (ConfigBlock * block, gchar * p, FILE * fp)
 
   gchar buf[1024], word[1024];
   gchar * q = NULL;
-  g_stpcpy (buf, p);
+  g_stpcpy (word, p);
 
   /* This block of code makes sure that we indeed have an opening brace
     to continue with parsing of the configuration file. */
   do
     {
-      p = buf;
+      p = word;
       
       if (EXPECT (p, q, '{'))
 	{
-	  g_stpcpy (buf, q+1);
+	  g_stpcpy (buf, q + 1);
 	  break;
 	} 
 
       if (*q == '\0')
 	continue;
       return NULL;
-    } while (fgets (buf, 1024, fp) != NULL);
+    } while (fgets (word, 1024, fp) != NULL);
 
   /* Start actually parsing rows now. */
   do 
@@ -356,29 +356,29 @@ config_method_load (Config * c, FILE * fp)
       return FALSE;
     }
 
-  gchar buf[1024], word[1024];
-  gchar * p = NULL, * q = NULL;
+  gchar * buf = g_malloc (sizeof (char) * 1024);
+  gchar word[1024];
+  gchar * p = NULL, * q = NULL, * r = NULL;
 
-  while (fgets (buf, 1024, fp) != NULL)
-    {
-      p = buf;
-
-      while ((*p != '\0') && (*p != '\n'))
+  while ((p = fgets (buf, 1024, fp)) != NULL) {
+      r = buf + (strlen (buf) - 1);
+ 
+      while (p && (p < r) && (*p != '\n'))
 	{
 	  if (*p == '%')
 	    {
-	      if ((q = parse (p+1, &word[0], 1024, ' ')) == NULL)
-		{
-		  /* STUB: exit parsing with a failure. */
-		  return FALSE;
-		}
+	      if ((q = parse (p+1, &word[0], 1023, ' ')) == NULL) {
+		/* STUB: exit parsing with a failure. */
+		g_free (buf);	
+		return FALSE;
+	      }
 
 	      if (strcmp (word, "block") == 0)
 		{
-		  if ((q = parse (q+1, &word[0], 1024, ' ')) == NULL)
-		    {
-		      return FALSE;
-		    }
+		  if ((q = parse (q+1, &word[0], 1023, ' ')) == NULL) {
+		    g_free(buf);
+		    return FALSE;
+		  }
 		  
 		  /* Replace the block if it already exists. Throw error. */
 		  ConfigBlock * b = c->get_block (c, trim (&word[0]));
@@ -392,17 +392,17 @@ config_method_load (Config * c, FILE * fp)
 
 		  b = configblock_new (c, trim (&word[0]));
 
-		  if ((p = b->parse (b, q, fp)) == NULL)
-		    {
-		      return FALSE;
-		    }
+		  if ((p = b->parse (b, q, fp)) == NULL) {
+		    g_free (buf);
+		    return FALSE;
+		  }
 		}
 	      else if (strcmp (word, "include") == 0)
 		{
-		  if ((p = parse (q+1, &word[0], 1024, ' ')) == NULL)
-		    {
-		      return FALSE;
-		    }
+		  if ((p = parse (q+1, &word[0], 1023, ' ')) == NULL) {
+		    g_free (buf);
+		    return FALSE;
+		  }
 
 		  /* Include the file; we're going to load up this file
 		     first and then proceed with parsing. */
@@ -419,21 +419,23 @@ config_method_load (Config * c, FILE * fp)
 
 		  c->load (c, ifp);
 		}
-	      else
+	      else {
+		g_free (buf);
 		return FALSE;
+	      }
 	    }
 	  /* BUGFIX: Need to check for tabs. */
 	  else if ((*p != ' ') && (*p != '\t'))
 	    {
 	      /* STUB: error out */
+	      g_free (buf);
 	      return FALSE;
 	    }
 
-	  if (*p == '\0')
-	    break;
 	  p++;
 	}
     }
+  g_free (buf);
   return TRUE;
 }
 
@@ -460,7 +462,8 @@ config_method_open (Config * c)
 {
   ASSERT (c != NULL);
 
-  if (IS_NULLSTR (c->filename)) return FALSE;
+  if (IS_NULLSTR (c->filename))
+    return FALSE;
 
   FILE * fp = NULL;
   if ((fp = fopen (c->filename, "r")) == NULL)
