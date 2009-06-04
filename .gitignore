@@ -12,3 +12,4 @@ csv/libcsv.*
 
 # Valgrind files
 massif*
+*.log
