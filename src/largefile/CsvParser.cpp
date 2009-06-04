@@ -40,26 +40,22 @@ namespace largefile {
      is parsed and cb2 is called after a tuple/row is parsed. */
   static void 
   cb1 (void * s, size_t length, void * data) {
-	struct csv_column * column = (struct csv_column *)data;
+	struct csv_column * column = (struct csv_column *) data;
 	int & array_max = column->array_max;
 
 	// Resize the cell array here.
 	if (column->field >= array_max) {
-	  int max = array_max * 2;
-	  Cell ** new_array = (Cell **)malloc (max * sizeof (Cell*));
+	  int max = (2 * array_max);
+	  (column->array) = (Cell **) g_realloc ((column->array), max * sizeof (Cell*));
 
-	  for (int ii = 0; ii < array_max; ii++)
-		new_array[ii] = (column->array)[ii];
-
-	  for (int jj = array_max; jj < max; jj++)
-		new_array[jj] = cell_new();
-
-	  free (column->array);
-	  column->array = new_array;
-	  array_max = max;
+	  for (int ii = array_max; ii < max; ii++)
+		array[ii] = NULL;
 	}
+	
+	if ((column->array)[column->field] == NULL)
+	  (column->array)[column->field] = cell_new();
 
-	Cell * cell = column->array[column->field];
+	Cell * cell = (column->array)[column->field];
 	cell->set_row (cell, column->row);
 	cell->set_column (cell, column->field++);
 	cell->set_value_length (cell, s, length);
@@ -82,17 +78,19 @@ namespace largefile {
     this->verbosity = verbosity;
     this->sizeOfFields = 0;
     this->maxOfFields = maxOfFields;
-    this->fields = (Cell **)malloc (maxOfFields * sizeof (Cell*));
+    this->fields = (Cell **) g_malloc (maxOfFields * sizeof (Cell*));
 
     for (int ii = 0; ii < this->maxOfFields; ii++)
-      this->fields[ii] = cell_new();
+      this->fields[ii] = NULL;
   }
 
   CsvParser::~CsvParser (void) {
-    for (int ii = 0; ii < this->maxOfFields; ii++)
-      this->fields[ii]->destroy (this->fields[ii]);
+    for (int ii = 0; ii <= this->maxOfFields; ii++) {
+	  if (this->fields[ii])
+		this->fields[ii]->destroy (this->fields[ii]);
+	}
     
-    free (this->fields);
+    g_free (this->fields);
   }
 
   void *
