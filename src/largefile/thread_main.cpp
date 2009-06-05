@@ -91,7 +91,7 @@ thread_main (ThreadArgs * args) {
     g_critical ("Failed starting file dispatcher; exiting thread.");
     return;
   }
-
+  
   // read first 10,000 lines
   fdispatcher.read (0, 10000);
 

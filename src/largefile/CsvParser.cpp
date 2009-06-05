@@ -46,7 +46,7 @@ namespace largefile {
 	// Resize the cell array here.
 	if (column->field >= array_max) {
 	  int max = (2 * array_max);
-	  (column->array) = (Cell **) g_realloc ((column->array), max * sizeof (Cell*));
+	  (column->array) = (Cell **) g_realloc ((column->array),max*sizeof (Cell*));
 
 	  for (int ii = array_max; ii < max; ii++)
 	    (column->array)[ii] = NULL;
@@ -78,16 +78,16 @@ namespace largefile {
     this->verbosity = verbosity;
     this->sizeOfFields = 0;
     this->maxOfFields = maxOfFields;
-    this->fields = (Cell **) g_malloc (maxOfFields * sizeof (Cell*));
+    this->fields = (Cell **) g_malloc (maxOfFields*sizeof (Cell*));
 
     for (int ii = 0; ii < this->maxOfFields; ii++)
       this->fields[ii] = NULL;
   }
 
   CsvParser::~CsvParser (void) {
-    for (int ii = 0; ii <= this->maxOfFields; ii++) {
-	  if (this->fields[ii])
-		this->fields[ii]->destroy (this->fields[ii]);
+    for (int ii = 0; ii < this->maxOfFields; ii++) {
+      if (this->fields[ii])
+	    (this->fields[ii])->destroy (this->fields[ii]);
 	}
     
     g_free (this->fields);
@@ -136,12 +136,15 @@ namespace largefile {
 
 	  csv_fini (&csv, cb1, cb2, &column);
 
-	  this->wb->sheet_first->apply_array (this->wb->sheet_first,
-					      this->fields,
-					      this->sizeOfFields);
+	  this->wb->sheet_first->apply_row (this->wb->sheet_first,
+					    this->fields,
+					    column.row,
+					    this->sizeOfFields);
 
 	  if (column.row >= (column.sheet)->max_rows)
 	    column.row = 0;
+
+	  concurrent::Thread::sleep(1);
 	}
       }	
       concurrent::Thread::sleep(1);

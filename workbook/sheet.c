@@ -17,6 +17,7 @@
    Foundation, Inc., 51 Franklin Street, Fifth Floor Boston, MA 02110-1301 USA
 */
 #include <workbook/sheet.h>
+#include <gtkextra/gtksheet.h>
 #include <string.h>
 
 /* sheet.c (static) */
@@ -38,16 +39,15 @@ static void sheet_method_range_set_foreground (Sheet *,
 static void sheet_method_set_attention (Sheet *, gint);
 static gboolean sheet_method_load (Sheet *, const gchar *);
 static gboolean sheet_method_save (Sheet *, const gchar *);
+static void sheet_method_apply_cellrow (Sheet *, Cell **, gint, gint);
 
-struct geometryFileHeader
-{
+struct geometryFileHeader {
   gint fileVersion;
   gint maxRow;
   gint maxColumn;
 };
 
-struct geometryFileEntry
-{
+struct geometryFileEntry {
   gint cellRow;
   gint cellCol;
   gint cellTextLength;
@@ -58,6 +58,57 @@ struct geometryFileEntry
   GdkColor cellBackground;
 };
 
+static GtkSheetCell *
+gtk_sheet_cell_new (void) {
+  GtkSheetCell * cell = g_new (GtkSheetCell, 1);
+  cell->text = NULL;
+  cell->link = NULL;
+  cell->attributes = NULL;
+  return cell;
+}
+/*
+static void
+GrowSheet (GtkSheet * tbl, gint newrows, gint newcols) {
+  gint ii, jj, inirow, inicol;
+
+  inirow = tbl->maxallocrow + 1;
+  inicol = tbl->maxalloccol + 1;
+
+  tbl->maxalloccol = tbl->maxalloccol + newcols;
+  tbl->maxallocrow = tbl->maxallocrow + newrows;
+
+  if (newrows > 0) {
+    tbl->data = (GtkSheetCell ***) g_realloc (tbl->data,
+					      (tbl->maxallocrow+1)*sizeof(GtkSheetCell**)+sizeof(double));
+
+    for (ii = inirow; ii <= tbl->maxallocrow; ii++) {
+      tbl->data[ii] = (GtkSheetCell **) g_malloc ((tbl->maxcol+1)*sizeof(GtkSheetCell*)+sizeof(double));
+
+      for (jj = 0; jj < inicol; jj++)
+	tbl->data[ii][jj] = NULL;
+    }
+  }
+
+  if (newcols > 0) {
+    for (ii = 0; ii <= tbl->maxallocrow; ii++) {
+      tbl->data[ii] = (GtkSheetCell **) g_realloc (tbl->data[ii],
+						   (tbl->maxalloccol+1)*sizeof(GtkSheetCell*)+sizeof(double));
+
+      for (jj = inicol; jj <= tbl->maxalloccol; jj++)
+	tbl->data[ii][jj] = NULL;
+    }
+  }
+}
+
+static void
+CheckBounds (GtkSheet * tbl, gint row, gint col) {
+  gint newrows = 0, newcols = 0;
+
+  if (col > tbl->maxalloccol) newcols = col - tbl->maxalloccol;
+  if (row > tbl->maxallocrow) newrows = row - tbl->maxallocrow;
+  if (newrows > 0 || newcols > 0) GrowSheet (tbl, newrows, newcols);
+}
+*/
 /* @description: This method creates a new Sheet object and returns the
    pointer to that object. It calls the constructor function to do so.
    @book: A pointer to the Workbook that the object will be a part of.
@@ -131,6 +182,7 @@ sheet_object_init (Workbook * book,
   sheet->apply_range = sheet_method_apply_cellrange;
   sheet->apply_array = sheet_method_apply_cellarray;
   sheet->apply_cell = sheet_method_apply_cell;
+  sheet->apply_row = sheet_method_apply_cellrow;
   sheet->range_set_foreground = sheet_method_range_set_foreground;
   sheet->range_set_background = sheet_method_range_set_background;
   sheet->set_attention = sheet_method_set_attention;
@@ -350,12 +402,58 @@ sheet_method_apply_cellrange (Sheet * sheet,
 }
 
 static void
+sheet_method_apply_cellrow (Sheet * sheet,
+			    Cell ** array,
+			    gint row,
+			    gint size) {
+  ASSERT (sheet != NULL);
+  g_return_if_fail (array != NULL);
+
+  GtkSheet * gtksheet = GTK_SHEET (sheet->gtk_sheet);
+  GtkSheetCell ** cell;
+  Cell * item;
+
+  if (row > gtksheet->maxrow || row < 0) return;
+  if (size > gtksheet->maxcol || size < 0) return;
+
+  gdk_threads_enter();
+
+  for (int col = 0; col < size; col++) {
+    item = array[col]; 
+    cell = &gtksheet->data[row][col];
+    
+    gtk_sheet_set_cell_text (gtksheet,
+			     row,
+			     col,
+			     item->value->str);
+    /*
+    if (*cell == NULL)
+      (*cell) = gtk_sheet_cell_new();
+      
+    (*cell)->row = row;
+    (*cell)->col = col;
+
+    if ((*cell)->text)
+      g_free ((*cell)->text);
+      
+    (*cell)->text = g_strdup (item->value->str);
+    */
+
+    item->value->str[0] = item->attributes.bgcolor->str[0] = item->attributes.fgcolor->str[0] = 0;
+  }
+
+  gdk_threads_leave();
+}
+
+static void
 sheet_method_apply_cellarray (Sheet * sheet, 
 			      Cell ** array,
 			      gint size)
 {
   ASSERT (sheet != NULL);
   g_return_if_fail (array != NULL);
+
+  GtkSheet * gtksheet = GTK_SHEET (sheet->gtk_sheet);
 
   gdk_threads_enter ();
 
@@ -366,7 +464,7 @@ sheet_method_apply_cellarray (Sheet * sheet,
   for (gint ii = 0; ii < size; ii++) {
     Cell * cell = array[ii];
 
-    gtk_sheet_set_cell_text (GTK_SHEET (sheet->gtk_sheet),
+    gtk_sheet_set_cell_text (gtksheet,
 			     cell->row,
 			     cell->column,
 			     cell->value->str);
@@ -381,10 +479,7 @@ sheet_method_apply_cellarray (Sheet * sheet,
 				   &cell->range, 
 				   cell->attributes.fgcolor->str);
 
-    /* Clear all of the strings */
-    g_string_assign (cell->value, "");
-    g_string_assign (cell->attributes.bgcolor, "");
-    g_string_assign (cell->attributes.fgcolor, "");
+    cell->value->str[0] = cell->attributes.bgcolor->str[0] = cell->attributes.fgcolor->str[0] = 0;
   }
 
   gdk_threads_leave ();

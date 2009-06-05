@@ -47,9 +47,9 @@ cell_object_init (void)
 {
   Cell * cell = NEW (Cell);
 
-  cell->attributes.bgcolor = g_string_new_len ("", 4096);
-  cell->attributes.fgcolor = g_string_new_len ("", 4096);
   cell->value = g_string_new_len ("", 4096);
+  cell->attributes.bgcolor = g_string_new_len ("", 1024);
+  cell->attributes.fgcolor = g_string_new_len ("", 1024);
 
   /* Methods */
   cell->set_fgcolor = cell_method_set_fgcolor;
