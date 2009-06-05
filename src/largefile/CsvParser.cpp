@@ -138,16 +138,16 @@ namespace largefile {
 
 	  this->wb->sheet_first->apply_row (this->wb->sheet_first,
 					    this->fields,
-					    column.row,
+					    column.row - 1,
 					    this->sizeOfFields);
 
 	  if (column.row >= (column.sheet)->max_rows)
 	    column.row = 0;
 
-	  concurrent::Thread::sleep(1);
+	  concurrent::Thread::sleep(5);
 	}
       }	
-      concurrent::Thread::sleep(1);
+      concurrent::Thread::sleep(5);
     }
 
     return NULL;

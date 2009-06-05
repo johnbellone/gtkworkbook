@@ -58,6 +58,7 @@ struct geometryFileEntry {
   GdkColor cellBackground;
 };
 
+/*
 static GtkSheetCell *
 gtk_sheet_cell_new (void) {
   GtkSheetCell * cell = g_new (GtkSheetCell, 1);
@@ -66,6 +67,7 @@ gtk_sheet_cell_new (void) {
   cell->attributes = NULL;
   return cell;
 }
+*/
 /*
 static void
 GrowSheet (GtkSheet * tbl, gint newrows, gint newcols) {

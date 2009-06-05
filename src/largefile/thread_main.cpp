@@ -16,6 +16,7 @@
    License along with the library; if not, write to the Free Software
    Foundation, Inc., 51 Franklin Street, Fifth Floor Boston, MA 02110-1301 USA
 */
+#include <gdk/gdkkeysyms.h>
 #include <workbook/workbook.h>
 #include <config/config.h>
 #include <concurrent/Thread.hpp>
@@ -43,64 +44,83 @@ append_pidname (const gchar * pre) {
   return s.str();
 }
 
+static gint
+key_press_callback (GtkWidget * widget, GdkEventKey * event, gpointer data) {
+	FileDispatcher * fdispatcher = (FileDispatcher *)data;
+	
+	switch (event->keyval) {
+		case GDK_Page_Up: {
+			fdispatcher->read (1000,1000);
+		}
+		return FALSE;
+
+		case GDK_Page_Down: {
+			std::cout<<"Down\n";
+		}
+		return FALSE;
+	}
+	return FALSE;
+}
+	
 void
 thread_main (ThreadArgs * args) {
-  Workbook * wb = (Workbook *)args->at(0);
-  Config * cfg  = (Config *)args->at(1);
-  gboolean * SHUTDOWN = (gboolean *)args->at(2);
+	Workbook * wb = (Workbook *)args->at(0);
+	Config * cfg  = (Config *)args->at(1);
+	gboolean * SHUTDOWN = (gboolean *)args->at(2);
+	ConfigPair * logpath = cfg->get_pair (cfg, "largefile", "log", "path");
+	if (IS_NULL (logpath)) {
+		g_critical ("Failed loading log->path from configuration file; "
+					"exiting thread");
+		return;
+	}
 
-  ConfigPair * logpath = cfg->get_pair (cfg, "largefile", "log", "path");
-  if (IS_NULL (logpath)) {
-      g_critical ("Failed loading log->path from configuration file; "
-		  "exiting thread");
-      return;
+	FILE * pktlog = NULL;
+	std::string logname = std::string (logpath->value).append("/");
+	logname.append (append_pidname("realtime.").append(".log"));
+
+	if ((pktlog = fopen (logname.c_str(), "w")) == NULL) {
+		g_critical ("Failed opening file '%s' for packet logging; exiting"
+					" thread", logname.c_str());
+		return;
     }
 
-  FILE * pktlog = NULL;
-  std::string logname = std::string (logpath->value).append("/");
-  logname.append (append_pidname("realtime.").append(".log"));
+	int fdEventId = proactor::Event::uniqueEventId(); 
+	proactor::Proactor proactor;
+	FileDispatcher fdispatcher (fdEventId, &proactor);
+	CsvParser csv_parser (wb, pktlog, 0, 20);
 
-  if ((pktlog = fopen (logname.c_str(), "w")) == NULL) {
-      g_critical ("Failed opening file '%s' for packet logging; exiting"
-		  " thread", logname.c_str());
-      return;
-    }
+	if (proactor.start() == false) {
+		g_critical ("Failed starting Proactor; exiting thread.");
+		return;
+	}
 
-  int fdEventId = proactor::Event::uniqueEventId(); 
+	if (proactor.addWorker (fdEventId, &csv_parser) == false) {
+		g_critical ("Failed starting CsvParser; exiting thread.");
+		return;
+	}
+
+	if (fdispatcher.open ("/home/johnb/largefile.csv") == false) {
+		g_critical ("Failed opening /home/johnb/largefile.csv");
+		return;
+	}
+
+	if (fdispatcher.start() == false) {
+		g_critical ("Failed starting file dispatcher; exiting thread.");
+		return;
+	}
+
+	gtk_signal_connect (GTK_OBJECT (wb->gtk_window), "key_press_event",
+							  GTK_SIGNAL_FUNC (key_press_callback),
+							  (gpointer)&fdispatcher);
+	
+	fdispatcher.read (0, 1000);
+
+	while (*SHUTDOWN == FALSE) {
+		concurrent::Thread::sleep (100);
+	}
+
+	csv_parser.stop();
   
-  proactor::Proactor proactor;
-  FileDispatcher fdispatcher (fdEventId, &proactor);
-  CsvParser csv_parser (wb, pktlog, 0, 20);
-
-  if (proactor.start() == false) {
-    g_critical ("Failed starting Proactor; exiting thread.");
-    return;
-  }
-
-  if (proactor.addWorker (fdEventId, &csv_parser) == false) {
-    g_critical ("Failed starting CsvParser; exiting thread.");
-    return;
-  }
-
-  if (fdispatcher.open ("/home/johnb/largefile.csv") == false) {
-    g_critical ("Failed opening /home/johnb/largefile.csv");
-    return;
-  }
-
-  if (fdispatcher.start() == false) {
-    g_critical ("Failed starting file dispatcher; exiting thread.");
-    return;
-  }
-  
-  // read first 10,000 lines
-  fdispatcher.read (0, 10000);
-
-  while (*SHUTDOWN == FALSE) {
-    concurrent::Thread::sleep (100);
-  }
-
-  csv_parser.stop();
-  
-  FCLOSE (pktlog);
-  delete args;
+	FCLOSE (pktlog);
+	delete args;
 }

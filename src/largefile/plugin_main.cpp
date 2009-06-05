@@ -99,7 +99,7 @@ extern "C" {
         
     wb->gtk_box = box;
     
-    wb->add_new_sheet (wb, "sheet0", 10000, 20);
+    wb->add_new_sheet (wb, "sheet0", 1000, 20);
 
     ThreadArgs args;
     args.push_back ( (void *)wb );
