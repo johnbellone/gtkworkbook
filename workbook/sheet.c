@@ -1,4 +1,21 @@
-/* @author: John `jb Bellone <jvb4@njit.edu> */
+/* 
+   The GTKWorkbook Project <http://gtkworkbook.sourceforge.net/>
+   Copyright (C) 2008, 2009 John Bellone, Jr. <jvb4@njit.edu>
+
+   This library is free software; you can redistribute it and/or
+   modify it under the terms of the GNU Lesser General Public
+   License as published by the Free Software Foundation; either
+   version 2.1 of the License, or (at your option) any later version.
+
+   This library is distributed in the hope that it will be useful,
+   but WITHOUT ANY WARRANTY; without even the implied warranty of
+   MERCHANTABILITY or FITNESS FOR A PRACTICAL PURPOSE. See the GNU
+   Lesser General Public License for more details.
+
+   You should have received a copy of the GNU Lesser General Public
+   License along with the library; if not, write to the Free Software
+   Foundation, Inc., 51 Franklin Street, Fifth Floor Boston, MA 02110-1301 USA
+*/
 #include <workbook/sheet.h>
 #include <string.h>
 
@@ -284,8 +301,7 @@ sheet_method_set_attention (Sheet * sheet, gint attention)
 
   /* Do something funky to show that you should be looking at ME!
      Oh, GtkNotebook tab, why are thou so vain? */
-  if ((sheet->has_focus == FALSE) && (sheet->notices > 0))
-    {
+  if ((sheet->has_focus == FALSE) && (sheet->notices > 0)) {
       
     }
 
@@ -348,25 +364,27 @@ sheet_method_apply_cellarray (Sheet * sheet,
      boost (mainly because we should not have to check all the bounds each
      time we want to update). */
   for (gint ii = 0; ii < size; ii++) {
+    Cell * cell = array[ii];
+
     gtk_sheet_set_cell_text (GTK_SHEET (sheet->gtk_sheet),
-			     array[ii]->row,
-			     array[ii]->column,
-			     array[ii]->value->str);
+			     cell->row,
+			     cell->column,
+			     cell->value->str);
 
-    if (!IS_NULLSTR (array[ii]->attributes.bgcolor->str))
+    if (!IS_NULLSTR (cell->attributes.bgcolor->str))
       sheet->range_set_background (sheet, 
-				   &array[ii]->range, 
-				   array[ii]->attributes.bgcolor->str);
+				   &cell->range, 
+				   cell->attributes.bgcolor->str);
 
-    if (!IS_NULLSTR (array[ii]->attributes.fgcolor->str))
+    if (!IS_NULLSTR (cell->attributes.fgcolor->str))
       sheet->range_set_foreground (sheet, 
-				   &array[ii]->range, 
-				   array[ii]->attributes.fgcolor->str);
+				   &cell->range, 
+				   cell->attributes.fgcolor->str);
 
     /* Clear all of the strings */
-    g_string_assign (array[ii]->value, "");
-    g_string_assign (array[ii]->attributes.bgcolor, "");
-    g_string_assign (array[ii]->attributes.fgcolor, "");
+    g_string_assign (cell->value, "");
+    g_string_assign (cell->attributes.bgcolor, "");
+    g_string_assign (cell->attributes.fgcolor, "");
   }
 
   gdk_threads_leave ();

@@ -49,7 +49,7 @@ namespace largefile {
 	  (column->array) = (Cell **) g_realloc ((column->array), max * sizeof (Cell*));
 
 	  for (int ii = array_max; ii < max; ii++)
-		array[ii] = NULL;
+	    (column->array)[ii] = NULL;
 	}
 	
 	if ((column->array)[column->field] == NULL)
