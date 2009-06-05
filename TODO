@@ -1,0 +1,20 @@
+* Fix heap problem inside of libworkbook
+* libworkbook
+	- Quickly update rows 
+		o This should use native GrowSheet, CheckBounds, etc
+	- Quickly update ranges
+		o Utilzies row/tuple update and pointer arithmetic
+* File dispatcher	
+	- Input/Output
+		o Put a timeout on reader/indexer executions
+		o Automatically index based upon the last read
+	- Caching
+		o Run a periodical reader in the background
+		o Run a periodical indexer in the background
+* Visualization 
+	- Controls
+		o Page up, page down for panning
+		o Control + G for GOTO line
+		o Control + O for percentage offset
+		o Control + I for index up to line
+	
