@@ -1,11 +1,9 @@
-# Ignore spotlight stores and emacs garbage
 .DS_Store
 *~
-
-# Ignore bin/, lib/ and OBJS/
 OBJS/
 bin/
 lib/
-
-# Ignore specific library outputs.
+autom4te.cache/
+autoscan.log
+configure.scan
 csv/libcsv.*
