@@ -1,6 +1,4 @@
 /* 
-   thread_main.cpp - Plugin Main Thread Source File
-
    The GTKWorkbook Project <http://gtkworkbook.sourceforge.net/>
    Copyright (C) 2008, 2009 John Bellone, Jr. <jvb4@njit.edu>
 
@@ -18,8 +16,7 @@
    License along with the library; if not, write to the Free Software
    Foundation, Inc., 51 Franklin Street, Fifth Floor Boston, MA 02110-1301 USA
 */
-#include <workbook/workbook.h>
-#include <config/config.h>
+#include <gtkworkbook/workbook.h>
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <unistd.h>
@@ -28,6 +25,7 @@
 #include <iostream>
 #include <sstream>
 #include <string>
+#include "../config.h"
 #include "concurrent/Thread.hpp"
 #include "concurrent/ThreadArgs.hpp"
 #include "proactor/Proactor.hpp"
