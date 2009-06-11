@@ -19,8 +19,8 @@
    Foundation, Inc., 51 Franklin Street, Fifth Floor Boston, MA 02110-1301 USA
 */
 #include "CsvParser.hpp"
-#include <workbook/sheet.h>
-#include <workbook/cell.h>
+#include <gtkworkbook/sheet.h>
+#include <gtkworkbook/cell.h>
 #include <iostream>
 
 namespace realtime {

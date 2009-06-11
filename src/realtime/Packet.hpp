@@ -1,6 +1,4 @@
 /* 
-   Packet.hpp - Packet Object Header File
-
    The GTKWorkbook Project <http://gtkworkbook.sourceforge.net/>
    Copyright (C) 2008, 2009 John Bellone, Jr. <jvb4@njit.edu>
 
@@ -21,7 +19,7 @@
 #ifndef HPP_PACKET
 #define HPP_PACKET
 
-#include <workbook/cell.h>
+#include <gtkworkbook/cell.h>
 #include <glib.h>
 #include <string>
 #include <cstdlib>

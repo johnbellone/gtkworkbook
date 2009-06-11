@@ -1,6 +1,4 @@
-/*
-   CsvParser.cpp - CSV Parser Object Header File
-
+/* 
    The GTKWorkbook Project <http://gtkworkbook.sourceforge.net/>
    Copyright (C) 2008, 2009 John Bellone, Jr. <jvb4@njit.edu>
 
@@ -18,42 +16,17 @@
    License along with the library; if not, write to the Free Software
    Foundation, Inc., 51 Franklin Street, Fifth Floor Boston, MA 02110-1301 USA
 */
-#ifndef HPP_CSVPARSER
-#define HPP_CSVPARSER
+#ifndef H_PARSE
+#define H_PARSE
 
-#include "proactor/Worker.hpp"
-#include <gtkworkbook/workbook.h>
-#include <gtkworkbook/sheet.h>
-#include <gtkworkbook/cell.h>
-#include <csv/csv.h>
-#include <iostream>
+#include <glib.h>
+#include <shared.h>
 
-namespace realtime {
+#define EXPECT(p,q,d) (*(q = munch (p)) == d)
 
-  class CsvParser : public proactor::Worker {
-  private:
-    Workbook * wb;
-    FILE * pktlog;
-    Cell * cell[10];
-    int verbosity;
-  public:
-    CsvParser (Workbook * wb, FILE * pktlog, int verbosity) {
-      this->wb = wb;
-      this->pktlog = pktlog;
-      this->verbosity = verbosity;
-
-      for (unsigned int ii = 0; ii < 10; ii++)
-	this->cell[ii] = cell_new();
-    }
-
-    virtual ~CsvParser (void) {
-      for (unsigned int ii = 0; ii < 10; ii++)
-	this->cell[ii]->destroy (this->cell[ii]);
-    }
-
-    void * run (void * null);
-  };
-
-} // end of namespace
+/* parse.c */
+extern gchar *munch (gchar *p);
+extern gchar *parse (gchar *p, gchar *word, gint n, const gchar delim);
+extern gchar *trim (gchar *p);
 
 #endif

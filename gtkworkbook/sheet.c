@@ -1,0 +1,488 @@
+/* @author: John `jb Bellone <jvb4@njit.edu> */
+#include <gtkworkbook/sheet.h>
+#include <string.h>
+
+/* sheet.c (static) */
+static Sheet *sheet_object_init (Workbook *, const gchar *, gint, gint);
+static void sheet_object_free (Sheet *);
+static void sheet_method_destroy (Sheet *);
+static void sheet_method_set_cell (Sheet *, gint, gint, const gchar *);
+static void sheet_method_apply_cell (Sheet *, const Cell *);
+static void sheet_method_apply_cellarray (Sheet *, Cell **, gint);
+static void sheet_method_apply_cellrange (Sheet *, 
+					  const GtkSheetRange *,
+					  const CellAttributes *);
+static void sheet_method_range_set_background (Sheet *, 
+					       const GtkSheetRange *,
+					       const gchar *);
+static void sheet_method_range_set_foreground (Sheet *,
+					       const GtkSheetRange *,
+					       const gchar *);
+static void sheet_method_set_attention (Sheet *, gint);
+static gboolean sheet_method_load (Sheet *, const gchar *);
+static gboolean sheet_method_save (Sheet *, const gchar *);
+
+struct geometryFileHeader
+{
+  gint fileVersion;
+  gint maxRow;
+  gint maxColumn;
+};
+
+struct geometryFileEntry
+{
+  gint cellRow;
+  gint cellCol;
+  gint cellTextLength;
+  gboolean cellIsVisible;
+  gboolean cellIsEditable;
+  GtkJustification cellJustification;
+  GdkColor cellForeground;
+  GdkColor cellBackground;
+};
+
+/* @description: This method creates a new Sheet object and returns the
+   pointer to that object. It calls the constructor function to do so.
+   @book: A pointer to the Workbook that the object will be a part of.
+   @label: A string to the Sheet's label. 
+   @rows: The number of rows.
+   @columns: The number of columns. */
+Sheet *
+sheet_new (Workbook * book, const gchar * label, gint rows, gint columns)
+{
+  ASSERT (book != NULL);
+  
+  Sheet * sheet = sheet_object_init (book, label, rows, columns);
+
+  /* STUB: Perform anything that is based on a style here. */
+
+  return sheet;
+}
+
+/* @description: This function is the Sheet's constructor. 
+   @book: A pointer to the Workbook that the Sheet object will be assigned.
+   @label: A string label - the name of the sheet that we will use to search.
+   @rows: The amount of rows the GtkSheet widget should have.
+   @cols: The amount of columns the GtkSheet widget should have. */
+static Sheet *
+sheet_object_init (Workbook * book,
+		   const gchar * label, 
+		   gint rows, gint columns)
+{
+  gdk_threads_enter ();
+  Sheet * sheet = NEW (Sheet);
+
+  /* Create the sheet containers and GtkSheet object. */
+  sheet->gtk_box = gtk_vbox_new (FALSE, 1);
+  gtk_widget_show (sheet->gtk_box);
+
+  GtkWidget * scrolled_window = gtk_scrolled_window_new (NULL, NULL);
+  gtk_box_pack_start (GTK_BOX (sheet->gtk_box), scrolled_window, 1,1,1);
+  gtk_scrolled_window_set_policy (GTK_SCROLLED_WINDOW (scrolled_window),
+				  GTK_POLICY_AUTOMATIC,
+				  GTK_POLICY_AUTOMATIC);
+  gtk_widget_show (scrolled_window);
+
+  sheet->gtk_label = gtk_label_new (label);
+  
+  sheet->gtk_sheet = gtk_sheet_new (rows, columns, label);
+  gtk_sheet_set_autoresize (GTK_SHEET (sheet->gtk_sheet), TRUE);
+  gtk_container_add (GTK_CONTAINER (scrolled_window),
+		     GTK_WIDGET (sheet->gtk_sheet));
+  gtk_widget_show (sheet->gtk_sheet);
+
+  /* We should be able to use sheet->gtk_box now throughout all of our
+     tests when iterating through a GtkNotebook structure. The page number
+     will change when something is removed (or reordered). The pointer will
+     stay the same. */
+  sheet->page = gtk_notebook_append_page (GTK_NOTEBOOK (book->gtk_notebook),
+					  sheet->gtk_box,
+					  sheet->gtk_label);
+  /* Members */
+  sheet->workbook = book;
+  sheet->name = g_strdup (label);
+  sheet->attention = 0;
+  sheet->notices = 0;
+  sheet->has_focus = FALSE;
+  sheet->next = sheet->prev = NULL;
+  sheet->max_rows = rows;
+  sheet->max_columns = columns;
+
+  /* Methods */
+  sheet->destroy = sheet_method_destroy;
+  sheet->set_cell = sheet_method_set_cell;
+  sheet->apply_range = sheet_method_apply_cellrange;
+  sheet->apply_array = sheet_method_apply_cellarray;
+  sheet->apply_cell = sheet_method_apply_cell;
+  sheet->range_set_foreground = sheet_method_range_set_foreground;
+  sheet->range_set_background = sheet_method_range_set_background;
+  sheet->set_attention = sheet_method_set_attention;
+  sheet->save = sheet_method_save;
+  sheet->load = sheet_method_load;
+
+  /* Connect any signals that we need to. */
+  if (!IS_NULL (sheet->workbook->signals[SIG_WORKBOOK_CHANGED]))
+    {
+      gtk_signal_connect (GTK_OBJECT (sheet->gtk_sheet),
+			  "changed",
+		  G_CALLBACK (sheet->workbook->signals[SIG_WORKBOOK_CHANGED]),
+			  (gpointer)sheet);
+    }
+
+  gdk_threads_leave ();
+  return sheet;
+}
+
+static gboolean
+sheet_method_load (Sheet * sheet, const gchar * filepath)
+{
+  ASSERT (sheet != NULL);
+
+  if (IS_NULLSTR (filepath))
+    {
+      g_warning ("%s: filepath cannot be a NULL string", __FUNCTION__);
+      return FALSE;
+    }
+
+  FILE * fp = NULL;
+  if ((fp = fopen (filepath, "rb")) == NULL)
+    {
+      g_warning ("%s: failed opening file '%s' for reading", 
+		 __FUNCTION__,
+		 filepath);
+      return FALSE;
+    }
+
+  gdk_threads_enter ();
+  GtkSheet * gtksheet = GTK_SHEET (sheet->gtk_sheet);
+  struct geometryFileHeader header = {-1,-1,-1};
+  struct geometryFileEntry entry = {-1,-1,-1};
+ 
+  fread ((void *)&header, sizeof (struct geometryFileHeader), 1, fp);
+
+  if (header.fileVersion != GEOMETRY_FILE_VERSION)
+    {
+      g_warning ("Geometry file version %d is not accepted. (%d)",
+		 header.fileVersion, GEOMETRY_FILE_VERSION);
+      FCLOSE (fp);
+      gdk_threads_leave ();
+      return FALSE;
+    }
+
+  while (fread ((void *)&entry, sizeof (struct geometryFileEntry), 1, fp) > 0)
+    {
+      gchar * text = g_strndup ("", entry.cellTextLength);
+      fread ((void *)text, sizeof (gchar), entry.cellTextLength, fp);
+      gtk_sheet_set_cell_text (gtksheet, 
+			       entry.cellRow, 
+			       entry.cellCol, 
+			       text);
+      
+      GtkSheetCell ** cell = &gtksheet->data[entry.cellRow][entry.cellCol];
+      
+      (*cell)->attributes->is_editable = entry.cellIsEditable;
+      (*cell)->attributes->is_visible = entry.cellIsVisible;
+      (*cell)->attributes->justification = entry.cellJustification;
+      (*cell)->attributes->foreground.pixel = entry.cellForeground.pixel;
+      (*cell)->attributes->foreground.red = entry.cellForeground.red;
+      (*cell)->attributes->foreground.green = entry.cellForeground.green;
+      (*cell)->attributes->foreground.blue = entry.cellForeground.blue;
+      (*cell)->attributes->background.pixel = entry.cellBackground.pixel;
+      (*cell)->attributes->background.red = entry.cellBackground.red;
+      (*cell)->attributes->background.green = entry.cellBackground.green;
+      (*cell)->attributes->background.blue = entry.cellBackground.blue;
+
+      FREE (text);
+    }
+
+  FCLOSE (fp);
+  gdk_threads_leave ();
+  return TRUE;
+}
+
+static gboolean
+sheet_method_save (Sheet * sheet, const gchar * filepath)
+{
+  ASSERT (sheet != NULL);
+
+  if (IS_NULLSTR (filepath))
+    {
+      g_warning ("%s: filepath cannot be a NULL string", __FUNCTION__);
+      return FALSE;
+    }
+
+  FILE * fp = NULL;
+  if ((fp = fopen (filepath, "wb")) == NULL)
+    {
+      g_warning ("%s: failed opening file '%s' for writing", 
+		 __FUNCTION__, 
+		 filepath);
+      return FALSE;
+    }
+  
+  gdk_threads_enter ();
+  GtkSheetCell *** data = GTK_SHEET (sheet->gtk_sheet)->data;
+  struct geometryFileHeader header =
+    {
+      GEOMETRY_FILE_VERSION,
+      GTK_SHEET (sheet->gtk_sheet)->maxallocrow,
+      GTK_SHEET (sheet->gtk_sheet)->maxalloccol
+    };
+
+  fwrite ((void *)&header, sizeof(struct geometryFileHeader), 1, fp);
+
+  for (gint ii = 0; ii <= header.maxRow; ii++)
+    {
+      for (gint jj = 0; jj <= header.maxColumn; jj++)
+	{
+	  GtkSheetCell * cell = data[ii][jj];
+
+	  if (!IS_NULL (cell) && !IS_NULLSTR(cell->text))
+	    {
+	      struct geometryFileEntry entry =
+		{
+		  cell->row,
+		  cell->col,
+		  strlen (cell->text),
+		  cell->attributes->is_visible,
+		  cell->attributes->is_editable,
+		  cell->attributes->justification
+		};
+
+	      entry.cellForeground.pixel = cell->attributes->foreground.pixel;
+	      entry.cellForeground.red = cell->attributes->foreground.red;
+	      entry.cellForeground.green = cell->attributes->foreground.green;
+	      entry.cellForeground.blue = cell->attributes->foreground.blue;
+	      entry.cellBackground.pixel = cell->attributes->background.pixel;
+	      entry.cellBackground.red = cell->attributes->background.red;
+	      entry.cellBackground.green = cell->attributes->background.green;
+	      entry.cellBackground.blue = cell->attributes->background.blue;
+
+	      fwrite ((void *)&entry, 
+		      sizeof (struct geometryFileEntry), 1, fp);
+	      fwrite ((void *)cell->text, 
+		      sizeof (gchar), entry.cellTextLength, fp);
+	    }
+	}
+    }
+
+  FCLOSE (fp);
+  gdk_threads_leave ();
+  return TRUE;
+}
+
+/* @description: This method sets the attention level of the Sheet.
+   @sheet: A pointer to the Sheet object.
+   @attention: The attention level. */
+static void 
+sheet_method_set_attention (Sheet * sheet, gint attention)
+{
+  ASSERT (sheet != NULL);
+  gdk_threads_enter ();
+
+  sheet->attention = attention;
+
+  /* Do something funky to show that you should be looking at ME!
+     Oh, GtkNotebook tab, why are thou so vain? */
+  if ((sheet->has_focus == FALSE) && (sheet->notices > 0))
+    {
+      
+    }
+
+  gdk_threads_leave ();
+}
+
+/* @description: This method destroys the Sheet object.
+   @sheet: A pointer to the object that will be destroyed. */
+static void
+sheet_method_destroy (Sheet * sheet)
+{
+  ASSERT (sheet != NULL);
+  gdk_threads_enter ();
+
+  DOUBLE_UNLINK (sheet);
+
+  sheet_object_free (sheet);
+
+  gdk_threads_leave ();
+}
+
+/* @description: This method frees the memory that was used by the Sheet
+   object. This should only be called from sheet->destroy()
+   @sheet: A pointer to the Sheet object that will be freed. */
+static void
+sheet_object_free (Sheet * sheet)
+{
+  ASSERT (sheet != NULL);
+
+  FREE (sheet->name);
+  FREE (sheet);
+  return;
+}
+
+static void
+sheet_method_apply_cellrange (Sheet * sheet, 
+			      const GtkSheetRange * range,
+			      const CellAttributes * attrib)
+{
+  ASSERT (sheet != NULL);
+  g_return_if_fail (range != NULL);
+  g_return_if_fail (attrib != NULL);
+  gdk_threads_enter ();
+
+  gdk_threads_leave ();
+}
+
+static void
+sheet_method_apply_cellarray (Sheet * sheet, 
+			      Cell ** array,
+			      gint size)
+{
+  ASSERT (sheet != NULL);
+  g_return_if_fail (array != NULL);
+
+  gdk_threads_enter ();
+
+  /* We'll see how this performs for now. In the future we may want to go
+     directly into the GtkSheet structures to get a little more performance
+     boost (mainly because we should not have to check all the bounds each
+     time we want to update). */
+  for (gint ii = 0; ii < size; ii++) {
+    gtk_sheet_set_cell_text (GTK_SHEET (sheet->gtk_sheet),
+			     array[ii]->row,
+			     array[ii]->column,
+			     array[ii]->value->str);
+
+    if (!IS_NULLSTR (array[ii]->attributes.bgcolor->str))
+      sheet->range_set_background (sheet, 
+				   &array[ii]->range, 
+				   array[ii]->attributes.bgcolor->str);
+
+    if (!IS_NULLSTR (array[ii]->attributes.fgcolor->str))
+      sheet->range_set_foreground (sheet, 
+				   &array[ii]->range, 
+				   array[ii]->attributes.fgcolor->str);
+
+    /* Clear all of the strings */
+    g_string_assign (array[ii]->value, "");
+    g_string_assign (array[ii]->attributes.bgcolor, "");
+    g_string_assign (array[ii]->attributes.fgcolor, "");
+  }
+
+  gdk_threads_leave ();
+}
+
+/* @description: This method applies the settings from a Cell object into the
+   GtkSheet. In order to properly function this should be really the only the
+   GtkSheet object is modified.
+   @sheet: A pointer to the Sheet that holds the GtkSheet object.
+   @cell: A pointer to the Cell that will be applied. */
+static void
+sheet_method_apply_cell (Sheet * sheet, const Cell * cell)
+{
+  ASSERT (sheet != NULL);
+  g_return_if_fail (cell != NULL);
+
+  gdk_threads_enter ();
+
+  if (sheet->has_focus == FALSE)
+    sheet->notices++;
+
+  gtk_sheet_set_cell (GTK_SHEET (sheet->gtk_sheet),
+		      cell->row,
+		      cell->column,
+		      cell->attributes.justification,
+		      cell->value->str);
+  gdk_threads_leave ();
+
+  if (!IS_NULLSTR (cell->attributes.bgcolor->str))
+    sheet->range_set_background (sheet, 
+				 &cell->range, 
+				 cell->attributes.bgcolor->str);
+
+  if (!IS_NULLSTR (cell->attributes.fgcolor->str))
+    sheet->range_set_foreground (sheet, 
+				 &cell->range, 
+				 cell->attributes.fgcolor->str);
+
+  /* Clear all of the strings */
+  g_string_assign (cell->value, "");
+  g_string_assign (cell->attributes.bgcolor, "");
+  g_string_assign (cell->attributes.fgcolor, "");
+}
+
+/* @description: This method changes the background of a range of cells. 
+   @sheet: A pointer to the Sheet object that contains GtkSheet.
+   @range: A pointer to the GtkSheetRange object that contains the ranges
+   that we will be applying the background color to.
+   @desc: A string that contains the color's string value (e.g. white, red
+   green, etc). */
+static void
+sheet_method_range_set_background (Sheet * sheet, 
+				   const GtkSheetRange * range,
+				   const gchar * desc)
+{
+  ASSERT (sheet != NULL); ASSERT (range != NULL);
+  GdkColor color;
+
+  /* The color needs to be taken from the colormap; there is an alternative
+     way to do this if we use #rgb or #rrggbb formats. */
+  gdk_threads_enter ();
+  gdk_color_parse (desc, &color);
+  gdk_color_alloc (gtk_widget_get_colormap (sheet->gtk_sheet),
+		   &color);
+  
+  gtk_sheet_range_set_background (GTK_SHEET (sheet->gtk_sheet),
+				  range, &color);
+  gdk_threads_leave ();
+}
+
+/* @description: This method changes the foreground color over a range of
+   cells. 
+   @sheet: A pointer to the Sheet object that contains GtkSheet.
+   @range: A pointer to the GtkSheetRange object that contains the ranges
+   that we will be applying the foreground color to.
+   @desc: The string representation of the color (e.g. white, green, blue). */
+static void
+sheet_method_range_set_foreground (Sheet * sheet, 
+				   const GtkSheetRange * range,
+				   const gchar * desc)
+{
+  ASSERT (sheet != NULL); ASSERT (range != NULL);
+  GdkColor color;
+  
+   /* The color needs to be taken from the colormap; there is an alternative
+     way to do this if we use #rgb or #rrggbb formats. */
+  gdk_threads_enter ();
+  gdk_color_parse (desc, &color);
+  gdk_color_alloc (gtk_widget_get_colormap (sheet->gtk_sheet),
+		   &color);
+      
+  gtk_sheet_range_set_foreground (GTK_SHEET (sheet->gtk_sheet),
+				  range, &color);
+  gdk_threads_leave ();
+ }
+
+/* @description: This method manually sets a GtkSheet cell's value. It does
+   not require the use of the Cell object.
+   @sheet: A pointer to the Sheet object that contains GtkSheet.
+   @row: An integer value of the row.
+   @col: An integer value of the column.
+   @value: The text string to be applied to the cell. */
+static void 
+sheet_method_set_cell (Sheet * sheet,
+		       gint row, gint col,
+		       const gchar * value)
+{
+  ASSERT (sheet != NULL);
+
+  gdk_threads_enter ();
+  if (sheet->has_focus == FALSE)
+    sheet->notices++;
+  gtk_sheet_set_cell (GTK_SHEET (sheet->gtk_sheet), 
+		      row, 
+		      col, 
+		      GTK_JUSTIFY_LEFT, 
+		      value);
+  gdk_threads_leave ();
+}
