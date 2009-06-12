@@ -82,23 +82,23 @@ namespace largefile {
     this->running = true;
 
     while (this->running == true) {
-      if (this->fp == NULL) {
-		this->running = false;
-		break;
-      }
+		 if (this->fp == NULL) {
+			 this->running = false;
+			 break;
+		 }
 
-      this->inputQueue.lock();
+		 this->inputQueue.lock();
       
-      while (this->inputQueue.size() > 0) {
-	if (this->running == false)
-	  break;
+		 while (this->inputQueue.size() > 0) {
+			 if (this->running == false)
+				 break;
 
-	this->pro->onReadComplete (this->inputQueue.pop());
-      }
+			 this->pro->onReadComplete (this->inputQueue.pop());
+		 }
 
-      this->inputQueue.unlock();
+		 this->inputQueue.unlock();
 
-      Thread::sleep (5);
+		 Thread::sleep (5);
     }
 
     return NULL;
@@ -180,7 +180,7 @@ namespace largefile {
      }
 
     this->running = false;
-    std::fseek (this->fp, cursor, SEEK_SET);
+    //std::fseek (this->fp, cursor, SEEK_SET);
     this->dispatcher->removeWorker (this);
     return NULL;
   }

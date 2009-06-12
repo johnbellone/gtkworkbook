@@ -1,15 +1,10 @@
-# Ignore spotlight stores and emacs garbage
 .DS_Store
 *~
-
-# Ignore bin/, lib/ and OBJS/
 OBJS/
 bin/
 lib/
-
-# Ignore specific library outputs.
 csv/libcsv.*
 
-# Valgrind files
+# Valgrind garbage
 massif*
 *.log
