@@ -4,7 +4,5 @@ OBJS/
 bin/
 lib/
 csv/libcsv.*
-
-# Valgrind garbage
 massif*
 *.log

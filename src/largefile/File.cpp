@@ -17,172 +17,181 @@
    Foundation, Inc., 51 Franklin Street, Fifth Floor Boston, MA 02110-1301 USA
 */
 #include "File.hpp"
+#include <iostream>
 #include <concurrent/ScopedMemoryLock.hpp>
 #include <cstdio>
 
 namespace largefile {
 
-  FileDispatcher::FileDispatcher (int e, proactor::Proactor * pro) {
-    this->fp = NULL;
-    this->pro = pro;
-    setEventId(e);
+	FileDispatcher::FileDispatcher (int e, proactor::Proactor * pro) {
+		this->fp = NULL;
+		this->pro = pro;
+		setEventId(e);
 
-    this->pool.start();
-  }
+		this->pool.start();
+	}
 
-  FileDispatcher::~FileDispatcher (void) {
-    if (this->fp != NULL)
-      this->close();
+	FileDispatcher::~FileDispatcher (void) {
+		if (this->fp != NULL)
+			this->close();
 
-    this->pool.stop();
-  }
+		this->pool.stop();
+	}
 
-  void
-  FileDispatcher::read (long int start, long int N) {
-    // WARNING: Need some form of a lock on this method.
-    LineReader * reader = new LineReader (this, this->fp, start, N);
-    this->pool.execute (reader);
-  }
+	void
+	FileDispatcher::read (long int start, long int N) {
+		// WARNING: Need some form of a lock on this method.
+		LineReader * reader = new LineReader (this, this->fp, start, N);
+		this->pool.execute (reader);
+	}
 
-  void
-  FileDispatcher::index (long int start, long int N) {
-    // WARNING: Need some form fo a lock on this method.
-    LineIndexer * indexer = new LineIndexer (this, this->fp, start, N);
-    this->pool.execute (indexer);
-  }
+	void
+	FileDispatcher::index (void) {
+		LineIndexer * indexer = new LineIndexer (this, this->fp, this->marks);
+		this->pool.execute (indexer);
+	}
 
-  bool
-  FileDispatcher::open (const std::string & filename) {
-    if (filename.length() == 0)
-      return false;
+	bool
+	FileDispatcher::open (const std::string & filename) {
+		if (filename.length() == 0)
+			return false;
 
-    if ((this->fp = std::fopen (filename.c_str(), "r")) == NULL) {
-      // stub: throw an error somewhere
-      return false;
-    }
+		if ((this->fp = std::fopen (filename.c_str(), "r")) == NULL) {
+			// stub: throw an error somewhere
+			return false;
+		}
 
-    concurrent::ScopedMemoryLock::addMemoryLock ((unsigned long int)this->fp);
-    this->filename = filename;
-    return true;
-  }
+		std::fseek (this->fp, 0, SEEK_END);
+		this->marks[100] = std::ftell (this->fp);
+		std::fseek (this->fp, 0, SEEK_SET);
 
-  bool 
-  FileDispatcher::close (void) {
-    concurrent::ScopedMemoryLock mutex ((unsigned long int)this->fp);
-    if (this->fp == NULL)
-      return false;
+		for (int ii = 0; ii < this->marks[100]; ii++)
+			this->marks[ii] = (long int)((ii/100)*this->marks[100]);
+		 
+		concurrent::ScopedMemoryLock::addMemoryLock ((unsigned long int)this->fp);
+		this->filename = filename;
+		return true;
+	}
 
-    std::fclose (this->fp); this->fp = NULL;
-    mutex.remove();
-    return true;
-  }
+	bool 
+	FileDispatcher::close (void) {
+		concurrent::ScopedMemoryLock mutex ((unsigned long int)this->fp);
+		if (this->fp == NULL)
+			return false;
+
+		std::fclose (this->fp); this->fp = NULL;
+		mutex.remove();
+		return true;
+	}
   
-  void *
-  FileDispatcher::run (void * null) {
-    this->running = true;
+	void *
+	FileDispatcher::run (void * null) {
+		this->running = true;
 
-    while (this->running == true) {
-		 if (this->fp == NULL) {
-			 this->running = false;
-			 break;
-		 }
+		while (this->running == true) {
+			if (this->fp == NULL) {
+				this->running = false;
+				break;
+			}
 
-		 this->inputQueue.lock();
+			this->inputQueue.lock();
       
-		 while (this->inputQueue.size() > 0) {
-			 if (this->running == false)
-				 break;
+			while (this->inputQueue.size() > 0) {
+				if (this->running == false)
+					break;
 
-			 this->pro->onReadComplete (this->inputQueue.pop());
-		 }
+				this->pro->onReadComplete (this->inputQueue.pop());
+			}
 
-		 this->inputQueue.unlock();
+			this->inputQueue.unlock();
 
-		 Thread::sleep (5);
-    }
+			Thread::sleep (5);
+		}
 
-    return NULL;
-  }
+		return NULL;
+	}
   
-  LineIndexer::LineIndexer (proactor::InputDispatcher * d,
-			    FILE * fp,
-			    long int start,
-			    long int N) {
-    this->fp = fp;
-    this->dispatcher = d;
-    this->startOffset = start;
-    this->numberOfLinesToRead = N;
-  }
+	LineIndexer::LineIndexer (proactor::InputDispatcher * d,
+									  FILE * fp,
+									  long int * marks) {
+		this->fp = fp;
+		this->dispatcher = d;
+		this->marks = marks;
+	}
 
-  LineIndexer::~LineIndexer (void) {
+	LineIndexer::~LineIndexer (void) {
 
-  }
+	}
 
-  void *
-  LineIndexer::run (void * null) {
-    this->running = true;
-    char buf[4096];
+	void *
+	LineIndexer::run (void * null) {
+		this->running = true;
 
-    concurrent::ScopedMemoryLock mutex ((unsigned long int)this->fp, true);
+		concurrent::ScopedMemoryLock mutex ((unsigned long int)this->fp, true);
+		
+		long int start = std::ftell (this->fp), cursor = 1;
 
-    // Record current position and seek to where we're going to start.
-    long int cursor = std::ftell (this->fp);
-    long int & read_max = this->numberOfLinesToRead;
-    std::fseek (this->fp, this->startOffset, SEEK_SET);
+		// Take the relative byte position, e.g. .75 * byte_end, and seek backwards until
+		// we get a newline. We now have the line at that relative byte position. Set it
+		// to the marks array so that we can quick line seek.
+		while (!feof (this->fp)
+				 && (cursor < 101)) {
+			int c = 0, ii = 0;
+			std::fseek(this->fp, this->marks[cursor], SEEK_SET);
 
-    for (long int ii = 0; ii < read_max; ii++) {
-      if (std::fgets (buf, 4096, this->fp) == NULL) 
-		break;
-          
-      //long int pos = std::ftell (this->fp);
-    }
+			while ((c = fgetc (this->fp)) != '\n') {
+				if (c == '\r') break;
+				std::fseek(this->fp, this->marks[cursor] - (++ii) - 1, SEEK_CUR); 
+			}
 
-    // stub: Push up to our pappy.
+			this->marks[cursor] = (this->marks[cursor] - ii); 
+			cursor++;
+		}
 
-    this->running = false;
-    std::fseek (this->fp, cursor, SEEK_SET);
-    this->dispatcher->removeWorker (this);
-    return NULL;
-  }
+		std::fseek (this->fp, start, SEEK_SET);
+		this->dispatcher->removeWorker (this);
+		return NULL;
+	}
 
-  LineReader::LineReader (proactor::InputDispatcher * d,
-						  FILE * fp,
-						  long int start,
-						  long int N) {
-    this->fp = fp;
-    this->dispatcher = d;
-    this->startOffset = start;
-    this->numberOfLinesToRead = N;
-  }
+	LineReader::LineReader (proactor::InputDispatcher * d,
+									FILE * fp,
+									long int start,
+									long int N) {
+		this->fp = fp;
+		this->dispatcher = d;
+		this->startOffset = start;
+		this->numberOfLinesToRead = N;
+		std::cout <<"reader begin\n";
+	}
 
-  LineReader::~LineReader (void) {
-  
-  }
+	LineReader::~LineReader (void) {
+		std::cout <<"reader end\n";
+	}
 
-  void *
-  LineReader::run (void * null) {
-    this->running = false;
-    char buf[4096];
+	void *
+	LineReader::run (void * null) {
+		this->running = false;
+		char buf[4096];
 
-    concurrent::ScopedMemoryLock mutex ((unsigned long int)this->fp, true);
+		concurrent::ScopedMemoryLock mutex ((unsigned long int)this->fp, true);
 
-    // Record current position and seek to where we're going to start.
-    long int cursor = std::ftell (this->fp);
-    long int & read_max = this->numberOfLinesToRead;
-    std::fseek (this->fp, this->startOffset, SEEK_SET);
+		// Record current position and seek to where we're going to start.
+		//    long int cursor = std::ftell (this->fp);
+		long int & read_max = this->numberOfLinesToRead;
+		std::fseek (this->fp, this->startOffset, SEEK_SET);
 
-    for (long int ii = 0; ii < read_max; ii++) {
-      if (std::fgets (buf, 4096, this->fp) == NULL)		
-	break;
+		for (long int ii = 0; ii < read_max; ii++) {
+			if (std::fgets (buf, 4096, this->fp) == NULL)		
+				break;
       
-      // Eventually store index here?
-      this->dispatcher->onReadComplete (std::string (buf));
-     }
+			// Eventually store index here?
+			this->dispatcher->onReadComplete (std::string (buf));
+		}
 
-    this->running = false;
-    //std::fseek (this->fp, cursor, SEEK_SET);
-    this->dispatcher->removeWorker (this);
-    return NULL;
-  }
+		this->running = false;
+		//std::fseek (this->fp, cursor, SEEK_SET);
+		this->dispatcher->removeWorker (this);
+		return NULL;
+	}
 
 } // end of namespace

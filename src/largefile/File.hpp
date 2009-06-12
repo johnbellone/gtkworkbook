@@ -29,52 +29,51 @@
 
 namespace largefile {
 
-  class FileDispatcher : public proactor::InputDispatcher {
-  private:
-    FILE * fp;
-    std::string filename;
-    concurrent::ThreadPool pool;
-  public:
-    FileDispatcher (int e, proactor::Proactor * pro);
-    virtual ~FileDispatcher (void);
+	class FileDispatcher : public proactor::InputDispatcher {
+	private:
+		long int marks[101];
+		FILE * fp;
+		std::string filename;
+		concurrent::ThreadPool pool;
+	public:
+		FileDispatcher (int e, proactor::Proactor * pro);
+		virtual ~FileDispatcher (void);
 
-    bool open (const std::string & filename);
-    bool close (void);
-    void * run (void * null);
+		bool open (const std::string & filename);
+		bool close (void);
+		void * run (void * null);
 
-    void read (long int start, long int N);
-    void index (long int start, long int N);
-  };
+		void read (long int start, long int N);
+		void index (void);
+	};
 
-  class LineIndexer : public proactor::Worker {
-  private:
-    FILE * fp;
-    long int numberOfLinesToRead;
-    long int startOffset; 
-  public:
-    LineIndexer (proactor::InputDispatcher * d, 
-		 FILE * fp, 
-		 long int start,
-		 long int N);
-    virtual ~LineIndexer (void);
+	class LineIndexer : public proactor::Worker {
+	private:
+		long int * marks;
+		FILE * fp;
+	public:
+		LineIndexer (proactor::InputDispatcher * d, 
+						 FILE * fp, 
+						 long int * marks);
+		virtual ~LineIndexer (void);
 
-    void * run (void * null);
-  };
+		void * run (void * null);
+	};
 
-  class LineReader : public proactor::Worker {
-  private:
-    FILE * fp;
-    long int numberOfLinesToRead;
-    long int startOffset;
-  public:
-    LineReader (proactor::InputDispatcher * d, 
-		 FILE * fp, 
-		 long int start,
-		 long int N);
-    virtual ~LineReader (void);
+	class LineReader : public proactor::Worker {
+	private:
+		FILE * fp;
+		long int numberOfLinesToRead;
+		long int startOffset;
+	public:
+		LineReader (proactor::InputDispatcher * d, 
+						FILE * fp, 
+						long int start,
+						long int N);
+		virtual ~LineReader (void);
 
-    void * run (void * null);
-  };
+		void * run (void * null);
+	};
 
 } // end of namespace
 

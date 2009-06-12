@@ -45,17 +45,20 @@ append_pidname (const gchar * pre) {
 }
 
 static gint
-key_press_callback (GtkWidget * widget, GdkEventKey * event, gpointer data) {
-	FileDispatcher * fdispatcher = (FileDispatcher *)data;
+key_press_callback (GtkWidget * window, GdkEventKey * event, gpointer data) {
+	std::vector<gpointer> * arguments = (std::vector<gpointer> *)data;
+	FileDispatcher * fd = (FileDispatcher *)arguments->at(0);
+	Workbook * wb = (Workbook *)arguments->at(1);
+	GtkSheet * gtksheet = GTK_SHEET (wb->sheet_first->gtk_sheet);
 	
 	switch (event->keyval) {
 		case GDK_Page_Up: {
-			fdispatcher->read (1000,1000);
+			
 		}
 		return FALSE;
 
 		case GDK_Page_Down: {
-			std::cout<<"Down\n";
+			
 		}
 		return FALSE;
 	}
@@ -109,9 +112,13 @@ thread_main (ThreadArgs * args) {
 		return;
 	}
 
+	std::vector<gpointer> signal_arguments;
+	signal_arguments.push_back( (gpointer)&fdispatcher );
+	signal_arguments.push_back( (gpointer)wb );
+	
 	gtk_signal_connect (GTK_OBJECT (wb->gtk_window), "key_press_event",
 							  GTK_SIGNAL_FUNC (key_press_callback),
-							  (gpointer)&fdispatcher);
+							  (gpointer)&signal_arguments);
 	
 	fdispatcher.read (0, 1000);
 
