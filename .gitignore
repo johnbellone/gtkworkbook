@@ -7,3 +7,16 @@ autom4te.cache/
 autoscan.log
 configure.scan
 csv/libcsv.*
+depcomp
+config.guess
+config.log
+config.status
+config.sub
+install-sh
+missing
+ltmain.sh
+*.o
+*.lo
+*.la
+*.a
+*.so
