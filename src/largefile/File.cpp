@@ -27,28 +27,24 @@ namespace largefile {
 		this->fp = NULL;
 		this->pro = pro;
 		setEventId(e);
-
-		this->pool.start();
 	}
 
 	FileDispatcher::~FileDispatcher (void) {
 		if (this->fp != NULL)
 			this->close();
-
-		this->pool.stop();
 	}
 
 	void
 	FileDispatcher::read (long int start, long int N) {
 		// WARNING: Need some form of a lock on this method.
 		LineReader * reader = new LineReader (this, this->fp, start, N);
-		this->pool.execute (reader);
+		this->addWorker (reader);
 	}
 
 	void
 	FileDispatcher::index (void) {
 		LineIndexer * indexer = new LineIndexer (this, this->fp, this->marks);
-		this->pool.execute (indexer);
+		this->addWorker (indexer);
 	}
 
 	bool
@@ -62,12 +58,15 @@ namespace largefile {
 		}
 
 		std::fseek (this->fp, 0, SEEK_END);
-		this->marks[100] = std::ftell (this->fp);
-		std::fseek (this->fp, 0, SEEK_SET);
+		long int byte_end = std::ftell (this->fp);
 
-		for (int ii = 0; ii < this->marks[100]; ii++)
-			this->marks[ii] = (long int)((ii/100)*this->marks[100]);
-		 
+		for (int ii = 0; ii < 101; ii++) {
+			float N = ii, K = 10000;
+			this->marks[ii] = (long int)((N/K) * byte_end);
+		}
+
+		std::fseek (this->fp, 0, SEEK_SET);
+		
 		concurrent::ScopedMemoryLock::addMemoryLock ((unsigned long int)this->fp);
 		this->filename = filename;
 		return true;
@@ -120,7 +119,6 @@ namespace largefile {
 	}
 
 	LineIndexer::~LineIndexer (void) {
-
 	}
 
 	void *
@@ -130,25 +128,26 @@ namespace largefile {
 		concurrent::ScopedMemoryLock mutex ((unsigned long int)this->fp, true);
 		
 		long int start = std::ftell (this->fp), cursor = 1;
-
+		
 		// Take the relative byte position, e.g. .75 * byte_end, and seek backwards until
 		// we get a newline. We now have the line at that relative byte position. Set it
 		// to the marks array so that we can quick line seek.
-		while (!feof (this->fp)
-				 && (cursor < 101)) {
+		while (!feof (this->fp) && (cursor < 101)) {
 			int c = 0, ii = 0;
 			std::fseek(this->fp, this->marks[cursor], SEEK_SET);
 
-			while ((c = fgetc (this->fp)) != '\n') {
-				if (c == '\r') break;
+			while ((c = fgetc (this->fp)) != EOF) {
+				if ((c == '\r') || (c=='\n')) break;
 				std::fseek(this->fp, this->marks[cursor] - (++ii) - 1, SEEK_CUR); 
 			}
 
-			this->marks[cursor] = (this->marks[cursor] - ii); 
+			this->marks[cursor] = (this->marks[cursor] - ii);
 			cursor++;
+			clearerr(this->fp);
 		}
 
 		std::fseek (this->fp, start, SEEK_SET);
+		
 		this->dispatcher->removeWorker (this);
 		return NULL;
 	}
@@ -161,11 +160,9 @@ namespace largefile {
 		this->dispatcher = d;
 		this->startOffset = start;
 		this->numberOfLinesToRead = N;
-		std::cout <<"reader begin\n";
 	}
 
 	LineReader::~LineReader (void) {
-		std::cout <<"reader end\n";
 	}
 
 	void *
@@ -176,7 +173,6 @@ namespace largefile {
 		concurrent::ScopedMemoryLock mutex ((unsigned long int)this->fp, true);
 
 		// Record current position and seek to where we're going to start.
-		//    long int cursor = std::ftell (this->fp);
 		long int & read_max = this->numberOfLinesToRead;
 		std::fseek (this->fp, this->startOffset, SEEK_SET);
 
@@ -184,12 +180,10 @@ namespace largefile {
 			if (std::fgets (buf, 4096, this->fp) == NULL)		
 				break;
       
-			// Eventually store index here?
 			this->dispatcher->onReadComplete (std::string (buf));
 		}
 
 		this->running = false;
-		//std::fseek (this->fp, cursor, SEEK_SET);
 		this->dispatcher->removeWorker (this);
 		return NULL;
 	}

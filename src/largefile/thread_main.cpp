@@ -48,12 +48,12 @@ static gint
 key_press_callback (GtkWidget * window, GdkEventKey * event, gpointer data) {
 	std::vector<gpointer> * arguments = (std::vector<gpointer> *)data;
 	FileDispatcher * fd = (FileDispatcher *)arguments->at(0);
-	Workbook * wb = (Workbook *)arguments->at(1);
-	GtkSheet * gtksheet = GTK_SHEET (wb->sheet_first->gtk_sheet);
+	//Workbook * wb = (Workbook *)arguments->at(1);
+	//GtkSheet * gtksheet = GTK_SHEET (wb->sheet_first->gtk_sheet);
 	
 	switch (event->keyval) {
 		case GDK_Page_Up: {
-			
+			std::cout<<fd->getLinePosition(56)<<"\n";
 		}
 		return FALSE;
 
@@ -79,7 +79,7 @@ thread_main (ThreadArgs * args) {
 
 	FILE * pktlog = NULL;
 	std::string logname = std::string (logpath->value).append("/");
-	logname.append (append_pidname("realtime.").append(".log"));
+	logname.append (append_pidname("largefile.").append(".log"));
 
 	if ((pktlog = fopen (logname.c_str(), "w")) == NULL) {
 		g_critical ("Failed opening file '%s' for packet logging; exiting"
@@ -119,7 +119,8 @@ thread_main (ThreadArgs * args) {
 	gtk_signal_connect (GTK_OBJECT (wb->gtk_window), "key_press_event",
 							  GTK_SIGNAL_FUNC (key_press_callback),
 							  (gpointer)&signal_arguments);
-	
+
+	fdispatcher.index();
 	fdispatcher.read (0, 1000);
 
 	while (*SHUTDOWN == FALSE) {

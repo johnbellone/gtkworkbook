@@ -19,7 +19,6 @@
 #ifndef FILE_HPP
 #define FILE_HPP
 
-#include <concurrent/ThreadPool.hpp>
 #include <proactor/InputDispatcher.hpp>
 #include <proactor/Proactor.hpp>
 #include <proactor/Worker.hpp>
@@ -34,7 +33,6 @@ namespace largefile {
 		long int marks[101];
 		FILE * fp;
 		std::string filename;
-		concurrent::ThreadPool pool;
 	public:
 		FileDispatcher (int e, proactor::Proactor * pro);
 		virtual ~FileDispatcher (void);
@@ -45,6 +43,8 @@ namespace largefile {
 
 		void read (long int start, long int N);
 		void index (void);
+
+		inline long int getLinePosition(int ii) const { return this->marks[ii]; }
 	};
 
 	class LineIndexer : public proactor::Worker {
