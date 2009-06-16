@@ -28,9 +28,14 @@
 
 namespace largefile {
 
+	struct LineIndex {
+		long int byte;
+		long int line;
+	};
+	
 	class FileDispatcher : public proactor::InputDispatcher {
 	private:
-		long int marks[101];
+		LineIndex marks[101];
 		FILE * fp;
 		std::string filename;
 	public:
@@ -44,17 +49,17 @@ namespace largefile {
 		void read (long int start, long int N);
 		void index (void);
 
-		inline long int getLinePosition(int ii) const { return this->marks[ii]; }
+		inline bool isIndexed(void) const { return (this->marks[100].line != -1); }
 	};
 
 	class LineIndexer : public proactor::Worker {
 	private:
-		long int * marks;
+		LineIndex * marks;
 		FILE * fp;
 	public:
 		LineIndexer (proactor::InputDispatcher * d, 
-						 FILE * fp, 
-						 long int * marks);
+						 FILE * fp,
+						 LineIndex * marks);
 		virtual ~LineIndexer (void);
 
 		void * run (void * null);
