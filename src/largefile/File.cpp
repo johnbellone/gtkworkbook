@@ -110,6 +110,13 @@ namespace largefile {
 	FileDispatcher::run (void * null) {
 		this->running = true;
 
+		concurrent::ThreadPool pool(1);
+
+		pool.start();
+		
+		for (int ii = 0; ii < 100; ii++)
+			pool.execute (new LineIndexer (this, this->fp, this->marks));
+		
 		while (this->running == true) {
 			if (this->fp == NULL) {
 				this->running = false;
