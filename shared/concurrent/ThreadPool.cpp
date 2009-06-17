@@ -30,15 +30,15 @@ namespace concurrent {
     this->running = true;
 
     while (this->running == true) {
-      if (this->pool->isRunning() == false)
-	break;
+		 if (this->pool->isRunning() == false)
+			 break;
       
-      if (this->pool->getQueueSize() > 0) {
-	IRunnable * runner = this->pool->removeFromQueue();
-	runner->run (NULL);
-	delete runner;
-      }
-      Thread::sleep (1);
+		 if (this->pool->getQueueSize() > 0) {
+			 IRunnable * runner = this->pool->removeFromQueue();
+			 runner->run (NULL);
+			 delete runner;
+		 }
+		 Thread::sleep (1);
     }
 
     return NULL;
@@ -86,11 +86,11 @@ namespace concurrent {
   ThreadPool::start (void) {
     this->running = true;
     
-  ThreadList::iterator it = this->threads.begin();
-  while (it != this->threads.end())
+	 ThreadList::iterator it = this->threads.begin();
+	 while (it != this->threads.end())
     {
-      (*it)->start();
-      it++;
+		 (*it)->start();
+		 it++;
     }
   }
 
@@ -106,11 +106,11 @@ namespace concurrent {
        of one of the Task threads then you are going to hit a deadlock. Never
        pass the join parameter if this is being called from inside the Tasks.*/
     if (join == true) {
-      ThreadList::iterator it = this->threads.begin();
-      while (it != this->threads.end()) {
-	(*it)->stop();
-	it++;
-      }
+		 ThreadList::iterator it = this->threads.begin();
+		 while (it != this->threads.end()) {
+			 (*it)->stop();
+			 it++;
+		 }
     }
   }
 

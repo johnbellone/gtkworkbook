@@ -48,19 +48,28 @@ static gint
 key_press_callback (GtkWidget * window, GdkEventKey * event, gpointer data) {
 	std::vector<gpointer> * arguments = (std::vector<gpointer> *)data;
 	FileDispatcher * fd = (FileDispatcher *)arguments->at(0);
-	//Workbook * wb = (Workbook *)arguments->at(1);
-	//GtkSheet * gtksheet = GTK_SHEET (wb->sheet_first->gtk_sheet);
+	Workbook * wb = (Workbook *)arguments->at(1);
+	GtkSheet * gtksheet = GTK_SHEET (wb->sheet_first->gtk_sheet);
+
+	int vposition = std::abs((int)gtksheet->vadjustment->value);
+
+	float N = vposition, K = 24388, V = (N/K);
 	
 	switch (event->keyval) {
-		case GDK_Page_Up: {
-			std::cout<<fd->getLinePosition(56)<<"\n";
+		case GDK_F1: {
+			gtk_sheet_column_button_add_label (gtksheet, 0, "A");
 		}
-		return FALSE;
+		break;
+		
+		case GDK_Page_Up: {
+			
+		}
+		break;
 
 		case GDK_Page_Down: {
 			
 		}
-		return FALSE;
+		break;
 	}
 	return FALSE;
 }
@@ -119,9 +128,6 @@ thread_main (ThreadArgs * args) {
 	gtk_signal_connect (GTK_OBJECT (wb->gtk_window), "key_press_event",
 							  GTK_SIGNAL_FUNC (key_press_callback),
 							  (gpointer)&signal_arguments);
-
-	fdispatcher.index();
-	fdispatcher.read (0, 1000);
 
 	while (*SHUTDOWN == FALSE) {
 		concurrent::Thread::sleep (100);

@@ -18,11 +18,12 @@
 */
 #include "File.hpp"
 #include <iostream>
+#include <concurrent/ThreadPool.hpp>
 #include <concurrent/ScopedMemoryLock.hpp>
 #include <cstdio>
 
 namespace largefile {
-
+	
 	FileDispatcher::FileDispatcher (int e, proactor::Proactor * pro) {
 		this->fp = NULL;
 		this->pro = pro;
@@ -36,7 +37,6 @@ namespace largefile {
 
 	void
 	FileDispatcher::read (long int start, long int N) {
-		// WARNING: Need some form of a lock on this method.
 		LineReader * reader = new LineReader (this, this->fp, start, N);
 		this->addWorker (reader);
 	}
@@ -57,15 +57,38 @@ namespace largefile {
 			return false;
 		}
 
-		std::fseek (this->fp, 0, SEEK_END);
+		// Take the relative byte position, e.g. .75 * byte_end, and seek backwards until
+		// we get a newline. We now have the line at that relative byte position. Set it
+		// to the marks array so that we can quick line seek.
+		std::fseek (this->fp, 0L, SEEK_END);
 		long int byte_end = std::ftell (this->fp);
 
+		// Compute fuzzy relative position, and set line to -1 for indexing.
 		for (int ii = 0; ii < 101; ii++) {
 			float N = ii, K = 10000;
-			this->marks[ii] = (long int)((N/K) * byte_end);
+			this->marks[ii].byte = (long int)((N/K) * byte_end);
+			this->marks[ii].line = -1;
 		}
 
-		std::fseek (this->fp, 0, SEEK_SET);
+		long int cursor = 1;
+				
+		// Get actual relative position (where line begins) from fuzzy.
+		while (!feof (this->fp) && (cursor < 101)) {
+			int c = 0, ii = 0;
+			std::fseek(this->fp, this->marks[cursor].byte, SEEK_SET);
+
+			// It looks fancy, but it really isn't.
+			while ((c = fgetc (this->fp)) != EOF) {
+				if ((c == '\r') || (c=='\n')) break;
+				std::fseek(this->fp, this->marks[cursor].byte - (++ii) - 1, SEEK_CUR); 
+			}
+
+			this->marks[cursor].byte = (this->marks[cursor].byte - ii);
+			cursor++;
+			clearerr(this->fp);
+		}
+		
+		std::fseek (this->fp, 0L, SEEK_SET);
 		
 		concurrent::ScopedMemoryLock::addMemoryLock ((unsigned long int)this->fp);
 		this->filename = filename;
@@ -92,7 +115,7 @@ namespace largefile {
 				this->running = false;
 				break;
 			}
-
+			
 			this->inputQueue.lock();
       
 			while (this->inputQueue.size() > 0) {
@@ -112,42 +135,55 @@ namespace largefile {
   
 	LineIndexer::LineIndexer (proactor::InputDispatcher * d,
 									  FILE * fp,
-									  long int * marks) {
+									  LineIndex * marks) {
 		this->fp = fp;
 		this->dispatcher = d;
 		this->marks = marks;
 	}
 
 	LineIndexer::~LineIndexer (void) {
+		std::cout<<"index finished!\n";
 	}
 
 	void *
 	LineIndexer::run (void * null) {
 		this->running = true;
 
-		concurrent::ScopedMemoryLock mutex ((unsigned long int)this->fp, true);
-		
-		long int start = std::ftell (this->fp), cursor = 1;
-		
-		// Take the relative byte position, e.g. .75 * byte_end, and seek backwards until
-		// we get a newline. We now have the line at that relative byte position. Set it
-		// to the marks array so that we can quick line seek.
-		while (!feof (this->fp) && (cursor < 101)) {
-			int c = 0, ii = 0;
-			std::fseek(this->fp, this->marks[cursor], SEEK_SET);
-
-			while ((c = fgetc (this->fp)) != EOF) {
-				if ((c == '\r') || (c=='\n')) break;
-				std::fseek(this->fp, this->marks[cursor] - (++ii) - 1, SEEK_CUR); 
-			}
-
-			this->marks[cursor] = (this->marks[cursor] - ii);
-			cursor++;
-			clearerr(this->fp);
+		int pos = 0;
+		for (; pos < 101; pos++) {
+			if (this->marks[pos].line == -1)
+				break;
 		}
 
-		std::fseek (this->fp, start, SEEK_SET);
+		// Nothing to index.
+		if (pos == 100) {
+			this->running = false;
+			return NULL;
+		}
 		
+		concurrent::ScopedMemoryLock mutex ((unsigned long int)this->fp, true);
+
+		char buf[4096];
+		long int start = std::ftell (this->fp), cursor = 0, count = 0, byte_end = this->marks[pos].byte;
+		std::fseek(this->fp, (pos==0) ? 0 : this->marks[pos-1].byte, SEEK_SET);
+
+		// We need to get a absoltue line number for the relative position. We're not
+		// going to get away from having to sequentially read this file in, but once we
+		// have line numbers we can jump throughout the file pretty quickly.
+		while (cursor < byte_end) {	
+			if (std::fgets (buf, 4096, this->fp) == NULL)
+				break;
+
+			// Save our position to compare against our ending byte.
+			cursor = std::ftell(this->fp);
+			count++;
+		}
+
+		if (cursor == byte_end)
+			this->marks[pos].line = count;
+
+		
+		std::fseek (this->fp, start, SEEK_SET);
 		this->dispatcher->removeWorker (this);
 		return NULL;
 	}
