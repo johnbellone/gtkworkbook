@@ -51,7 +51,8 @@ am__strip_dir = `echo $$p | sed -e 's|^.*/||'`;
 am__installdirs = "$(DESTDIR)$(libdir)" "$(DESTDIR)$(bindir)"
 libLTLIBRARIES_INSTALL = $(INSTALL)
 LTLIBRARIES = $(lib_LTLIBRARIES)
-realtime_la_LIBADD =
+realtime_la_DEPENDENCIES = ../gtkworkbook/libgtkworkbook.a \
+	../csv/libcsv.a
 am_realtime_la_OBJECTS = realtime_la-CsvParser.lo \
 	realtime_la-Network.lo realtime_la-Packet.lo \
 	realtime_la-plugin_main.lo realtime_la-thread_main.lo \
@@ -63,7 +64,7 @@ am_realtime_la_OBJECTS = realtime_la-CsvParser.lo \
 	realtime_la-Tcp.lo
 realtime_la_OBJECTS = $(am_realtime_la_OBJECTS)
 realtime_la_LINK = $(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) \
-	$(LIBTOOLFLAGS) --mode=link $(CXXLD) $(realtime_la_CXXFLAGS) \
+	$(LIBTOOLFLAGS) --mode=link $(CXXLD) $(AM_CXXFLAGS) \
 	$(CXXFLAGS) $(realtime_la_LDFLAGS) $(LDFLAGS) -o $@
 binPROGRAMS_INSTALL = $(INSTALL_PROGRAM)
 PROGRAMS = $(bin_PROGRAMS)
@@ -71,7 +72,8 @@ am_gtkworkbook_OBJECTS = gtkworkbook-application.$(OBJEXT) \
 	gtkworkbook-config.$(OBJEXT) gtkworkbook-main.$(OBJEXT) \
 	gtkworkbook-parse.$(OBJEXT) gtkworkbook-plugin.$(OBJEXT)
 gtkworkbook_OBJECTS = $(am_gtkworkbook_OBJECTS)
-gtkworkbook_LDADD = $(LDADD)
+gtkworkbook_DEPENDENCIES = ../gtkworkbook/libgtkworkbook.a \
+	../csv/libcsv.a
 gtkworkbook_LINK = $(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) \
 	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(gtkworkbook_CFLAGS) \
 	$(CFLAGS) $(gtkworkbook_LDFLAGS) $(LDFLAGS) -o $@
@@ -110,9 +112,7 @@ AUTOMAKE = @AUTOMAKE@
 AWK = @AWK@
 CC = @CC@
 CCDEPMODE = @CCDEPMODE@
-CFLAGS = -I/usr/local/include -I/usr/local/include/gtkextra-2.0 -I$(top_srcdir)/include -std=c99 \
-	`pkg-config gtk+-2.0 glib-2.0 --cflags`
-
+CFLAGS = @CFLAGS@
 CPP = @CPP@
 CPPFLAGS = @CPPFLAGS@
 CXX = @CXX@
@@ -137,9 +137,7 @@ INSTALL_PROGRAM = @INSTALL_PROGRAM@
 INSTALL_SCRIPT = @INSTALL_SCRIPT@
 INSTALL_STRIP_PROGRAM = @INSTALL_STRIP_PROGRAM@
 LD = @LD@
-LDFLAGS = -L/usr/local/lib -L$(top_srcdir)/lib -lcsv -lgtkextra-x11-2.0 -lgtkworkbook \
-	`pkg-config gtk+-2.0 glib-2.0 --libs`
-
+LDFLAGS = @LDFLAGS@
 LIBOBJS = @LIBOBJS@
 LIBS = @LIBS@
 LIBTOOL = @LIBTOOL@
@@ -221,9 +219,13 @@ top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
 AUTOMAKE_OPTIONS = foreign
+C_FLAGS = -I/usr/local/include -I/usr/include -I/usr/local/include/gtkextra-2.0 -I$(top_srcdir)/include `pkg-config gtk+-2.0 glib-2.0 --cflags`
+L_FLAGS = -L/usr/local/lib -L/usr/lib -L$(top_srcdir)/lib `pkg-config gtk+-2.0 glib-2.0 --libs` -lgtkextra-x11-2.0
 gtkworkbook_SOURCES = application.c config.c main.c parse.c plugin.c
-gtkworkbook_CFLAGS = -Wall -lgthread-2.0 $(CFLAGS)  
-gtkworkbook_LDFLAGS = -ldl $(LDFLAGS)
+gtkworkbook_CFLAGS = -Wall -lgthread-2.0 -std=c99 $(C_FLAGS)  
+gtkworkbook_LFLAGS = -ldl $(L_FLAGS)
+gtkworkbook_LDFLAGS = $(L_FLAGS)
+gtkworkbook_LDADD = ../gtkworkbook/libgtkworkbook.a ../csv/libcsv.a
 lib_LTLIBRARIES = realtime.la
 realtime_la_SOURCES = realtime/CsvParser.cpp realtime/Network.cpp realtime/Packet.cpp realtime/plugin_main.cpp \
 	realtime/thread_main.cpp realtime/concurrent/Mutex.cpp realtime/concurrent/Semaphore.cpp \
@@ -231,8 +233,10 @@ realtime_la_SOURCES = realtime/CsvParser.cpp realtime/Network.cpp realtime/Packe
 	realtime/proactor/Dispatcher.cpp realtime/proactor/Event.cpp realtime/proactor/Proactor.cpp \
 	realtime/proactor/InputDispatcher.cpp realtime/proactor/Worker.cpp realtime/network/Tcp.cpp
 
-realtime_la_CXXFLAGS = -Wall $(CFLAGS)
-realtime_la_LDFLAGS = -module -export-dynamic $(LDFLAGS)
+realtime_la_CPPFLAGS = -Wall -Wno-write-strings $(C_FLAGS)
+realtime_la_LFLAGS = $(L_FLAGS)
+realtime_la_LDFLAGS = -module -export-dynamic 
+realtime_la_LIBADD = ../gtkworkbook/libgtkworkbook.a ../csv/libcsv.a
 all: all-am
 
 .SUFFIXES:
@@ -468,116 +472,116 @@ gtkworkbook-plugin.obj: plugin.c
 @am__fastdepCXX_FALSE@	$(LTCXXCOMPILE) -c -o $@ $<
 
 realtime_la-CsvParser.lo: realtime/CsvParser.cpp
-@am__fastdepCXX_TRUE@	$(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(realtime_la_CXXFLAGS) $(CXXFLAGS) -MT realtime_la-CsvParser.lo -MD -MP -MF $(DEPDIR)/realtime_la-CsvParser.Tpo -c -o realtime_la-CsvParser.lo `test -f 'realtime/CsvParser.cpp' || echo '$(srcdir)/'`realtime/CsvParser.cpp
+@am__fastdepCXX_TRUE@	$(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(realtime_la_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT realtime_la-CsvParser.lo -MD -MP -MF $(DEPDIR)/realtime_la-CsvParser.Tpo -c -o realtime_la-CsvParser.lo `test -f 'realtime/CsvParser.cpp' || echo '$(srcdir)/'`realtime/CsvParser.cpp
 @am__fastdepCXX_TRUE@	mv -f $(DEPDIR)/realtime_la-CsvParser.Tpo $(DEPDIR)/realtime_la-CsvParser.Plo
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='realtime/CsvParser.cpp' object='realtime_la-CsvParser.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCXX_FALSE@	$(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(realtime_la_CXXFLAGS) $(CXXFLAGS) -c -o realtime_la-CsvParser.lo `test -f 'realtime/CsvParser.cpp' || echo '$(srcdir)/'`realtime/CsvParser.cpp
+@am__fastdepCXX_FALSE@	$(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(realtime_la_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o realtime_la-CsvParser.lo `test -f 'realtime/CsvParser.cpp' || echo '$(srcdir)/'`realtime/CsvParser.cpp
 
 realtime_la-Network.lo: realtime/Network.cpp
-@am__fastdepCXX_TRUE@	$(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(realtime_la_CXXFLAGS) $(CXXFLAGS) -MT realtime_la-Network.lo -MD -MP -MF $(DEPDIR)/realtime_la-Network.Tpo -c -o realtime_la-Network.lo `test -f 'realtime/Network.cpp' || echo '$(srcdir)/'`realtime/Network.cpp
+@am__fastdepCXX_TRUE@	$(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(realtime_la_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT realtime_la-Network.lo -MD -MP -MF $(DEPDIR)/realtime_la-Network.Tpo -c -o realtime_la-Network.lo `test -f 'realtime/Network.cpp' || echo '$(srcdir)/'`realtime/Network.cpp
 @am__fastdepCXX_TRUE@	mv -f $(DEPDIR)/realtime_la-Network.Tpo $(DEPDIR)/realtime_la-Network.Plo
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='realtime/Network.cpp' object='realtime_la-Network.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCXX_FALSE@	$(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(realtime_la_CXXFLAGS) $(CXXFLAGS) -c -o realtime_la-Network.lo `test -f 'realtime/Network.cpp' || echo '$(srcdir)/'`realtime/Network.cpp
+@am__fastdepCXX_FALSE@	$(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(realtime_la_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o realtime_la-Network.lo `test -f 'realtime/Network.cpp' || echo '$(srcdir)/'`realtime/Network.cpp
 
 realtime_la-Packet.lo: realtime/Packet.cpp
-@am__fastdepCXX_TRUE@	$(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(realtime_la_CXXFLAGS) $(CXXFLAGS) -MT realtime_la-Packet.lo -MD -MP -MF $(DEPDIR)/realtime_la-Packet.Tpo -c -o realtime_la-Packet.lo `test -f 'realtime/Packet.cpp' || echo '$(srcdir)/'`realtime/Packet.cpp
+@am__fastdepCXX_TRUE@	$(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(realtime_la_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT realtime_la-Packet.lo -MD -MP -MF $(DEPDIR)/realtime_la-Packet.Tpo -c -o realtime_la-Packet.lo `test -f 'realtime/Packet.cpp' || echo '$(srcdir)/'`realtime/Packet.cpp
 @am__fastdepCXX_TRUE@	mv -f $(DEPDIR)/realtime_la-Packet.Tpo $(DEPDIR)/realtime_la-Packet.Plo
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='realtime/Packet.cpp' object='realtime_la-Packet.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCXX_FALSE@	$(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(realtime_la_CXXFLAGS) $(CXXFLAGS) -c -o realtime_la-Packet.lo `test -f 'realtime/Packet.cpp' || echo '$(srcdir)/'`realtime/Packet.cpp
+@am__fastdepCXX_FALSE@	$(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(realtime_la_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o realtime_la-Packet.lo `test -f 'realtime/Packet.cpp' || echo '$(srcdir)/'`realtime/Packet.cpp
 
 realtime_la-plugin_main.lo: realtime/plugin_main.cpp
-@am__fastdepCXX_TRUE@	$(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(realtime_la_CXXFLAGS) $(CXXFLAGS) -MT realtime_la-plugin_main.lo -MD -MP -MF $(DEPDIR)/realtime_la-plugin_main.Tpo -c -o realtime_la-plugin_main.lo `test -f 'realtime/plugin_main.cpp' || echo '$(srcdir)/'`realtime/plugin_main.cpp
+@am__fastdepCXX_TRUE@	$(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(realtime_la_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT realtime_la-plugin_main.lo -MD -MP -MF $(DEPDIR)/realtime_la-plugin_main.Tpo -c -o realtime_la-plugin_main.lo `test -f 'realtime/plugin_main.cpp' || echo '$(srcdir)/'`realtime/plugin_main.cpp
 @am__fastdepCXX_TRUE@	mv -f $(DEPDIR)/realtime_la-plugin_main.Tpo $(DEPDIR)/realtime_la-plugin_main.Plo
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='realtime/plugin_main.cpp' object='realtime_la-plugin_main.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCXX_FALSE@	$(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(realtime_la_CXXFLAGS) $(CXXFLAGS) -c -o realtime_la-plugin_main.lo `test -f 'realtime/plugin_main.cpp' || echo '$(srcdir)/'`realtime/plugin_main.cpp
+@am__fastdepCXX_FALSE@	$(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(realtime_la_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o realtime_la-plugin_main.lo `test -f 'realtime/plugin_main.cpp' || echo '$(srcdir)/'`realtime/plugin_main.cpp
 
 realtime_la-thread_main.lo: realtime/thread_main.cpp
-@am__fastdepCXX_TRUE@	$(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(realtime_la_CXXFLAGS) $(CXXFLAGS) -MT realtime_la-thread_main.lo -MD -MP -MF $(DEPDIR)/realtime_la-thread_main.Tpo -c -o realtime_la-thread_main.lo `test -f 'realtime/thread_main.cpp' || echo '$(srcdir)/'`realtime/thread_main.cpp
+@am__fastdepCXX_TRUE@	$(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(realtime_la_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT realtime_la-thread_main.lo -MD -MP -MF $(DEPDIR)/realtime_la-thread_main.Tpo -c -o realtime_la-thread_main.lo `test -f 'realtime/thread_main.cpp' || echo '$(srcdir)/'`realtime/thread_main.cpp
 @am__fastdepCXX_TRUE@	mv -f $(DEPDIR)/realtime_la-thread_main.Tpo $(DEPDIR)/realtime_la-thread_main.Plo
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='realtime/thread_main.cpp' object='realtime_la-thread_main.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCXX_FALSE@	$(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(realtime_la_CXXFLAGS) $(CXXFLAGS) -c -o realtime_la-thread_main.lo `test -f 'realtime/thread_main.cpp' || echo '$(srcdir)/'`realtime/thread_main.cpp
+@am__fastdepCXX_FALSE@	$(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(realtime_la_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o realtime_la-thread_main.lo `test -f 'realtime/thread_main.cpp' || echo '$(srcdir)/'`realtime/thread_main.cpp
 
 realtime_la-Mutex.lo: realtime/concurrent/Mutex.cpp
-@am__fastdepCXX_TRUE@	$(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(realtime_la_CXXFLAGS) $(CXXFLAGS) -MT realtime_la-Mutex.lo -MD -MP -MF $(DEPDIR)/realtime_la-Mutex.Tpo -c -o realtime_la-Mutex.lo `test -f 'realtime/concurrent/Mutex.cpp' || echo '$(srcdir)/'`realtime/concurrent/Mutex.cpp
+@am__fastdepCXX_TRUE@	$(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(realtime_la_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT realtime_la-Mutex.lo -MD -MP -MF $(DEPDIR)/realtime_la-Mutex.Tpo -c -o realtime_la-Mutex.lo `test -f 'realtime/concurrent/Mutex.cpp' || echo '$(srcdir)/'`realtime/concurrent/Mutex.cpp
 @am__fastdepCXX_TRUE@	mv -f $(DEPDIR)/realtime_la-Mutex.Tpo $(DEPDIR)/realtime_la-Mutex.Plo
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='realtime/concurrent/Mutex.cpp' object='realtime_la-Mutex.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCXX_FALSE@	$(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(realtime_la_CXXFLAGS) $(CXXFLAGS) -c -o realtime_la-Mutex.lo `test -f 'realtime/concurrent/Mutex.cpp' || echo '$(srcdir)/'`realtime/concurrent/Mutex.cpp
+@am__fastdepCXX_FALSE@	$(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(realtime_la_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o realtime_la-Mutex.lo `test -f 'realtime/concurrent/Mutex.cpp' || echo '$(srcdir)/'`realtime/concurrent/Mutex.cpp
 
 realtime_la-Semaphore.lo: realtime/concurrent/Semaphore.cpp
-@am__fastdepCXX_TRUE@	$(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(realtime_la_CXXFLAGS) $(CXXFLAGS) -MT realtime_la-Semaphore.lo -MD -MP -MF $(DEPDIR)/realtime_la-Semaphore.Tpo -c -o realtime_la-Semaphore.lo `test -f 'realtime/concurrent/Semaphore.cpp' || echo '$(srcdir)/'`realtime/concurrent/Semaphore.cpp
+@am__fastdepCXX_TRUE@	$(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(realtime_la_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT realtime_la-Semaphore.lo -MD -MP -MF $(DEPDIR)/realtime_la-Semaphore.Tpo -c -o realtime_la-Semaphore.lo `test -f 'realtime/concurrent/Semaphore.cpp' || echo '$(srcdir)/'`realtime/concurrent/Semaphore.cpp
 @am__fastdepCXX_TRUE@	mv -f $(DEPDIR)/realtime_la-Semaphore.Tpo $(DEPDIR)/realtime_la-Semaphore.Plo
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='realtime/concurrent/Semaphore.cpp' object='realtime_la-Semaphore.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCXX_FALSE@	$(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(realtime_la_CXXFLAGS) $(CXXFLAGS) -c -o realtime_la-Semaphore.lo `test -f 'realtime/concurrent/Semaphore.cpp' || echo '$(srcdir)/'`realtime/concurrent/Semaphore.cpp
+@am__fastdepCXX_FALSE@	$(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(realtime_la_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o realtime_la-Semaphore.lo `test -f 'realtime/concurrent/Semaphore.cpp' || echo '$(srcdir)/'`realtime/concurrent/Semaphore.cpp
 
 realtime_la-Thread.lo: realtime/concurrent/Thread.cpp
-@am__fastdepCXX_TRUE@	$(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(realtime_la_CXXFLAGS) $(CXXFLAGS) -MT realtime_la-Thread.lo -MD -MP -MF $(DEPDIR)/realtime_la-Thread.Tpo -c -o realtime_la-Thread.lo `test -f 'realtime/concurrent/Thread.cpp' || echo '$(srcdir)/'`realtime/concurrent/Thread.cpp
+@am__fastdepCXX_TRUE@	$(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(realtime_la_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT realtime_la-Thread.lo -MD -MP -MF $(DEPDIR)/realtime_la-Thread.Tpo -c -o realtime_la-Thread.lo `test -f 'realtime/concurrent/Thread.cpp' || echo '$(srcdir)/'`realtime/concurrent/Thread.cpp
 @am__fastdepCXX_TRUE@	mv -f $(DEPDIR)/realtime_la-Thread.Tpo $(DEPDIR)/realtime_la-Thread.Plo
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='realtime/concurrent/Thread.cpp' object='realtime_la-Thread.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCXX_FALSE@	$(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(realtime_la_CXXFLAGS) $(CXXFLAGS) -c -o realtime_la-Thread.lo `test -f 'realtime/concurrent/Thread.cpp' || echo '$(srcdir)/'`realtime/concurrent/Thread.cpp
+@am__fastdepCXX_FALSE@	$(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(realtime_la_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o realtime_la-Thread.lo `test -f 'realtime/concurrent/Thread.cpp' || echo '$(srcdir)/'`realtime/concurrent/Thread.cpp
 
 realtime_la-ThreadGroup.lo: realtime/concurrent/ThreadGroup.cpp
-@am__fastdepCXX_TRUE@	$(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(realtime_la_CXXFLAGS) $(CXXFLAGS) -MT realtime_la-ThreadGroup.lo -MD -MP -MF $(DEPDIR)/realtime_la-ThreadGroup.Tpo -c -o realtime_la-ThreadGroup.lo `test -f 'realtime/concurrent/ThreadGroup.cpp' || echo '$(srcdir)/'`realtime/concurrent/ThreadGroup.cpp
+@am__fastdepCXX_TRUE@	$(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(realtime_la_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT realtime_la-ThreadGroup.lo -MD -MP -MF $(DEPDIR)/realtime_la-ThreadGroup.Tpo -c -o realtime_la-ThreadGroup.lo `test -f 'realtime/concurrent/ThreadGroup.cpp' || echo '$(srcdir)/'`realtime/concurrent/ThreadGroup.cpp
 @am__fastdepCXX_TRUE@	mv -f $(DEPDIR)/realtime_la-ThreadGroup.Tpo $(DEPDIR)/realtime_la-ThreadGroup.Plo
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='realtime/concurrent/ThreadGroup.cpp' object='realtime_la-ThreadGroup.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCXX_FALSE@	$(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(realtime_la_CXXFLAGS) $(CXXFLAGS) -c -o realtime_la-ThreadGroup.lo `test -f 'realtime/concurrent/ThreadGroup.cpp' || echo '$(srcdir)/'`realtime/concurrent/ThreadGroup.cpp
+@am__fastdepCXX_FALSE@	$(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(realtime_la_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o realtime_la-ThreadGroup.lo `test -f 'realtime/concurrent/ThreadGroup.cpp' || echo '$(srcdir)/'`realtime/concurrent/ThreadGroup.cpp
 
 realtime_la-ThreadPool.lo: realtime/concurrent/ThreadPool.cpp
-@am__fastdepCXX_TRUE@	$(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(realtime_la_CXXFLAGS) $(CXXFLAGS) -MT realtime_la-ThreadPool.lo -MD -MP -MF $(DEPDIR)/realtime_la-ThreadPool.Tpo -c -o realtime_la-ThreadPool.lo `test -f 'realtime/concurrent/ThreadPool.cpp' || echo '$(srcdir)/'`realtime/concurrent/ThreadPool.cpp
+@am__fastdepCXX_TRUE@	$(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(realtime_la_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT realtime_la-ThreadPool.lo -MD -MP -MF $(DEPDIR)/realtime_la-ThreadPool.Tpo -c -o realtime_la-ThreadPool.lo `test -f 'realtime/concurrent/ThreadPool.cpp' || echo '$(srcdir)/'`realtime/concurrent/ThreadPool.cpp
 @am__fastdepCXX_TRUE@	mv -f $(DEPDIR)/realtime_la-ThreadPool.Tpo $(DEPDIR)/realtime_la-ThreadPool.Plo
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='realtime/concurrent/ThreadPool.cpp' object='realtime_la-ThreadPool.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCXX_FALSE@	$(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(realtime_la_CXXFLAGS) $(CXXFLAGS) -c -o realtime_la-ThreadPool.lo `test -f 'realtime/concurrent/ThreadPool.cpp' || echo '$(srcdir)/'`realtime/concurrent/ThreadPool.cpp
+@am__fastdepCXX_FALSE@	$(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(realtime_la_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o realtime_la-ThreadPool.lo `test -f 'realtime/concurrent/ThreadPool.cpp' || echo '$(srcdir)/'`realtime/concurrent/ThreadPool.cpp
 
 realtime_la-Dispatcher.lo: realtime/proactor/Dispatcher.cpp
-@am__fastdepCXX_TRUE@	$(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(realtime_la_CXXFLAGS) $(CXXFLAGS) -MT realtime_la-Dispatcher.lo -MD -MP -MF $(DEPDIR)/realtime_la-Dispatcher.Tpo -c -o realtime_la-Dispatcher.lo `test -f 'realtime/proactor/Dispatcher.cpp' || echo '$(srcdir)/'`realtime/proactor/Dispatcher.cpp
+@am__fastdepCXX_TRUE@	$(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(realtime_la_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT realtime_la-Dispatcher.lo -MD -MP -MF $(DEPDIR)/realtime_la-Dispatcher.Tpo -c -o realtime_la-Dispatcher.lo `test -f 'realtime/proactor/Dispatcher.cpp' || echo '$(srcdir)/'`realtime/proactor/Dispatcher.cpp
 @am__fastdepCXX_TRUE@	mv -f $(DEPDIR)/realtime_la-Dispatcher.Tpo $(DEPDIR)/realtime_la-Dispatcher.Plo
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='realtime/proactor/Dispatcher.cpp' object='realtime_la-Dispatcher.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCXX_FALSE@	$(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(realtime_la_CXXFLAGS) $(CXXFLAGS) -c -o realtime_la-Dispatcher.lo `test -f 'realtime/proactor/Dispatcher.cpp' || echo '$(srcdir)/'`realtime/proactor/Dispatcher.cpp
+@am__fastdepCXX_FALSE@	$(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(realtime_la_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o realtime_la-Dispatcher.lo `test -f 'realtime/proactor/Dispatcher.cpp' || echo '$(srcdir)/'`realtime/proactor/Dispatcher.cpp
 
 realtime_la-Event.lo: realtime/proactor/Event.cpp
-@am__fastdepCXX_TRUE@	$(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(realtime_la_CXXFLAGS) $(CXXFLAGS) -MT realtime_la-Event.lo -MD -MP -MF $(DEPDIR)/realtime_la-Event.Tpo -c -o realtime_la-Event.lo `test -f 'realtime/proactor/Event.cpp' || echo '$(srcdir)/'`realtime/proactor/Event.cpp
+@am__fastdepCXX_TRUE@	$(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(realtime_la_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT realtime_la-Event.lo -MD -MP -MF $(DEPDIR)/realtime_la-Event.Tpo -c -o realtime_la-Event.lo `test -f 'realtime/proactor/Event.cpp' || echo '$(srcdir)/'`realtime/proactor/Event.cpp
 @am__fastdepCXX_TRUE@	mv -f $(DEPDIR)/realtime_la-Event.Tpo $(DEPDIR)/realtime_la-Event.Plo
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='realtime/proactor/Event.cpp' object='realtime_la-Event.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCXX_FALSE@	$(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(realtime_la_CXXFLAGS) $(CXXFLAGS) -c -o realtime_la-Event.lo `test -f 'realtime/proactor/Event.cpp' || echo '$(srcdir)/'`realtime/proactor/Event.cpp
+@am__fastdepCXX_FALSE@	$(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(realtime_la_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o realtime_la-Event.lo `test -f 'realtime/proactor/Event.cpp' || echo '$(srcdir)/'`realtime/proactor/Event.cpp
 
 realtime_la-Proactor.lo: realtime/proactor/Proactor.cpp
-@am__fastdepCXX_TRUE@	$(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(realtime_la_CXXFLAGS) $(CXXFLAGS) -MT realtime_la-Proactor.lo -MD -MP -MF $(DEPDIR)/realtime_la-Proactor.Tpo -c -o realtime_la-Proactor.lo `test -f 'realtime/proactor/Proactor.cpp' || echo '$(srcdir)/'`realtime/proactor/Proactor.cpp
+@am__fastdepCXX_TRUE@	$(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(realtime_la_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT realtime_la-Proactor.lo -MD -MP -MF $(DEPDIR)/realtime_la-Proactor.Tpo -c -o realtime_la-Proactor.lo `test -f 'realtime/proactor/Proactor.cpp' || echo '$(srcdir)/'`realtime/proactor/Proactor.cpp
 @am__fastdepCXX_TRUE@	mv -f $(DEPDIR)/realtime_la-Proactor.Tpo $(DEPDIR)/realtime_la-Proactor.Plo
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='realtime/proactor/Proactor.cpp' object='realtime_la-Proactor.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCXX_FALSE@	$(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(realtime_la_CXXFLAGS) $(CXXFLAGS) -c -o realtime_la-Proactor.lo `test -f 'realtime/proactor/Proactor.cpp' || echo '$(srcdir)/'`realtime/proactor/Proactor.cpp
+@am__fastdepCXX_FALSE@	$(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(realtime_la_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o realtime_la-Proactor.lo `test -f 'realtime/proactor/Proactor.cpp' || echo '$(srcdir)/'`realtime/proactor/Proactor.cpp
 
 realtime_la-InputDispatcher.lo: realtime/proactor/InputDispatcher.cpp
-@am__fastdepCXX_TRUE@	$(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(realtime_la_CXXFLAGS) $(CXXFLAGS) -MT realtime_la-InputDispatcher.lo -MD -MP -MF $(DEPDIR)/realtime_la-InputDispatcher.Tpo -c -o realtime_la-InputDispatcher.lo `test -f 'realtime/proactor/InputDispatcher.cpp' || echo '$(srcdir)/'`realtime/proactor/InputDispatcher.cpp
+@am__fastdepCXX_TRUE@	$(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(realtime_la_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT realtime_la-InputDispatcher.lo -MD -MP -MF $(DEPDIR)/realtime_la-InputDispatcher.Tpo -c -o realtime_la-InputDispatcher.lo `test -f 'realtime/proactor/InputDispatcher.cpp' || echo '$(srcdir)/'`realtime/proactor/InputDispatcher.cpp
 @am__fastdepCXX_TRUE@	mv -f $(DEPDIR)/realtime_la-InputDispatcher.Tpo $(DEPDIR)/realtime_la-InputDispatcher.Plo
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='realtime/proactor/InputDispatcher.cpp' object='realtime_la-InputDispatcher.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCXX_FALSE@	$(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(realtime_la_CXXFLAGS) $(CXXFLAGS) -c -o realtime_la-InputDispatcher.lo `test -f 'realtime/proactor/InputDispatcher.cpp' || echo '$(srcdir)/'`realtime/proactor/InputDispatcher.cpp
+@am__fastdepCXX_FALSE@	$(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(realtime_la_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o realtime_la-InputDispatcher.lo `test -f 'realtime/proactor/InputDispatcher.cpp' || echo '$(srcdir)/'`realtime/proactor/InputDispatcher.cpp
 
 realtime_la-Worker.lo: realtime/proactor/Worker.cpp
-@am__fastdepCXX_TRUE@	$(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(realtime_la_CXXFLAGS) $(CXXFLAGS) -MT realtime_la-Worker.lo -MD -MP -MF $(DEPDIR)/realtime_la-Worker.Tpo -c -o realtime_la-Worker.lo `test -f 'realtime/proactor/Worker.cpp' || echo '$(srcdir)/'`realtime/proactor/Worker.cpp
+@am__fastdepCXX_TRUE@	$(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(realtime_la_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT realtime_la-Worker.lo -MD -MP -MF $(DEPDIR)/realtime_la-Worker.Tpo -c -o realtime_la-Worker.lo `test -f 'realtime/proactor/Worker.cpp' || echo '$(srcdir)/'`realtime/proactor/Worker.cpp
 @am__fastdepCXX_TRUE@	mv -f $(DEPDIR)/realtime_la-Worker.Tpo $(DEPDIR)/realtime_la-Worker.Plo
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='realtime/proactor/Worker.cpp' object='realtime_la-Worker.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCXX_FALSE@	$(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(realtime_la_CXXFLAGS) $(CXXFLAGS) -c -o realtime_la-Worker.lo `test -f 'realtime/proactor/Worker.cpp' || echo '$(srcdir)/'`realtime/proactor/Worker.cpp
+@am__fastdepCXX_FALSE@	$(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(realtime_la_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o realtime_la-Worker.lo `test -f 'realtime/proactor/Worker.cpp' || echo '$(srcdir)/'`realtime/proactor/Worker.cpp
 
 realtime_la-Tcp.lo: realtime/network/Tcp.cpp
-@am__fastdepCXX_TRUE@	$(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(realtime_la_CXXFLAGS) $(CXXFLAGS) -MT realtime_la-Tcp.lo -MD -MP -MF $(DEPDIR)/realtime_la-Tcp.Tpo -c -o realtime_la-Tcp.lo `test -f 'realtime/network/Tcp.cpp' || echo '$(srcdir)/'`realtime/network/Tcp.cpp
+@am__fastdepCXX_TRUE@	$(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(realtime_la_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT realtime_la-Tcp.lo -MD -MP -MF $(DEPDIR)/realtime_la-Tcp.Tpo -c -o realtime_la-Tcp.lo `test -f 'realtime/network/Tcp.cpp' || echo '$(srcdir)/'`realtime/network/Tcp.cpp
 @am__fastdepCXX_TRUE@	mv -f $(DEPDIR)/realtime_la-Tcp.Tpo $(DEPDIR)/realtime_la-Tcp.Plo
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='realtime/network/Tcp.cpp' object='realtime_la-Tcp.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCXX_FALSE@	$(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(realtime_la_CXXFLAGS) $(CXXFLAGS) -c -o realtime_la-Tcp.lo `test -f 'realtime/network/Tcp.cpp' || echo '$(srcdir)/'`realtime/network/Tcp.cpp
+@am__fastdepCXX_FALSE@	$(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(realtime_la_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o realtime_la-Tcp.lo `test -f 'realtime/network/Tcp.cpp' || echo '$(srcdir)/'`realtime/network/Tcp.cpp
 
 mostlyclean-libtool:
 	-rm -f *.lo

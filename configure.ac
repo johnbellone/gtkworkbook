@@ -13,6 +13,7 @@ AC_PROG_INSTALL
 AC_PROG_MAKE_SET
 AC_PROG_RANLIB
 AC_PROG_LIBTOOL
+AC_PROG_CC_C_O
 
 AC_CHECK_LIB([pthread], [pthread_mutex_init], [], [
 			echo "pthread library is missing. pthread is required for this program"

@@ -8,10 +8,11 @@ libcsv.o: libcsv.c csv.h /usr/include/stdlib.h /usr/include/features.h \
   /usr/include/sys/select.h /usr/include/bits/select.h \
   /usr/include/bits/sigset.h /usr/include/bits/time.h \
   /usr/include/sys/sysmacros.h /usr/include/bits/pthreadtypes.h \
-  /usr/include/alloca.h /usr/include/stdio.h /usr/include/libio.h \
-  /usr/include/_G_config.h /usr/include/wchar.h \
+  /usr/include/alloca.h /usr/include/bits/stdlib.h /usr/include/stdio.h \
+  /usr/include/libio.h /usr/include/_G_config.h /usr/include/wchar.h \
   /usr/lib/gcc/x86_64-linux-gnu/4.3.3/include/stdarg.h \
-  /usr/include/bits/stdio_lim.h /usr/include/bits/sys_errlist.h
+  /usr/include/bits/stdio_lim.h /usr/include/bits/sys_errlist.h \
+  /usr/include/bits/stdio.h /usr/include/bits/stdio2.h
 
 csv.h:
 
@@ -57,6 +58,8 @@ csv.h:
 
 /usr/include/alloca.h:
 
+/usr/include/bits/stdlib.h:
+
 /usr/include/stdio.h:
 
 /usr/include/libio.h:
@@ -70,3 +73,7 @@ csv.h:
 /usr/include/bits/stdio_lim.h:
 
 /usr/include/bits/sys_errlist.h:
+
+/usr/include/bits/stdio.h:
+
+/usr/include/bits/stdio2.h:

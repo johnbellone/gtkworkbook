@@ -40,14 +40,23 @@ am__configure_deps = $(am__aclocal_m4_deps) $(CONFIGURE_DEPENDENCIES) \
 	$(ACLOCAL_M4)
 mkinstalldirs = $(install_sh) -d
 CONFIG_CLEAN_FILES =
-LIBRARIES = $(noinst_LIBRARIES)
-ARFLAGS = cru
-libgtkworkbook_a_AR = $(AR) $(ARFLAGS)
-libgtkworkbook_a_LIBADD =
-am_libgtkworkbook_a_OBJECTS = libgtkworkbook_a-workbook.$(OBJEXT) \
-	libgtkworkbook_a-sheet.$(OBJEXT) \
-	libgtkworkbook_a-cell.$(OBJEXT)
-libgtkworkbook_a_OBJECTS = $(am_libgtkworkbook_a_OBJECTS)
+am__vpath_adj_setup = srcdirstrip=`echo "$(srcdir)" | sed 's|.|.|g'`;
+am__vpath_adj = case $$p in \
+    $(srcdir)/*) f=`echo "$$p" | sed "s|^$$srcdirstrip/||"`;; \
+    *) f=$$p;; \
+  esac;
+am__strip_dir = `echo $$p | sed -e 's|^.*/||'`;
+am__installdirs = "$(DESTDIR)$(libdir)"
+libLTLIBRARIES_INSTALL = $(INSTALL)
+LTLIBRARIES = $(lib_LTLIBRARIES)
+libgtkworkbook_la_LIBADD =
+am_libgtkworkbook_la_OBJECTS = libgtkworkbook_la-workbook.lo \
+	libgtkworkbook_la-sheet.lo libgtkworkbook_la-cell.lo
+libgtkworkbook_la_OBJECTS = $(am_libgtkworkbook_la_OBJECTS)
+libgtkworkbook_la_LINK = $(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) \
+	$(LIBTOOLFLAGS) --mode=link $(CCLD) \
+	$(libgtkworkbook_la_CFLAGS) $(CFLAGS) $(AM_LDFLAGS) $(LDFLAGS) \
+	-o $@
 DEFAULT_INCLUDES = -I.@am__isrc@
 depcomp = $(SHELL) $(top_srcdir)/depcomp
 am__depfiles_maybe = depfiles
@@ -60,8 +69,8 @@ CCLD = $(CC)
 LINK = $(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) \
 	--mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) $(AM_LDFLAGS) \
 	$(LDFLAGS) -o $@
-SOURCES = $(libgtkworkbook_a_SOURCES)
-DIST_SOURCES = $(libgtkworkbook_a_SOURCES)
+SOURCES = $(libgtkworkbook_la_SOURCES)
+DIST_SOURCES = $(libgtkworkbook_la_SOURCES)
 ETAGS = etags
 CTAGS = ctags
 DISTFILES = $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST)
@@ -74,7 +83,7 @@ AUTOMAKE = @AUTOMAKE@
 AWK = @AWK@
 CC = @CC@
 CCDEPMODE = @CCDEPMODE@
-CFLAGS = -std=c99 `pkg-config gtk+-2.0 glib-2.0 --cflags`
+CFLAGS = @CFLAGS@
 CPP = @CPP@
 CPPFLAGS = @CPPFLAGS@
 CXX = @CXX@
@@ -99,7 +108,7 @@ INSTALL_PROGRAM = @INSTALL_PROGRAM@
 INSTALL_SCRIPT = @INSTALL_SCRIPT@
 INSTALL_STRIP_PROGRAM = @INSTALL_STRIP_PROGRAM@
 LD = @LD@
-LDFLAGS = `pkg-config gtk+-2.0 glib-2.0 --libs`
+LDFLAGS = @LDFLAGS@
 LIBOBJS = @LIBOBJS@
 LIBS = @LIBS@
 LIBTOOL = @LIBTOOL@
@@ -181,10 +190,12 @@ top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
 AUTOMAKE_OPTIONS = foreign
-noinst_LIBRARIES = libgtkworkbook.a
-libgtkworkbook_a_SOURCES = workbook.c sheet.c cell.c
-libgtkworkbook_a_CFLAGS = -Wall -I/usr/local/include -I/usr/local/include/gtkextra-2.0 -I$(top_srcdir)/include $(CFLAGS)
-libgtkworkbook_a_LFLAGS = -L/usr/local/lib -lgtkextra-x11-2.0 -lgthread-2.0 $(LDFLAGS)
+C_FLAGS = -I/usr/local/include -I/usr/local/include/gtkextra-2.0 -std=c99 `pkg-config gtk+-2.0 glib-2.0 --cflags`
+L_FLAGS = -L/usr/local/lib -lgtkextra-x11-2.0 -lgthread-2.0 `pkg-config gtk+-2.0 glib-2.0 --libs`
+lib_LTLIBRARIES = libgtkworkbook.la
+libgtkworkbook_la_SOURCES = workbook.c sheet.c cell.c
+libgtkworkbook_la_CFLAGS = -Wall -I$(top_srcdir)/include $(C_FLAGS)
+libgtkworkbook_la_LFLAGS = $(L_FLAGS)
 all: all-am
 
 .SUFFIXES:
@@ -218,13 +229,35 @@ $(top_srcdir)/configure:  $(am__configure_deps)
 	cd $(top_builddir) && $(MAKE) $(AM_MAKEFLAGS) am--refresh
 $(ACLOCAL_M4):  $(am__aclocal_m4_deps)
 	cd $(top_builddir) && $(MAKE) $(AM_MAKEFLAGS) am--refresh
+install-libLTLIBRARIES: $(lib_LTLIBRARIES)
+	@$(NORMAL_INSTALL)
+	test -z "$(libdir)" || $(MKDIR_P) "$(DESTDIR)$(libdir)"
+	@list='$(lib_LTLIBRARIES)'; for p in $$list; do \
+	  if test -f $$p; then \
+	    f=$(am__strip_dir) \
+	    echo " $(LIBTOOL) $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=install $(libLTLIBRARIES_INSTALL) $(INSTALL_STRIP_FLAG) '$$p' '$(DESTDIR)$(libdir)/$$f'"; \
+	    $(LIBTOOL) $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=install $(libLTLIBRARIES_INSTALL) $(INSTALL_STRIP_FLAG) "$$p" "$(DESTDIR)$(libdir)/$$f"; \
+	  else :; fi; \
+	done
 
-clean-noinstLIBRARIES:
-	-test -z "$(noinst_LIBRARIES)" || rm -f $(noinst_LIBRARIES)
-libgtkworkbook.a: $(libgtkworkbook_a_OBJECTS) $(libgtkworkbook_a_DEPENDENCIES) 
-	-rm -f libgtkworkbook.a
-	$(libgtkworkbook_a_AR) libgtkworkbook.a $(libgtkworkbook_a_OBJECTS) $(libgtkworkbook_a_LIBADD)
-	$(RANLIB) libgtkworkbook.a
+uninstall-libLTLIBRARIES:
+	@$(NORMAL_UNINSTALL)
+	@list='$(lib_LTLIBRARIES)'; for p in $$list; do \
+	  p=$(am__strip_dir) \
+	  echo " $(LIBTOOL) $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=uninstall rm -f '$(DESTDIR)$(libdir)/$$p'"; \
+	  $(LIBTOOL) $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=uninstall rm -f "$(DESTDIR)$(libdir)/$$p"; \
+	done
+
+clean-libLTLIBRARIES:
+	-test -z "$(lib_LTLIBRARIES)" || rm -f $(lib_LTLIBRARIES)
+	@list='$(lib_LTLIBRARIES)'; for p in $$list; do \
+	  dir="`echo $$p | sed -e 's|/[^/]*$$||'`"; \
+	  test "$$dir" != "$$p" || dir=.; \
+	  echo "rm -f \"$${dir}/so_locations\""; \
+	  rm -f "$${dir}/so_locations"; \
+	done
+libgtkworkbook.la: $(libgtkworkbook_la_OBJECTS) $(libgtkworkbook_la_DEPENDENCIES) 
+	$(libgtkworkbook_la_LINK) -rpath $(libdir) $(libgtkworkbook_la_OBJECTS) $(libgtkworkbook_la_LIBADD) $(LIBS)
 
 mostlyclean-compile:
 	-rm -f *.$(OBJEXT)
@@ -232,9 +265,9 @@ mostlyclean-compile:
 distclean-compile:
 	-rm -f *.tab.c
 
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libgtkworkbook_a-cell.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libgtkworkbook_a-sheet.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libgtkworkbook_a-workbook.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libgtkworkbook_la-cell.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libgtkworkbook_la-sheet.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libgtkworkbook_la-workbook.Plo@am__quote@
 
 .c.o:
 @am__fastdepCC_TRUE@	$(COMPILE) -MT $@ -MD -MP -MF $(DEPDIR)/$*.Tpo -c -o $@ $<
@@ -257,47 +290,26 @@ distclean-compile:
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(LTCOMPILE) -c -o $@ $<
 
-libgtkworkbook_a-workbook.o: workbook.c
-@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libgtkworkbook_a_CFLAGS) $(CFLAGS) -MT libgtkworkbook_a-workbook.o -MD -MP -MF $(DEPDIR)/libgtkworkbook_a-workbook.Tpo -c -o libgtkworkbook_a-workbook.o `test -f 'workbook.c' || echo '$(srcdir)/'`workbook.c
-@am__fastdepCC_TRUE@	mv -f $(DEPDIR)/libgtkworkbook_a-workbook.Tpo $(DEPDIR)/libgtkworkbook_a-workbook.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='workbook.c' object='libgtkworkbook_a-workbook.o' libtool=no @AMDEPBACKSLASH@
+libgtkworkbook_la-workbook.lo: workbook.c
+@am__fastdepCC_TRUE@	$(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libgtkworkbook_la_CFLAGS) $(CFLAGS) -MT libgtkworkbook_la-workbook.lo -MD -MP -MF $(DEPDIR)/libgtkworkbook_la-workbook.Tpo -c -o libgtkworkbook_la-workbook.lo `test -f 'workbook.c' || echo '$(srcdir)/'`workbook.c
+@am__fastdepCC_TRUE@	mv -f $(DEPDIR)/libgtkworkbook_la-workbook.Tpo $(DEPDIR)/libgtkworkbook_la-workbook.Plo
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='workbook.c' object='libgtkworkbook_la-workbook.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libgtkworkbook_a_CFLAGS) $(CFLAGS) -c -o libgtkworkbook_a-workbook.o `test -f 'workbook.c' || echo '$(srcdir)/'`workbook.c
+@am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libgtkworkbook_la_CFLAGS) $(CFLAGS) -c -o libgtkworkbook_la-workbook.lo `test -f 'workbook.c' || echo '$(srcdir)/'`workbook.c
 
-libgtkworkbook_a-workbook.obj: workbook.c
-@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libgtkworkbook_a_CFLAGS) $(CFLAGS) -MT libgtkworkbook_a-workbook.obj -MD -MP -MF $(DEPDIR)/libgtkworkbook_a-workbook.Tpo -c -o libgtkworkbook_a-workbook.obj `if test -f 'workbook.c'; then $(CYGPATH_W) 'workbook.c'; else $(CYGPATH_W) '$(srcdir)/workbook.c'; fi`
-@am__fastdepCC_TRUE@	mv -f $(DEPDIR)/libgtkworkbook_a-workbook.Tpo $(DEPDIR)/libgtkworkbook_a-workbook.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='workbook.c' object='libgtkworkbook_a-workbook.obj' libtool=no @AMDEPBACKSLASH@
+libgtkworkbook_la-sheet.lo: sheet.c
+@am__fastdepCC_TRUE@	$(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libgtkworkbook_la_CFLAGS) $(CFLAGS) -MT libgtkworkbook_la-sheet.lo -MD -MP -MF $(DEPDIR)/libgtkworkbook_la-sheet.Tpo -c -o libgtkworkbook_la-sheet.lo `test -f 'sheet.c' || echo '$(srcdir)/'`sheet.c
+@am__fastdepCC_TRUE@	mv -f $(DEPDIR)/libgtkworkbook_la-sheet.Tpo $(DEPDIR)/libgtkworkbook_la-sheet.Plo
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='sheet.c' object='libgtkworkbook_la-sheet.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libgtkworkbook_a_CFLAGS) $(CFLAGS) -c -o libgtkworkbook_a-workbook.obj `if test -f 'workbook.c'; then $(CYGPATH_W) 'workbook.c'; else $(CYGPATH_W) '$(srcdir)/workbook.c'; fi`
+@am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libgtkworkbook_la_CFLAGS) $(CFLAGS) -c -o libgtkworkbook_la-sheet.lo `test -f 'sheet.c' || echo '$(srcdir)/'`sheet.c
 
-libgtkworkbook_a-sheet.o: sheet.c
-@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libgtkworkbook_a_CFLAGS) $(CFLAGS) -MT libgtkworkbook_a-sheet.o -MD -MP -MF $(DEPDIR)/libgtkworkbook_a-sheet.Tpo -c -o libgtkworkbook_a-sheet.o `test -f 'sheet.c' || echo '$(srcdir)/'`sheet.c
-@am__fastdepCC_TRUE@	mv -f $(DEPDIR)/libgtkworkbook_a-sheet.Tpo $(DEPDIR)/libgtkworkbook_a-sheet.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='sheet.c' object='libgtkworkbook_a-sheet.o' libtool=no @AMDEPBACKSLASH@
+libgtkworkbook_la-cell.lo: cell.c
+@am__fastdepCC_TRUE@	$(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libgtkworkbook_la_CFLAGS) $(CFLAGS) -MT libgtkworkbook_la-cell.lo -MD -MP -MF $(DEPDIR)/libgtkworkbook_la-cell.Tpo -c -o libgtkworkbook_la-cell.lo `test -f 'cell.c' || echo '$(srcdir)/'`cell.c
+@am__fastdepCC_TRUE@	mv -f $(DEPDIR)/libgtkworkbook_la-cell.Tpo $(DEPDIR)/libgtkworkbook_la-cell.Plo
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='cell.c' object='libgtkworkbook_la-cell.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libgtkworkbook_a_CFLAGS) $(CFLAGS) -c -o libgtkworkbook_a-sheet.o `test -f 'sheet.c' || echo '$(srcdir)/'`sheet.c
-
-libgtkworkbook_a-sheet.obj: sheet.c
-@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libgtkworkbook_a_CFLAGS) $(CFLAGS) -MT libgtkworkbook_a-sheet.obj -MD -MP -MF $(DEPDIR)/libgtkworkbook_a-sheet.Tpo -c -o libgtkworkbook_a-sheet.obj `if test -f 'sheet.c'; then $(CYGPATH_W) 'sheet.c'; else $(CYGPATH_W) '$(srcdir)/sheet.c'; fi`
-@am__fastdepCC_TRUE@	mv -f $(DEPDIR)/libgtkworkbook_a-sheet.Tpo $(DEPDIR)/libgtkworkbook_a-sheet.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='sheet.c' object='libgtkworkbook_a-sheet.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libgtkworkbook_a_CFLAGS) $(CFLAGS) -c -o libgtkworkbook_a-sheet.obj `if test -f 'sheet.c'; then $(CYGPATH_W) 'sheet.c'; else $(CYGPATH_W) '$(srcdir)/sheet.c'; fi`
-
-libgtkworkbook_a-cell.o: cell.c
-@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libgtkworkbook_a_CFLAGS) $(CFLAGS) -MT libgtkworkbook_a-cell.o -MD -MP -MF $(DEPDIR)/libgtkworkbook_a-cell.Tpo -c -o libgtkworkbook_a-cell.o `test -f 'cell.c' || echo '$(srcdir)/'`cell.c
-@am__fastdepCC_TRUE@	mv -f $(DEPDIR)/libgtkworkbook_a-cell.Tpo $(DEPDIR)/libgtkworkbook_a-cell.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='cell.c' object='libgtkworkbook_a-cell.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libgtkworkbook_a_CFLAGS) $(CFLAGS) -c -o libgtkworkbook_a-cell.o `test -f 'cell.c' || echo '$(srcdir)/'`cell.c
-
-libgtkworkbook_a-cell.obj: cell.c
-@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libgtkworkbook_a_CFLAGS) $(CFLAGS) -MT libgtkworkbook_a-cell.obj -MD -MP -MF $(DEPDIR)/libgtkworkbook_a-cell.Tpo -c -o libgtkworkbook_a-cell.obj `if test -f 'cell.c'; then $(CYGPATH_W) 'cell.c'; else $(CYGPATH_W) '$(srcdir)/cell.c'; fi`
-@am__fastdepCC_TRUE@	mv -f $(DEPDIR)/libgtkworkbook_a-cell.Tpo $(DEPDIR)/libgtkworkbook_a-cell.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='cell.c' object='libgtkworkbook_a-cell.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libgtkworkbook_a_CFLAGS) $(CFLAGS) -c -o libgtkworkbook_a-cell.obj `if test -f 'cell.c'; then $(CYGPATH_W) 'cell.c'; else $(CYGPATH_W) '$(srcdir)/cell.c'; fi`
+@am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libgtkworkbook_la_CFLAGS) $(CFLAGS) -c -o libgtkworkbook_la-cell.lo `test -f 'cell.c' || echo '$(srcdir)/'`cell.c
 
 mostlyclean-libtool:
 	-rm -f *.lo
@@ -380,8 +392,11 @@ distdir: $(DISTFILES)
 	done
 check-am: all-am
 check: check-am
-all-am: Makefile $(LIBRARIES)
+all-am: Makefile $(LTLIBRARIES)
 installdirs:
+	for dir in "$(DESTDIR)$(libdir)"; do \
+	  test -z "$$dir" || $(MKDIR_P) "$$dir"; \
+	done
 install: install-am
 install-exec: install-exec-am
 install-data: install-data-am
@@ -408,7 +423,7 @@ maintainer-clean-generic:
 	@echo "it deletes files that may require special tools to rebuild."
 clean: clean-am
 
-clean-am: clean-generic clean-libtool clean-noinstLIBRARIES \
+clean-am: clean-generic clean-libLTLIBRARIES clean-libtool \
 	mostlyclean-am
 
 distclean: distclean-am
@@ -431,7 +446,7 @@ install-data-am:
 
 install-dvi: install-dvi-am
 
-install-exec-am:
+install-exec-am: install-libLTLIBRARIES
 
 install-html: install-html-am
 
@@ -463,22 +478,23 @@ ps: ps-am
 
 ps-am:
 
-uninstall-am:
+uninstall-am: uninstall-libLTLIBRARIES
 
 .MAKE: install-am install-strip
 
 .PHONY: CTAGS GTAGS all all-am check check-am clean clean-generic \
-	clean-libtool clean-noinstLIBRARIES ctags distclean \
+	clean-libLTLIBRARIES clean-libtool ctags distclean \
 	distclean-compile distclean-generic distclean-libtool \
 	distclean-tags distdir dvi dvi-am html html-am info info-am \
 	install install-am install-data install-data-am install-dvi \
 	install-dvi-am install-exec install-exec-am install-html \
-	install-html-am install-info install-info-am install-man \
-	install-pdf install-pdf-am install-ps install-ps-am \
-	install-strip installcheck installcheck-am installdirs \
-	maintainer-clean maintainer-clean-generic mostlyclean \
-	mostlyclean-compile mostlyclean-generic mostlyclean-libtool \
-	pdf pdf-am ps ps-am tags uninstall uninstall-am
+	install-html-am install-info install-info-am \
+	install-libLTLIBRARIES install-man install-pdf install-pdf-am \
+	install-ps install-ps-am install-strip installcheck \
+	installcheck-am installdirs maintainer-clean \
+	maintainer-clean-generic mostlyclean mostlyclean-compile \
+	mostlyclean-generic mostlyclean-libtool pdf pdf-am ps ps-am \
+	tags uninstall uninstall-am uninstall-libLTLIBRARIES
 
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.
