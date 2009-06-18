@@ -110,12 +110,8 @@ namespace largefile {
 	FileDispatcher::run (void * null) {
 		this->running = true;
 
-		concurrent::ThreadPool pool(1);
-
-		pool.start();
-		
-		for (int ii = 0; ii < 100; ii++)
-			pool.execute (new LineIndexer (this, this->fp, this->marks));
+		// Start the indexer thread. 
+		this->index();
 		
 		while (this->running == true) {
 			if (this->fp == NULL) {
@@ -149,14 +145,16 @@ namespace largefile {
 	}
 
 	LineIndexer::~LineIndexer (void) {
-		std::cout<<"index finished!\n";
+		std::cout<<"index finished\n"<<std::flush;
 	}
 
 	void *
 	LineIndexer::run (void * null) {
 		this->running = true;
 
-		int pos = 0;
+		std::cout<<"index begun..."<<std::flush;
+		
+		int pos = 1;
 		for (; pos < 101; pos++) {
 			if (this->marks[pos].line == -1)
 				break;
@@ -181,16 +179,20 @@ namespace largefile {
 			if (std::fgets (buf, 4096, this->fp) == NULL)
 				break;
 
-			// Save our position to compare against our ending byte.
 			cursor = std::ftell(this->fp);
 			count++;
 		}
 
-		if (cursor == byte_end)
+		if (cursor >= byte_end)
 			this->marks[pos].line = count;
-
 		
 		std::fseek (this->fp, start, SEEK_SET);
+
+		for (pos=0; pos < 101; pos++) {
+			std::cout << "pos: "<<pos<<" byte: "<<this->marks[pos].byte<<" line: "<<this->marks[pos].line<<"\n";
+		}
+		std::cout<<std::flush;
+		
 		this->dispatcher->removeWorker (this);
 		return NULL;
 	}
