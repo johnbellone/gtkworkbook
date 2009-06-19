@@ -19,7 +19,8 @@ def main():
     maxCols = int(options.columns)
 
     while ii < maxRows:
-        jj = 0
+        fp.write(str(ii+1) + ",")
+        jj = 1
         while jj < maxCols-1:
             choice = random.choice([1,2,3,4,5])
 

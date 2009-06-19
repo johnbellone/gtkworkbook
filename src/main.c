@@ -21,12 +21,12 @@
 int 
 main(int argc, char *argv[])
 {
-  ApplicationState *app = application_init (&argc, &argv);
+	ApplicationState *app = application_init (&argc, &argv);
 
-  app->run (app);
-  app->close (app);
+	app->run (app);
+	app->close (app);
 
-  return 0; 
+	return 0; 
 }
 
 

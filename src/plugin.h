@@ -43,28 +43,28 @@ typedef void * LibraryHandle;
 
 struct _Plugin
 {
-  /* Members */
-  LibraryHandle pfnhandle;
-  PluginMethod * first, * last;
-  Plugin * next, * prev;
-  GPtrArray * threads;
+	/* Members */
+	LibraryHandle pfnhandle;
+	PluginMethod * first, * last;
+	Plugin * next, * prev;
+	GPtrArray * threads;
 
-  /* Methods */
-  void *(*method_register) (Plugin *, gchar *);
-  void (*method_deregister) (Plugin *, PluginMethod *);
-  void (*destroy) (Plugin *);
-  GThread *(*create_thread) (Plugin *, GThreadFunc, gpointer);
+	/* Methods */
+	void *(*method_register) (Plugin *, gchar *);
+	void (*method_deregister) (Plugin *, PluginMethod *);
+	void (*destroy) (Plugin *);
+	GThread *(*create_thread) (Plugin *, GThreadFunc, gpointer);
 };
 
 struct _PluginMethod
 {
-  /* Members */
-  void * pfnmethod;
-  PluginMethod * next, * prev;
-  Plugin * plugin;
+	/* Members */
+	void * pfnmethod;
+	PluginMethod * next, * prev;
+	Plugin * plugin;
 
-  /* Methods */
-  void (*deregister) (PluginMethod *method, Plugin *plugin);
+	/* Methods */
+	void (*deregister) (PluginMethod *method, Plugin *plugin);
 };
 
 /* plugin.c */

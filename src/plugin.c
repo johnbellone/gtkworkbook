@@ -30,169 +30,169 @@ static PluginMethod *pluginmethod_object_init (Plugin *);
 static PluginMethod *pluginmethod_object_free (PluginMethod *);
 static void pluginmethod_method_deregister (PluginMethod *, Plugin *);
 static GThread *plugin_method_create_thread (Plugin *,
-					     GThreadFunc,
-					     gpointer);
+															GThreadFunc,
+															gpointer);
 
 Plugin *
 plugin_open (const gchar * filename)
 {
-  if (!filename || (*filename == '\0'))
-    return NULL;
+	if (!filename || (*filename == '\0'))
+		return NULL;
 
-  Plugin * plug = plugin_object_init ();
+	Plugin * plug = plugin_object_init ();
 
-  if ((plug->pfnhandle = LIBRARY_OPEN(filename)) == NULL)
-    {
+	if ((plug->pfnhandle = LIBRARY_OPEN(filename)) == NULL)
+	{
       fprintf (stderr, "%s\n", LIBRARY_ERROR());
       exit (1);
-    }
-  return plug;
+	}
+	return plug;
 }
 
 static Plugin *
 plugin_object_init (void)
 {
-  Plugin * plug = NEW (Plugin);
+	Plugin * plug = NEW (Plugin);
   
-  /* Members */
-  plug->pfnhandle = NULL;
-  plug->next = NULL;
-  plug->prev = NULL;
-  plug->first = NULL;
-  plug->last = NULL;
-  plug->threads = g_ptr_array_new ();
+	/* Members */
+	plug->pfnhandle = NULL;
+	plug->next = NULL;
+	plug->prev = NULL;
+	plug->first = NULL;
+	plug->last = NULL;
+	plug->threads = g_ptr_array_new ();
 
-  /* Methods */
-  plug->destroy = plugin_method_destroy;
-  plug->method_register = plugin_method_symbol_register;
-  plug->method_deregister = plugin_method_symbol_deregister;
-  plug->create_thread = plugin_method_create_thread;
+	/* Methods */
+	plug->destroy = plugin_method_destroy;
+	plug->method_register = plugin_method_symbol_register;
+	plug->method_deregister = plugin_method_symbol_deregister;
+	plug->create_thread = plugin_method_create_thread;
 
-  return plug;
+	return plug;
 }
 
 static GThread *
 plugin_method_create_thread (Plugin * plugin,
-			     GThreadFunc thread_function,
-			     gpointer data)
+									  GThreadFunc thread_function,
+									  gpointer data)
 {
-  ASSERT (plugin != NULL);
+	ASSERT (plugin != NULL);
 
-  GThread * runnable = NULL;
-  GError * err = NULL;
+	GThread * runnable = NULL;
+	GError * err = NULL;
 
-  if ((runnable = g_thread_create (thread_function, data,
-				   TRUE, &err)) == NULL)
-    {
+	if ((runnable = g_thread_create (thread_function, data,
+												TRUE, &err)) == NULL)
+	{
       g_warning ("Failed creating thread; ERROR %s", err->message);
       g_error_free (err);
       return NULL;
-    }
-  g_ptr_array_add (plugin->threads, (gpointer)runnable);
-  return runnable;
+	}
+	g_ptr_array_add (plugin->threads, (gpointer)runnable);
+	return runnable;
 } 
 
 static Plugin *
 plugin_object_free (Plugin * plugin)
 {
-  if (!plugin)
-    return NULL;
+	if (!plugin)
+		return NULL;
 
-  plugin->first = plugin->last = NULL;
+	plugin->first = plugin->last = NULL;
 
-  g_ptr_array_free (plugin->threads, TRUE);
+	g_ptr_array_free (plugin->threads, TRUE);
 
-  FREE (plugin);
-  return plugin;
+	FREE (plugin);
+	return plugin;
 }
 
 static void
 plugin_method_destroy (Plugin * plugin)
 {
-  if (!plugin)
-    return;
+	if (!plugin)
+		return;
 
-  PluginMethod * current = plugin->first, * next = NULL;
-  while (current)
-    {
+	PluginMethod * current = plugin->first, * next = NULL;
+	while (current)
+	{
       next = current->next;
       current->deregister (current, plugin);
       current = next;
-    }
+	}
 
-  for (guint ii = 0; ii < plugin->threads->len; ii++)
-    {
+	for (guint ii = 0; ii < plugin->threads->len; ii++)
+	{
       GThread * thread 
-	= (GThread *)g_ptr_array_remove_index_fast (plugin->threads, ii);
+			= (GThread *)g_ptr_array_remove_index_fast (plugin->threads, ii);
       g_thread_join (thread);
-    }
+	}
 
-  UNLINK_OBJECT (plugin);
-  LIBRARY_CLOSE (plugin->pfnhandle);
-  plugin_object_free (plugin);
+	UNLINK_OBJECT (plugin);
+	LIBRARY_CLOSE (plugin->pfnhandle);
+	plugin_object_free (plugin);
 }
 
 static void
 plugin_method_symbol_deregister (Plugin * plugin, PluginMethod * method)
 {
-  if (!plugin || !method)
-    return;
+	if (!plugin || !method)
+		return;
 
-  method->deregister (method, plugin);
+	method->deregister (method, plugin);
 }
 
 static void *
 plugin_method_symbol_register (Plugin * plugin, gchar * symbol)
 {
-  if (IS_NULLSTR (symbol))
-    return NULL;
+	if (IS_NULLSTR (symbol))
+		return NULL;
 
-  PluginMethod * plugm = pluginmethod_object_init (plugin);
+	PluginMethod * plugm = pluginmethod_object_init (plugin);
 
-  if ((plugm->pfnmethod 
-       = LIBRARY_SYM(plugin->pfnhandle, symbol)) == NULL)
-    {
+	if ((plugm->pfnmethod 
+		  = LIBRARY_SYM(plugin->pfnhandle, symbol)) == NULL)
+	{
       fprintf (stderr, "%s\n", LIBRARY_ERROR());
       exit (1);
-    }
+	}
 
-  LINK_OBJECT (plugin->first, plugin->last, plugm); 
-  return plugm->pfnmethod;
+	LINK_OBJECT (plugin->first, plugin->last, plugm); 
+	return plugm->pfnmethod;
 }
 
 static PluginMethod *
 pluginmethod_object_init (Plugin * plugin)
 {
-  PluginMethod * plugm = NEW (PluginMethod);
+	PluginMethod * plugm = NEW (PluginMethod);
 
-  /* Members */
-  plugm->pfnmethod = NULL;
-  plugm->plugin = plugin;
+	/* Members */
+	plugm->pfnmethod = NULL;
+	plugm->plugin = plugin;
 
-  /* Methods */
-  plugm->deregister = pluginmethod_method_deregister;
+	/* Methods */
+	plugm->deregister = pluginmethod_method_deregister;
 
-  plugm->next = NULL;
-  plugm->prev = NULL;
-  return plugm;
+	plugm->next = NULL;
+	plugm->prev = NULL;
+	return plugm;
 }
 
 static PluginMethod *
 pluginmethod_object_free (PluginMethod * method)
 {
-  if (!method)
-    return NULL;
+	if (!method)
+		return NULL;
 
-  FREE (method);
-  return method;
+	FREE (method);
+	return method;
 }
 
 static void
 pluginmethod_method_deregister (PluginMethod * method, Plugin * plugin)
 {
-  if (!method)
-    return;
+	if (!method)
+		return;
 
-  UNLINK_OBJECT (method);
-  pluginmethod_object_free (method);
+	UNLINK_OBJECT (method);
+	pluginmethod_object_free (method);
 }

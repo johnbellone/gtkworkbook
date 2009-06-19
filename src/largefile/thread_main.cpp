@@ -52,7 +52,7 @@ key_press_callback (GtkWidget * window, GdkEventKey * event, gpointer data) {
 	GtkSheet * gtksheet = GTK_SHEET (wb->sheet_first->gtk_sheet);
 
 	int vposition = std::abs((int)gtksheet->vadjustment->value);
-
+	static long int cursor = 0;
 	float N = vposition, K = 24388, V = (N/K);
 	
 	switch (event->keyval) {
@@ -62,14 +62,20 @@ key_press_callback (GtkWidget * window, GdkEventKey * event, gpointer data) {
 		break;
 		
 		case GDK_Page_Up: {
-			
+			fd->read(cursor, 100);
+			cursor += 100;
 		}
-		break;
+		return TRUE;
 
 		case GDK_Page_Down: {
+			if (cursor <= 100)
+				cursor = 0;
+			else
+				cursor -= 100;
 			
+			fd->read(cursor, 100);
 		}
-		break;
+		return TRUE;
 	}
 	return FALSE;
 }

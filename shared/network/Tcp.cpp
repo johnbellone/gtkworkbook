@@ -1,6 +1,4 @@
 /* 
-   Tcp.hpp - Tcp Implementation Source File
-
    The GTKWorkbook Project <http://gtkworkbook.sourceforge.net/>
    Copyright (C) 2008, 2009 John Bellone, Jr. <jvb4@njit.edu>
 
@@ -23,133 +21,133 @@
 
 namespace network {
 
-  TcpSocket::TcpSocket (void) {
-    this->sockfd = socket (AF_INET, SOCK_STREAM, IPPROTO_TCP);
-  }
+	TcpSocket::TcpSocket (void) {
+		this->sockfd = socket (AF_INET, SOCK_STREAM, IPPROTO_TCP);
+	}
 
-  TcpSocket::~TcpSocket (void) {
-    this->close();
-  }
+	TcpSocket::~TcpSocket (void) {
+		this->close();
+	}
 
-  void
-  TcpSocket::close (void) {
-    if (this->sockfd > 0)
-      ::close (this->sockfd);
-  }
+	void
+	TcpSocket::close (void) {
+		if (this->sockfd > 0)
+			::close (this->sockfd);
+	}
 	
-  int
-  TcpSocket::send (const char * bytes, size_t length) {
-    return ::write (this->sockfd, bytes, length);
-  }
+	int
+	TcpSocket::send (const char * bytes, size_t length) {
+		return ::write (this->sockfd, bytes, length);
+	}
 
-  int
-  TcpSocket::receive (char * bytes, size_t size) {
-    return ::read (this->sockfd, bytes, size);
-  }
+	int
+	TcpSocket::receive (char * bytes, size_t size) {
+		return ::read (this->sockfd, bytes, size);
+	}
 
-  TcpServerSocket::TcpServerSocket (int port) : TcpSocket() {
-    this->port = port;
+	TcpServerSocket::TcpServerSocket (int port) : TcpSocket() {
+		this->port = port;
 
-    memset (&(this->sockaddr), 0, sizeof (this->sockaddr));
-    this->sockaddr.sin_family = AF_INET;
-    this->sockaddr.sin_addr.s_addr = htonl (INADDR_ANY);
-    this->sockaddr.sin_port = htons (this->port);
-  }
+		memset (&(this->sockaddr), 0, sizeof (this->sockaddr));
+		this->sockaddr.sin_family = AF_INET;
+		this->sockaddr.sin_addr.s_addr = htonl (INADDR_ANY);
+		this->sockaddr.sin_port = htons (this->port);
+	}
 
-  TcpServerSocket::~TcpServerSocket (void) {
-    this->close();
-  }
+	TcpServerSocket::~TcpServerSocket (void) {
+		this->close();
+	}
 
-  bool
-  TcpServerSocket::start (int backlog = 5) {
-    int opt = 1;
+	bool
+	TcpServerSocket::start (int backlog = 5) {
+		int opt = 1;
 
-    // This is to prevent conflicts with major services' ports.
-    if (this->port < 1024)
-      return false;
+		// This is to prevent conflicts with major services' ports.
+		if (this->port < 1024)
+			return false;
 
-    if (::setsockopt (this->sockfd, 
-		      SOL_SOCKET, SO_REUSEADDR, &opt, sizeof (opt)) < 0)
-      return false;
+		if (::setsockopt (this->sockfd, 
+								SOL_SOCKET, SO_REUSEADDR, &opt, sizeof (opt)) < 0)
+			return false;
 
-    if (::bind (this->sockfd,
-		(struct sockaddr *)&(this->sockaddr),
-		sizeof (this->sockaddr)) < 0)
-      return false;
+		if (::bind (this->sockfd,
+						(struct sockaddr *)&(this->sockaddr),
+						sizeof (this->sockaddr)) < 0)
+			return false;
 
-    if (::listen (this->sockfd, backlog) < 0)
-      return false;
+		if (::listen (this->sockfd, backlog) < 0)
+			return false;
 
-    return true;
-  }
+		return true;
+	}
 
-  void
-  TcpServerSocket::close (void) {
-    TcpSocket::close();
-  }
+	void
+	TcpServerSocket::close (void) {
+		TcpSocket::close();
+	}
 
-  TcpServerSocket::Acceptor *
-  TcpServerSocket::newAcceptor (void) {
-    return new TcpServerSocket::Acceptor (this, this->sockfd);
-  }
+	TcpServerSocket::Acceptor *
+	TcpServerSocket::newAcceptor (void) {
+		return new TcpServerSocket::Acceptor (this, this->sockfd);
+	}
 
-  TcpServerSocket::Acceptor::Acceptor (TcpServerSocket * server, int sockfd) {
-    this->socket = server;
-    this->sockfd = sockfd;
-  }
+	TcpServerSocket::Acceptor::Acceptor (TcpServerSocket * server, int sockfd) {
+		this->socket = server;
+		this->sockfd = sockfd;
+	}
 
-  int
-  TcpServerSocket::Acceptor::acceptIncoming (void) {
-    int newfd = -1;
-    static struct sockaddr_in clientaddr;
-    unsigned int x = sizeof (clientaddr);
+	int
+	TcpServerSocket::Acceptor::acceptIncoming (void) {
+		int newfd = -1;
+		static struct sockaddr_in clientaddr;
+		unsigned int x = sizeof (clientaddr);
 
-    if ((newfd = ::accept (this->sockfd, 
-			   (struct sockaddr *)&clientaddr,
-			   &x)) < 0)
-      return -1;
-    return newfd;
-  }
+		if ((newfd = ::accept (this->sockfd, 
+									  (struct sockaddr *)&clientaddr,
+									  &x)) < 0)
+			return -1;
+		return newfd;
+	}
 
-  TcpClientSocket::TcpClientSocket (void) : TcpSocket() {
-    memset (&(this->sockaddr), 0, sizeof (this->sockaddr));
-    this->sockaddr.sin_family = AF_INET;
-    this->sockaddr.sin_addr.s_addr = htonl (INADDR_ANY);
-  }
+	TcpClientSocket::TcpClientSocket (void) : TcpSocket() {
+		memset (&(this->sockaddr), 0, sizeof (this->sockaddr));
+		this->sockaddr.sin_family = AF_INET;
+		this->sockaddr.sin_addr.s_addr = htonl (INADDR_ANY);
+	}
 
-  TcpClientSocket::TcpClientSocket (int newfd) {
-    this->sockfd = newfd;
-  }
+	TcpClientSocket::TcpClientSocket (int newfd) {
+		this->sockfd = newfd;
+	}
 				
-  TcpClientSocket::~TcpClientSocket (void) {
-  }
+	TcpClientSocket::~TcpClientSocket (void) {
+	}
 
-  bool
-  TcpClientSocket::connect (const char * host, int port) {
-    if (!host || (*host == '\0'))
-      return false;
+	bool
+	TcpClientSocket::connect (const char * host, int port) {
+		if (!host || (*host == '\0'))
+			return false;
 
-    if ((this->hp = ::gethostbyname (host)) == NULL)
-      return false;
+		if ((this->hp = ::gethostbyname (host)) == NULL)
+			return false;
  
-    // Copy over the hostname address.
-    memset (&(this->sockaddr),0, sizeof (this->sockaddr));
-    this->sockaddr.sin_family = AF_INET;
-    this->sockaddr.sin_addr.s_addr 
-      = ((struct in_addr *)(this->hp->h_addr))->s_addr;
-    this->sockaddr.sin_port = htons (port);
+		// Copy over the hostname address.
+		memset (&(this->sockaddr),0, sizeof (this->sockaddr));
+		this->sockaddr.sin_family = AF_INET;
+		this->sockaddr.sin_addr.s_addr 
+			= ((struct in_addr *)(this->hp->h_addr))->s_addr;
+		this->sockaddr.sin_port = htons (port);
 
-    if (::connect (this->sockfd,
-		   (struct sockaddr *)&(this->sockaddr),
-		   sizeof (struct sockaddr)) < 0)
-      return false;
+		if (::connect (this->sockfd,
+							(struct sockaddr *)&(this->sockaddr),
+							sizeof (struct sockaddr)) < 0)
+			return false;
     
-    return true;
-  }
+		return true;
+	}
 
-  void
-  TcpClientSocket::close (void) {
-    TcpSocket::close();
-  }
+	void
+	TcpClientSocket::close (void) {
+		TcpSocket::close();
+	}
 
 } // end of namespace

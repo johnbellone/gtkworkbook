@@ -202,7 +202,7 @@ namespace largefile {
 		
 		for (int index = 0; index < 101; index++) {
 			if (this->startLine > this->marks[index].line) {
-				delta = this->marks[index].line - read_max;
+				delta = this->marks[index].line - read_max - 1;
 				if (index > 0)
 					offset = this->marks[index-1].byte;
 				break;

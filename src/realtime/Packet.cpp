@@ -18,17 +18,17 @@
 */
 #include "Packet.hpp"
 
-#define WORD(d,buf,word) if (buf.length() > 0) { \
-    size_t index = buf.find_first_of (d, 0);	 \
-    if (index == std::string::npos) {		 \
-      word = buf;				 \
-      buf.clear();				 \
-    }						 \
-    else {					 \
-      word = buf.substr (0, index);		 \
-      buf = buf.substr (index+1, buf.length());	 \
-    }						 \
-  }
+#define WORD(d,buf,word) if (buf.length() > 0) {	\
+		size_t index = buf.find_first_of (d, 0);		\
+		if (index == std::string::npos) {				\
+			word = buf;											\
+			buf.clear();										\
+		}															\
+		else {													\
+			word = buf.substr (0, index);					\
+			buf = buf.substr (index+1, buf.length());	\
+		}															\
+	}
 
 namespace realtime {
 
