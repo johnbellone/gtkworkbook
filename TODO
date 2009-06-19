@@ -1,16 +1,30 @@
-* Fix heap problem inside of libworkbook
-* libworkbook
-	- Quickly update rows 
-		o This should use native GrowSheet, CheckBounds, etc
-	- Quickly update ranges
-		o Utilzies row/tuple update and pointer arithmetic
-* File dispatcher	
-	- Input/Output
-		o Put a timeout on reader/indexer executions
-		o Automatically index based upon the last read
-	- Caching
-		o Run a periodical reader in the background
-		o Run a periodical indexer in the background
+TODO for GTKWorkbook
+
+* Application
+	- Convert the structures to C++ classes for autotools merge.
+* largefile
+	- Bug fixes
+		o Offset by one for file dispatcher read() method
+		o Integer problem (total line offset) needs to be fixed
+	- Priorities (before merge)
+		o Absolute line goto dialog
+		o Index indicator
+		o Panning/Paging controls
+		o Move shared library into application folder
+	- Priorities (after merge)
+		o Framebuffering and Caching
+		o Statistics on writing to screen, reading, and panning/paging
+		o Staging for the indexer... N percentile increments
+	- Merge
+		o Autotools merge happens *before* largefile merge
+		o Largefile merge happens into an autotools branch
+		o Final merge back into the master branch
+	- Release
+		o Release happens when master branch is fully brought up to date
+		o Largefile must be merged into autotools
+	- Documentation	
+		o Point release after main beta release
+
 * Visualization 
 	- Controls
 		o Page up, page down for panning
