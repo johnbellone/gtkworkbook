@@ -149,11 +149,9 @@ namespace largefile {
 		// going to get away from having to sequentially read this file in, but once we
 		// have line numbers we can jump throughout the file pretty quickly.
 		while ((ch = std::fgetc(this->fp)) != EOF) {
-			cursor++;
-			
 			if (ch=='\n') count++;
-						
-			if (this->marks[index].byte <= cursor) {
+
+  			if (this->marks[index].byte == cursor++) {
 				this->marks[index].line = count;
 				this->marks[index].byte = byte_beg;
 
@@ -202,7 +200,7 @@ namespace largefile {
 		
 		for (int index = 1; index < 101; index++) {
 			if ((this->startLine + read_max) < this->marks[index].line) {
-				delta = std::abs(this->marks[index-1].line - this->startLine);
+				delta = std::abs(this->marks[index-1].line - this->startLine + 1);
 				offset = this->marks[index-1].byte;
 				break;
 			}
