@@ -57,7 +57,7 @@ key_press_callback (GtkWidget * window, GdkEventKey * event, gpointer data) {
 	
 	switch (event->keyval) {
 		case GDK_F1: {
-			fd->read(102583,1000);
+			fd->read(500000,1000);
 		}
 		break;
 		
