@@ -53,11 +53,11 @@ key_press_callback (GtkWidget * window, GdkEventKey * event, gpointer data) {
 
 	int vposition = std::abs((int)gtksheet->vadjustment->value);
 	static long int cursor = 0;
-	float N = vposition, K = 24388, V = (N/K);
+	//	float N = vposition, K = 24388, V = (N/K);
 	
 	switch (event->keyval) {
 		case GDK_F1: {
-			fd->read(500000,1000);
+			fd->read(8570218,1000);
 		}
 		break;
 		

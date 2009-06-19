@@ -38,7 +38,7 @@ namespace largefile {
 	}
 
 	void
-	FileDispatcher::read (long int start, long int N) {
+	FileDispatcher::read (long long start, long long N) {
 		LineReader * reader = new LineReader (this, this->fp, this->marks, start, N);
 		this->addWorker (reader);
 	}
@@ -62,7 +62,7 @@ namespace largefile {
 		// Take the relative byte position, e.g. .75 * byte_end, and we now have the a relative
 		// line at that byte position for indexing at a later point in time.
 		std::fseek (this->fp, 0L, SEEK_END);
-		long int byte_end = std::ftell (this->fp);
+		long long byte_end = std::ftell (this->fp);
 
 		this->marks[0].byte = 0;
 		this->marks[0].line = 0;
@@ -70,7 +70,7 @@ namespace largefile {
 		// Compute fuzzy relative position, and set line to -1 for indexing.
 		for (int ii = 1; ii < 101; ii++) {
 			float N = ii, K = 10000;
-			this->marks[ii].byte = (long int)((N/K) * byte_end);
+			this->marks[ii].byte = (long long)((N/K) * byte_end);
 			this->marks[ii].line = -1;
 		}
 
@@ -137,7 +137,7 @@ namespace largefile {
 	LineIndexer::run (void * null) {
 		this->running = true;
 		int ch, index = 0;
-		long long int cursor = 0, count = 0, byte_beg = 0;
+		long long cursor = 0, count = 0, byte_beg = 0;
 
 		struct timeval start, end;
 		
@@ -176,8 +176,8 @@ namespace largefile {
 	LineReader::LineReader (proactor::InputDispatcher * d,
 									FILE * fp,
 									LineIndex * marks,
-									long int start,
-									long int N) {
+									long long start,
+									long long N) {
 		this->fp = fp;
 		this->dispatcher = d;
 		this->startLine = start;
@@ -194,13 +194,13 @@ namespace largefile {
 		char buf[4096];
 
 		concurrent::ScopedMemoryLock mutex ((unsigned long int)this->fp, true);
-		long int start = std::ftell(this->fp);
-		long int offset = 0, delta = 0;
-		long int & read_max = this->numberOfLinesToRead;
+		long long start = std::ftell(this->fp);
+		long long offset = 0, delta = 0;
+		long long & read_max = this->numberOfLinesToRead;
 		
 		for (int index = 1; index < 101; index++) {
 			if ((this->startLine + read_max) < this->marks[index].line) {
-				delta = std::abs(this->marks[index-1].line - this->startLine + 1);
+				delta = std::abs(this->marks[index-1].line - this->startLine);
 				offset = this->marks[index-1].byte;
 				break;
 			}
@@ -215,7 +215,7 @@ namespace largefile {
 			--delta;
       }
 		
-		for (long int ii = 0; ii < read_max; ii++) {
+		for (long long ii = 0; ii < read_max; ii++) {
 			if (std::fgets (buf, 4096, this->fp) == NULL)		
 				break;
       
