@@ -51,8 +51,8 @@ am__strip_dir = `echo $$p | sed -e 's|^.*/||'`;
 am__installdirs = "$(DESTDIR)$(libdir)" "$(DESTDIR)$(bindir)"
 libLTLIBRARIES_INSTALL = $(INSTALL)
 LTLIBRARIES = $(lib_LTLIBRARIES)
-realtime_la_DEPENDENCIES = ../gtkworkbook/libgtkworkbook.a \
-	../csv/libcsv.a
+realtime_la_DEPENDENCIES = ../gtkworkbook/libgtkworkbook.la \
+	../csv/libcsv.la
 am_realtime_la_OBJECTS = realtime_la-CsvParser.lo \
 	realtime_la-Network.lo realtime_la-Packet.lo \
 	realtime_la-plugin_main.lo realtime_la-thread_main.lo \
@@ -72,8 +72,8 @@ am_gtkworkbook_OBJECTS = gtkworkbook-application.$(OBJEXT) \
 	gtkworkbook-config.$(OBJEXT) gtkworkbook-main.$(OBJEXT) \
 	gtkworkbook-parse.$(OBJEXT) gtkworkbook-plugin.$(OBJEXT)
 gtkworkbook_OBJECTS = $(am_gtkworkbook_OBJECTS)
-gtkworkbook_DEPENDENCIES = ../gtkworkbook/libgtkworkbook.a \
-	../csv/libcsv.a
+gtkworkbook_DEPENDENCIES = ../gtkworkbook/libgtkworkbook.la \
+	../csv/libcsv.la
 gtkworkbook_LINK = $(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) \
 	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(gtkworkbook_CFLAGS) \
 	$(CFLAGS) $(gtkworkbook_LDFLAGS) $(LDFLAGS) -o $@
@@ -225,7 +225,7 @@ gtkworkbook_SOURCES = application.c config.c main.c parse.c plugin.c
 gtkworkbook_CFLAGS = -Wall -lgthread-2.0 -std=c99 $(C_FLAGS)  
 gtkworkbook_LFLAGS = -ldl $(L_FLAGS)
 gtkworkbook_LDFLAGS = $(L_FLAGS)
-gtkworkbook_LDADD = ../gtkworkbook/libgtkworkbook.a ../csv/libcsv.a
+gtkworkbook_LDADD = ../gtkworkbook/libgtkworkbook.la ../csv/libcsv.la
 lib_LTLIBRARIES = realtime.la
 realtime_la_SOURCES = realtime/CsvParser.cpp realtime/Network.cpp realtime/Packet.cpp realtime/plugin_main.cpp \
 	realtime/thread_main.cpp realtime/concurrent/Mutex.cpp realtime/concurrent/Semaphore.cpp \
@@ -234,9 +234,9 @@ realtime_la_SOURCES = realtime/CsvParser.cpp realtime/Network.cpp realtime/Packe
 	realtime/proactor/InputDispatcher.cpp realtime/proactor/Worker.cpp realtime/network/Tcp.cpp
 
 realtime_la_CPPFLAGS = -Wall -Wno-write-strings $(C_FLAGS)
-realtime_la_LFLAGS = $(L_FLAGS)
+realtime_la_LFLAGS = -lgtkworkbook -lcsv $(L_FLAGS)
 realtime_la_LDFLAGS = -module -export-dynamic 
-realtime_la_LIBADD = ../gtkworkbook/libgtkworkbook.a ../csv/libcsv.a
+realtime_la_LIBADD = ../gtkworkbook/libgtkworkbook.la ../csv/libcsv.la
 all: all-am
 
 .SUFFIXES:

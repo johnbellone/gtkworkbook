@@ -8,7 +8,7 @@ gtkworkbook_SOURCES= application.c config.c main.c parse.c plugin.c
 gtkworkbook_CFLAGS= -Wall -lgthread-2.0 -std=c99 $(C_FLAGS)  
 gtkworkbook_LFLAGS= -ldl $(L_FLAGS)
 gtkworkbook_LDFLAGS= $(L_FLAGS)
-gtkworkbook_LDADD= ../gtkworkbook/libgtkworkbook.a ../csv/libcsv.a
+gtkworkbook_LDADD= ../gtkworkbook/libgtkworkbook.la ../csv/libcsv.la
 
 lib_LTLIBRARIES= realtime.la
 realtime_la_SOURCES= realtime/CsvParser.cpp realtime/Network.cpp realtime/Packet.cpp realtime/plugin_main.cpp \
@@ -17,6 +17,6 @@ realtime_la_SOURCES= realtime/CsvParser.cpp realtime/Network.cpp realtime/Packet
 	realtime/proactor/Dispatcher.cpp realtime/proactor/Event.cpp realtime/proactor/Proactor.cpp \
 	realtime/proactor/InputDispatcher.cpp realtime/proactor/Worker.cpp realtime/network/Tcp.cpp
 realtime_la_CPPFLAGS= -Wall -Wno-write-strings $(C_FLAGS)
-realtime_la_LFLAGS= $(L_FLAGS)
+realtime_la_LFLAGS= -lgtkworkbook -lcsv $(L_FLAGS)
 realtime_la_LDFLAGS= -module -export-dynamic 
-realtime_la_LIBADD= ../gtkworkbook/libgtkworkbook.a ../csv/libcsv.a
+realtime_la_LIBADD= ../gtkworkbook/libgtkworkbook.la ../csv/libcsv.la
