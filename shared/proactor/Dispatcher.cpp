@@ -1,6 +1,4 @@
 /* 
-   Dispatcher.hpp - Dispatcher Object Source File
-
    The GTKWorkbook Project <http://gtkworkbook.sourceforge.net/>
    Copyright (C) 2008, 2009 John Bellone, Jr. <jvb4@njit.edu>
 
@@ -28,30 +26,29 @@ namespace proactor {
       
   }
    
-  bool
-  Dispatcher::addWorker (Worker * w) {
-    WorkerListType::iterator it = std::find (this->workers.begin(),
-					     this->workers.end(),
-					     w);
-    if (it == this->workers.end())
-      {
-	this->workers.push_back (w);
-	return w->start();
+	bool
+	Dispatcher::addWorker (Worker * w) {
+		WorkerListType::iterator it = std::find (this->workers.begin(),
+															  this->workers.end(),
+															  w);
+		if (it == this->workers.end()) {
+			this->workers.push_back (w);
+			return w->start();
       }
-    return false;
-  }
+		return false;
+	}
   
-  bool
-  Dispatcher::removeWorker (Worker * w) {
-    WorkerListType::iterator it = std::find (this->workers.begin(),
-					     this->workers.end(),
-					     w);
+	bool
+	Dispatcher::removeWorker (Worker * w) {
+		WorkerListType::iterator it = std::find (this->workers.begin(),
+															  this->workers.end(),
+															  w);
 
-    if (it == this->workers.end())
-      return false;
+		if (it == this->workers.end())
+			return false;
   
-    this->workers.erase (it);
-    return true;
-  }
+		this->workers.erase (it);
+		return true;
+	}
 
 } // end of namesapce

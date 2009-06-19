@@ -24,10 +24,10 @@
 namespace proactor {
 
   InputDispatcher::~InputDispatcher (void) {
-      this->inputQueue.lock();
-      while (this->inputQueue.size() > 0)
-	this->inputQueue.pop();
-      this->inputQueue.unlock();
+	  this->inputQueue.lock();
+	  while (this->inputQueue.size() > 0)
+		  this->inputQueue.pop();
+	  this->inputQueue.unlock();
   }
 
   void *

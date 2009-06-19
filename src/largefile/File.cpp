@@ -21,6 +21,8 @@
 #include <concurrent/ThreadPool.hpp>
 #include <concurrent/ScopedMemoryLock.hpp>
 #include <cstdio>
+#include <sys/time.h>
+#include <unistd.h>
 
 namespace largefile {
 	
@@ -37,7 +39,7 @@ namespace largefile {
 
 	void
 	FileDispatcher::read (long int start, long int N) {
-		LineReader * reader = new LineReader (this, this->fp, start, N);
+		LineReader * reader = new LineReader (this, this->fp, this->marks, start, N);
 		this->addWorker (reader);
 	}
 
@@ -57,37 +59,21 @@ namespace largefile {
 			return false;
 		}
 
-		// Take the relative byte position, e.g. .75 * byte_end, and seek backwards until
-		// we get a newline. We now have the line at that relative byte position. Set it
-		// to the marks array so that we can quick line seek.
+		// Take the relative byte position, e.g. .75 * byte_end, and we now have the a relative
+		// line at that byte position for indexing at a later point in time.
 		std::fseek (this->fp, 0L, SEEK_END);
 		long int byte_end = std::ftell (this->fp);
 
+		this->marks[0].byte = 0;
+		this->marks[0].line = 0;
+		
 		// Compute fuzzy relative position, and set line to -1 for indexing.
-		for (int ii = 0; ii < 101; ii++) {
+		for (int ii = 1; ii < 101; ii++) {
 			float N = ii, K = 10000;
 			this->marks[ii].byte = (long int)((N/K) * byte_end);
 			this->marks[ii].line = -1;
 		}
 
-		long int cursor = 1;
-				
-		// Get actual relative position (where line begins) from fuzzy.
-		while (!feof (this->fp) && (cursor < 101)) {
-			int c = 0, ii = 0;
-			std::fseek(this->fp, this->marks[cursor].byte, SEEK_SET);
-
-			// It looks fancy, but it really isn't.
-			while ((c = fgetc (this->fp)) != EOF) {
-				if ((c == '\r') || (c=='\n')) break;
-				std::fseek(this->fp, this->marks[cursor].byte - (++ii) - 1, SEEK_CUR); 
-			}
-
-			this->marks[cursor].byte = (this->marks[cursor].byte - ii);
-			cursor++;
-			clearerr(this->fp);
-		}
-		
 		std::fseek (this->fp, 0L, SEEK_SET);
 		
 		concurrent::ScopedMemoryLock::addMemoryLock ((unsigned long int)this->fp);
@@ -110,7 +96,6 @@ namespace largefile {
 	FileDispatcher::run (void * null) {
 		this->running = true;
 
-		// Start the indexer thread. 
 		this->index();
 		
 		while (this->running == true) {
@@ -118,7 +103,7 @@ namespace largefile {
 				this->running = false;
 				break;
 			}
-			
+
 			this->inputQueue.lock();
       
 			while (this->inputQueue.size() > 0) {
@@ -130,7 +115,7 @@ namespace largefile {
 
 			this->inputQueue.unlock();
 
-			Thread::sleep (5);
+			concurrent::Thread::sleep(5);
 		}
 
 		return NULL;
@@ -151,60 +136,55 @@ namespace largefile {
 	void *
 	LineIndexer::run (void * null) {
 		this->running = true;
+		int ch, index = 0;
+		long long int cursor = 0, count = 0, byte_beg = 0;
 
-		std::cout<<"index begun..."<<std::flush;
-		
-		int pos = 1;
-		for (; pos < 101; pos++) {
-			if (this->marks[pos].line == -1)
-				break;
-		}
-
-		// Nothing to index.
-		if (pos == 100) {
-			this->running = false;
-			return NULL;
-		}
+		struct timeval start, end;
 		
 		concurrent::ScopedMemoryLock mutex ((unsigned long int)this->fp, true);
 
-		char buf[4096];
-		long int start = std::ftell (this->fp), cursor = 0, count = 0, byte_end = this->marks[pos].byte;
-		std::fseek(this->fp, (pos==0) ? 0 : this->marks[pos-1].byte, SEEK_SET);
-
-		// We need to get a absoltue line number for the relative position. We're not
+		gettimeofday(&start, NULL);
+		
+		// We need to get a absoltue line number from the relative position. We're not
 		// going to get away from having to sequentially read this file in, but once we
 		// have line numbers we can jump throughout the file pretty quickly.
-		while (cursor < byte_end) {	
-			if (std::fgets (buf, 4096, this->fp) == NULL)
-				break;
+		while ((ch = std::fgetc(this->fp)) != EOF) {
+			cursor++;
+			
+			if (ch=='\n') count++;
+						
+			if (this->marks[index].byte <= cursor) {
+				this->marks[index].line = count;
+				this->marks[index].byte = byte_beg;
 
-			cursor = std::ftell(this->fp);
-			count++;
+				index++;
+				
+				if (index == 101)
+					break;
+			}
+
+			if (ch=='\n') byte_beg = cursor + 1;
 		}
 
-		if (cursor >= byte_end)
-			this->marks[pos].line = count;
-		
-		std::fseek (this->fp, start, SEEK_SET);
+		gettimeofday(&end, NULL);
 
-		for (pos=0; pos < 101; pos++) {
-			std::cout << "pos: "<<pos<<" byte: "<<this->marks[pos].byte<<" line: "<<this->marks[pos].line<<"\n";
-		}
-		std::cout<<std::flush;
+		std::cout<<"ms: "<<((((end.tv_sec-start.tv_sec) * 1000) + ((end.tv_usec-start.tv_usec)/1000.0)) + 0.5)<<"\n";
 		
+		this->running = false;
 		this->dispatcher->removeWorker (this);
 		return NULL;
 	}
 
 	LineReader::LineReader (proactor::InputDispatcher * d,
 									FILE * fp,
+									LineIndex * marks,
 									long int start,
 									long int N) {
 		this->fp = fp;
 		this->dispatcher = d;
-		this->startOffset = start;
+		this->startLine = start;
 		this->numberOfLinesToRead = N;
+		this->marks = marks;
 	}
 
 	LineReader::~LineReader (void) {
@@ -216,11 +196,27 @@ namespace largefile {
 		char buf[4096];
 
 		concurrent::ScopedMemoryLock mutex ((unsigned long int)this->fp, true);
-
-		// Record current position and seek to where we're going to start.
+		long int start = std::ftell(this->fp);
+		long int offset = 0, delta = 0;
 		long int & read_max = this->numberOfLinesToRead;
-		std::fseek (this->fp, this->startOffset, SEEK_SET);
+		
+		for (int index = 0; index < 101; index++) {
+			if (this->startLine > this->marks[index].line) {
+				delta = this->marks[index].line - read_max;
+				if (index > 0)
+					offset = this->marks[index-1].byte;
+				break;
+			}
+		}
+		
+		std::fseek (this->fp, offset, SEEK_SET);
 
+		// Munch lines to get to our starting point.
+		while (delta > 0) {
+			if (std::fgets (buf, 4096, this->fp) == NULL)		
+				break;
+      }
+		
 		for (long int ii = 0; ii < read_max; ii++) {
 			if (std::fgets (buf, 4096, this->fp) == NULL)		
 				break;
@@ -228,6 +224,8 @@ namespace largefile {
 			this->dispatcher->onReadComplete (std::string (buf));
 		}
 
+		std::fseek (this->fp, start, SEEK_SET);
+		
 		this->running = false;
 		this->dispatcher->removeWorker (this);
 		return NULL;

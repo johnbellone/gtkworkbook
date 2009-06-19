@@ -69,10 +69,12 @@ namespace largefile {
 	private:
 		FILE * fp;
 		long int numberOfLinesToRead;
-		long int startOffset;
+		long int startLine;
+		LineIndex * marks;
 	public:
 		LineReader (proactor::InputDispatcher * d, 
-						FILE * fp, 
+						FILE * fp,
+						LineIndex * marks,
 						long int start,
 						long int N);
 		virtual ~LineReader (void);

@@ -57,7 +57,7 @@ key_press_callback (GtkWidget * window, GdkEventKey * event, gpointer data) {
 	
 	switch (event->keyval) {
 		case GDK_F1: {
-			gtk_sheet_column_button_add_label (gtksheet, 0, "A");
+			fd->read(102583,1000);
 		}
 		break;
 		
@@ -120,7 +120,7 @@ thread_main (ThreadArgs * args) {
 		g_critical ("Failed starting file dispatcher; exiting thread.");
 		return;
 	}
-
+	
 	std::vector<gpointer> signal_arguments;
 	signal_arguments.push_back( (gpointer)&fdispatcher );
 	signal_arguments.push_back( (gpointer)wb );
