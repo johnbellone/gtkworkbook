@@ -200,11 +200,10 @@ namespace largefile {
 		long int offset = 0, delta = 0;
 		long int & read_max = this->numberOfLinesToRead;
 		
-		for (int index = 0; index < 101; index++) {
-			if (this->startLine > this->marks[index].line) {
-				delta = this->marks[index].line - read_max - 1;
-				if (index > 0)
-					offset = this->marks[index-1].byte;
+		for (int index = 1; index < 101; index++) {
+			if ((this->startLine + read_max) < this->marks[index].line) {
+				delta = std::abs(this->marks[index-1].line - this->startLine + 1);
+				offset = this->marks[index-1].byte;
 				break;
 			}
 		}
@@ -212,7 +211,7 @@ namespace largefile {
 		std::fseek (this->fp, offset, SEEK_SET);
 
 		// Munch lines to get to our starting point.
-		while (delta > 0) {
+		while (delta-- > 0) {
 			if (std::fgets (buf, 4096, this->fp) == NULL)		
 				break;
       }
