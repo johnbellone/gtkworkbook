@@ -52,12 +52,12 @@ key_press_callback (GtkWidget * window, GdkEventKey * event, gpointer data) {
 	GtkSheet * gtksheet = GTK_SHEET (wb->sheet_first->gtk_sheet);
 
 	int vposition = std::abs((int)gtksheet->vadjustment->value);
-	static long int cursor = 0;
+	static off64_t cursor = 0;
 	//	float N = vposition, K = 24388, V = (N/K);
 	
 	switch (event->keyval) {
 		case GDK_F1: {
-			fd->read(8570218,1000);
+			fd->read(1012121,1000);
 		}
 		break;
 		
@@ -117,7 +117,7 @@ thread_main (ThreadArgs * args) {
 		return;
 	}
 
-	if (fdispatcher.open ("/home/johnb/largefile.csv") == false) {
+	if (fdispatcher.open ("/home/jbellone/largefile.csv") == false) {
 		g_critical ("Failed opening /home/johnb/largefile.csv");
 		return;
 	}

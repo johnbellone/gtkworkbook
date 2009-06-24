@@ -4,10 +4,12 @@ INCS += -I${PROJDIR}/shared
 SRCS=$(wildcard *.cpp) 
 OBJS=$(patsubst %.cpp,${OBJDIR}/largefile/%.o,${SRCS})
 
+_CXFLAGS= -D_LARGEFILE_SOURCE -D_LARGEFILE64_SOURCE -D_FILE_OFFSET_BITS=64
+
 all: 	largefile
 
 largefile: ${OBJS}
-	${CX} -shared -Wl -o ${PROJDIR}/bin/largefile.so ${OBJS} ${LIBS} \
+	${CX} ${_CXFLAGS} -shared -Wl -o ${PROJDIR}/bin/largefile.so ${OBJS} ${LIBS} \
 	-lgthread-2.0 -lpthread -lcsv -lshared
 
 clean:		
@@ -19,7 +21,7 @@ install: all
 	${CP} ${PROJDIR}/bin/largefile.so ${INSEXTDIR}/largefile.so
 
 ${OBJDIR}/largefile/%.o: %.cpp
-	${CX} ${INCS} -c -fPIC ${CXFLAGS} $< -o $@
+	${CX} ${_CXFLAGS} ${INCS} -c -fPIC ${CXFLAGS} $< -o $@
 
 .cpp.o:
-	${CX} ${INCS} -c -fPIC ${CXFLAGS} $<ls
+	${CX} ${_CXFLAGS} ${INCS} -c -fPIC ${CXFLAGS} $<ls

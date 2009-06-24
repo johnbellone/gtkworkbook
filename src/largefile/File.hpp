@@ -29,8 +29,8 @@
 namespace largefile {
 
 	struct LineIndex {
-		long long byte;
-		long long line;
+		off64_t byte;
+		off64_t line;
 	};
 	
 	class FileDispatcher : public proactor::InputDispatcher {
@@ -46,7 +46,7 @@ namespace largefile {
 		bool close (void);
 		void * run (void * null);
 
-		void read (long long start, long long N);
+		void read (off64_t start, off64_t N);
 		void index (void);
 
 		inline bool isIndexed(void) const { return (this->marks[100].line != -1); }
@@ -68,15 +68,15 @@ namespace largefile {
 	class LineReader : public proactor::Worker {
 	private:
 		FILE * fp;
-		long long numberOfLinesToRead;
-		long long startLine;
+		off64_t numberOfLinesToRead;
+		off64_t startLine;
 		LineIndex * marks;
 	public:
 		LineReader (proactor::InputDispatcher * d, 
 						FILE * fp,
 						LineIndex * marks,
-						long long start,
-						long long N);
+						off64_t start,
+						off64_t N);
 		virtual ~LineReader (void);
 
 		void * run (void * null);

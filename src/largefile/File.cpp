@@ -38,7 +38,7 @@ namespace largefile {
 	}
 
 	void
-	FileDispatcher::read (long long start, long long N) {
+	FileDispatcher::read (off64_t start, off64_t N) {
 		LineReader * reader = new LineReader (this, this->fp, this->marks, start, N);
 		this->addWorker (reader);
 	}
@@ -54,27 +54,27 @@ namespace largefile {
 		if (filename.length() == 0)
 			return false;
 
-		if ((this->fp = std::fopen (filename.c_str(), "r")) == NULL) {
+		if ((this->fp = fopen64 (filename.c_str(), "r")) == NULL) {
 			// stub: throw an error somewhere
 			return false;
 		}
 
 		// Take the relative byte position, e.g. .75 * byte_end, and we now have the a relative
 		// line at that byte position for indexing at a later point in time.
-		std::fseek (this->fp, 0L, SEEK_END);
-		long long byte_end = std::ftell (this->fp);
+		fseeko64 (this->fp, 0L, SEEK_END);
+		off64_t byte_end = ftello64 (this->fp);
 
 		this->marks[0].byte = 0;
 		this->marks[0].line = 0;
 		
 		// Compute fuzzy relative position, and set line to -1 for indexing.
 		for (int ii = 1; ii < 101; ii++) {
-			float N = ii, K = 10000;
-			this->marks[ii].byte = (long long)((N/K) * byte_end);
+			double N = ii, K = 1000;
+			this->marks[ii].byte = (off64_t)((N/K) * byte_end);
 			this->marks[ii].line = -1;
 		}
 
-		std::fseek (this->fp, 0L, SEEK_SET);
+		fseeko64 (this->fp, 0L, SEEK_SET);
 		
 		concurrent::ScopedMemoryLock::addMemoryLock ((unsigned long int)this->fp);
 		this->filename = filename;
@@ -87,7 +87,7 @@ namespace largefile {
 		if (this->fp == NULL)
 			return false;
 
-		std::fclose (this->fp); this->fp = NULL;
+		fclose (this->fp); this->fp = NULL;
 		mutex.remove();
 		return true;
 	}
@@ -99,11 +99,6 @@ namespace largefile {
 		this->index();
 		
 		while (this->running == true) {
-			if (this->fp == NULL) {
-				this->running = false;
-				break;
-			}
-
 			this->inputQueue.lock();
       
 			while (this->inputQueue.size() > 0) {
@@ -130,14 +125,13 @@ namespace largefile {
 	}
 
 	LineIndexer::~LineIndexer (void) {
-		std::cout<<"index finished\n"<<std::flush;
 	}
 
 	void *
 	LineIndexer::run (void * null) {
 		this->running = true;
 		int ch, index = 0;
-		long long cursor = 0, count = 0, byte_beg = 0;
+		off64_t cursor = 0, count = 0, byte_beg = 0;
 
 		struct timeval start, end;
 		
@@ -148,13 +142,15 @@ namespace largefile {
 		// We need to get a absoltue line number from the relative position. We're not
 		// going to get away from having to sequentially read this file in, but once we
 		// have line numbers we can jump throughout the file pretty quickly.
-		while ((ch = std::fgetc(this->fp)) != EOF) {
+		while ((ch = fgetc(this->fp)) != EOF) {
 			if (ch=='\n') count++;
 
   			if (this->marks[index].byte == cursor++) {
 				this->marks[index].line = count;
 				this->marks[index].byte = byte_beg;
 
+				std::cout<<"index: "<<index<<" byte: "<<this->marks[index].byte<<" line: "<<this->marks[index].line<<"\n";
+				
 				index++;
 				
 				if (index == 101)
@@ -176,8 +172,8 @@ namespace largefile {
 	LineReader::LineReader (proactor::InputDispatcher * d,
 									FILE * fp,
 									LineIndex * marks,
-									long long start,
-									long long N) {
+									off64_t start,
+									off64_t N) {
 		this->fp = fp;
 		this->dispatcher = d;
 		this->startLine = start;
@@ -194,9 +190,9 @@ namespace largefile {
 		char buf[4096];
 
 		concurrent::ScopedMemoryLock mutex ((unsigned long int)this->fp, true);
-		long long start = std::ftell(this->fp);
-		long long offset = 0, delta = 0;
-		long long & read_max = this->numberOfLinesToRead;
+		off64_t start = ftello64 (this->fp);
+		off64_t offset = 0, delta = 0;
+		off64_t read_max = this->numberOfLinesToRead;
 		
 		for (int index = 1; index < 101; index++) {
 			if ((this->startLine + read_max) < this->marks[index].line) {
@@ -206,7 +202,7 @@ namespace largefile {
 			}
 		}
 		
-		std::fseek (this->fp, offset, SEEK_SET);
+		fseeko64 (this->fp, offset, SEEK_SET);
 
 		// Munch lines to get to our starting point.
 		while (delta > 0) {
@@ -215,14 +211,14 @@ namespace largefile {
 			--delta;
       }
 		
-		for (long long ii = 0; ii < read_max; ii++) {
+		for (off64_t ii = 0; ii < read_max; ii++) {
 			if (std::fgets (buf, 4096, this->fp) == NULL)		
 				break;
       
 			this->dispatcher->onReadComplete (std::string (buf));
 		}
 
-		std::fseek (this->fp, start, SEEK_SET);
+		fseeko64 (this->fp, start, SEEK_SET);
 		
 		this->running = false;
 		this->dispatcher->removeWorker (this);
