@@ -26,6 +26,9 @@
 #include <vector>
 #include <string>
 
+#define LINE_INDEX_MAX 1001
+#define LINE_PRECISION 10000
+
 namespace largefile {
 
 	struct LineIndex {
@@ -35,7 +38,7 @@ namespace largefile {
 	
 	class FileDispatcher : public proactor::InputDispatcher {
 	private:
-		LineIndex marks[101];
+		LineIndex marks[LINE_INDEX_MAX];
 		FILE * fp;
 		std::string filename;
 	public:
@@ -49,7 +52,7 @@ namespace largefile {
 		void read (off64_t start, off64_t N);
 		void index (void);
 
-		inline bool isIndexed(void) const { return (this->marks[100].line != -1); }
+		inline bool isIndexed(void) const { return (this->marks[LINE_INDEX_MAX-1].line != -1); }
 	};
 
 	class LineIndexer : public proactor::Worker {

@@ -68,8 +68,8 @@ namespace largefile {
 		this->marks[0].line = 0;
 		
 		// Compute fuzzy relative position, and set line to -1 for indexing.
-		for (int ii = 1; ii < 101; ii++) {
-			double N = ii, K = 1000;
+		for (int ii = 1; ii < LINE_INDEX_MAX; ii++) {
+			double N = ii, K = LINE_PRECISION;
 			this->marks[ii].byte = (off64_t)((N/K) * byte_end);
 			this->marks[ii].line = -1;
 		}
@@ -148,12 +148,10 @@ namespace largefile {
   			if (this->marks[index].byte == cursor++) {
 				this->marks[index].line = count;
 				this->marks[index].byte = byte_beg;
-
-				std::cout<<"index: "<<index<<" byte: "<<this->marks[index].byte<<" line: "<<this->marks[index].line<<"\n";
 				
 				index++;
 				
-				if (index == 101)
+				if (index == LINE_INDEX_MAX)
 					break;
 			}
 
@@ -194,7 +192,7 @@ namespace largefile {
 		off64_t offset = 0, delta = 0;
 		off64_t read_max = this->numberOfLinesToRead;
 		
-		for (int index = 1; index < 101; index++) {
+		for (int index = 1; index < LINE_INDEX_MAX; index++) {
 			if ((this->startLine + read_max) < this->marks[index].line) {
 				delta = std::abs(this->marks[index-1].line - this->startLine);
 				offset = this->marks[index-1].byte;
