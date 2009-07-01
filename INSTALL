@@ -39,41 +39,37 @@ DEPENDENCIES
 
 	   The newest version should suffice as long as it compiles and installs.
 
+	D. libcsv
+
+	   This C library is used for the parsing of comma-separated files that are
+	   used for all of the major modes of this application. It is a very solid
+	   library, and the most recent version is more than suitable for the demo
+	   code.
+
+	   It is available off sourceforge.net at the following address:
+
+	   http://sourceforge.net/projects/libcsv/
+
 BASIC INSTALLATION
 
-      So as I stated before my build system merely uses some shell commands, and a
-      set of Makefiles. I do not use automake as of the writing of this document
-      therefore some care may have to be taken when linking dependencies. The only
-      issue I have ran into is that YUM properly installs GtkExtra include files
-      into: /usr/include instead of /usr/local/include
+      The build system has begun to move to a GNU autotools design. There are still
+      a few quirks about how the system works, but all in all it is much like any other
+      open source project that uses the GNU tool chain. There is a configure script that
+      can be run independently to build the set of Makefiles, but a custom autogen.sh
+      script is included for ease of use.
 
-      This can be easily (and quickly) changed inside of the Makefile.base which 
-      has a specific include line for the GtkExtra headers. Once this change is
-      made and as long as the dependencies have all been installed you are ready
-      to rock on compliation/installation of this project.
+      One limitiation to the build system is that it is designed with the purpose of
+      installing the application. Right now there is no easy way to build the code into	
+      a sensible directory structure (bin/, lib/, etc) without severe modification. In
+      the future the code will most likely be restructured further to ease the transition
+      to newer versions, but for now it is compilable.
 
-      1. Copy the .gtkworkbook file from the project directory, and change the
-      paths to where you would like the compiled libraries to be installed to
-      and where your project directory is located.
+      Please make sure all the dependencies are installed before building.
 
-      You will get compliation errors if your project directory is not correct.
+      1. Run ./autogen.sh --prefix=[install_directory]
 
-      2. make clean all
+      2. make install
 
-      3. Modify the application.cfg file inside of the `bin' directory to account
-      for any changes for the application; this includes the absolute path of the
-      example .so files.
-
-      4. The binaries and .so files are located in the `bin' directory for testing.
-
-      5. Execute with ./bin/gtkworkbook -c ./bin/application.cfg and enjoy!
-
-ADVANCED INSTALLATION
-
- 	 If you have plans to install the application in a separate directory than
-	 the .so plugin files be sure to remember that the application.cfg input
-	 file must point to the absolute path of the individual files. Relative paths
-	 will work but are currently tied to the execution path of the binary. 
-
-
+      3. cd [install_directory]
       
+      4. ./bin/gtkworkbook -c ./cfg/application.cfg

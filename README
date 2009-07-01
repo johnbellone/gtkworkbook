@@ -16,10 +16,18 @@ The file etc/BUGS contains known bugs that are being worked on. If you find
 any bugs please report them on sourceforge.net so that they can be added
 to the queue.
 
-`etc'  holds miscellaneous files that are useful for development purposes but
-       not critical to the application itself.
+`etc'		holds miscellaneous files that are useful for development purposes but
+       		not critical to the application itself. 
 
-`src' holds the C/C++ code for the GTKWorkbook application.
+`src' 		holds the C/C++ code for the GTKWorkbook application.
+
+`gtkworkbook' 	contains the library built to abstract away the calls to the
+	      	GtkSheet widget available in the required GtkExtra+ package.
+
+`cfg' 		has the demonstration's configuration file that must be loaded in order
+		for the application to launch properly.
+
+`include'	is where the includes for the shared libraries are
 
 
        

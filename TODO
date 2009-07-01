@@ -1,9 +1,8 @@
-TODO for Autotools branch
+TODO for master branch
 
-* Autotools
-	- Before Merge
-		o Checks for proper version of GTK+, GtkExtra, and Pixman. 
-	- Merge
-		o This should be a clean merge into master branch.
-		o This branch should then be deleted, recreated, and merged into largefile.
+* Master
+  x Before stable merge
+    o Create autogen.sh script for building autotools purposes.
+    o Fix segemnation fault on exit.
+ 
 	
