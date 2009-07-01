@@ -1,2 +1,2 @@
 AUTOMAKE_OPTIONS= foreign
-SUBDIRS= csv gtkworkbook src
+SUBDIRS= gtkworkbook/OBJS src/OBJS src/realtime/OBJS

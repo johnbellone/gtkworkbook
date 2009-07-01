@@ -25,7 +25,7 @@
 #include <gtkworkbook/workbook.h>
 #include <gtkworkbook/sheet.h>
 #include <gtkworkbook/cell.h>
-#include <csv/csv.h>
+#include <libcsv/csv.h>
 #include <iostream>
 
 namespace realtime {

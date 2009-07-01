@@ -20,3 +20,5 @@ ltmain.sh
 *.la
 *.a
 *.so
+.libs
+.deps

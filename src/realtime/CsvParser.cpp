@@ -69,36 +69,36 @@ namespace realtime {
     }
 
     while (this->running == true) {
-      while (this->inputQueue.size() > 0) {
+		 while (this->inputQueue.size() > 0) {
 
-	if (this->running == false)
-	  break;
+			 if (this->running == false)
+				 break;
 
-	std::string buf = this->inputQueue.pop();
-	size_t bytes = buf.length();
+			 std::string buf = this->inputQueue.pop();
+			 size_t bytes = buf.length();
  
-	// Parse the CSV input
-	if ((bytes = csv_parse(&csv, 
-			       buf.c_str(), 
-			       bytes, 
-			       cb1,
-			       cb2,
-			       &column)) == bytes) {
-	  if (csv_error (&csv) == CSV_EPARSE)
-	    std::cerr << "Parsing error on input: " << buf << "\n";
-	}
+			 // Parse the CSV input
+			 if ((bytes = csv_parse(&csv, 
+											buf.c_str(), 
+											bytes, 
+											cb1,
+											cb2,
+											&column)) == bytes) {
+				 if (csv_error (&csv) == CSV_EPARSE)
+					 std::cerr << "Parsing error on input: " << buf << "\n";
+			 }
 
-	csv_fini (&csv, cb1, cb2, &column);
+			 csv_fini (&csv, cb1, cb2, &column);
 
-	this->wb->sheet_first->apply_array (this->wb->sheet_first,
-					    this->cell,
-					    10);
+			 this->wb->sheet_first->apply_array (this->wb->sheet_first,
+															 this->cell,
+															 10);
 
-	if (column.row >= (column.sheet)->max_rows)
-	  column.row = 0;
-      }
+			 if (column.row >= (column.sheet)->max_rows)
+				 column.row = 0;
+		 }
 
-      Thread::sleep(100);
+		 Thread::sleep(100);
 
     }
 
