@@ -40,6 +40,14 @@ if test x${ok} != xyes ; then
     exit 1
 fi
 
+# Generate ChangeLog from git log
+if ( git log -p ) > ChangeLog; then
+    echo -n "Building ChangeLog from git..."
+    echo "done."
+else
+    echo "git not found -- cannot build ChangeLog"
+fi
+
 # Clean up old files which could hurt otherwise
 rm -f config.cache config.log config.status
 

@@ -1,4 +1,5 @@
-cfg/Makefile
+ChangeLog
+*Makefile
 autoregen.sh
 .DS_Store
 *~
