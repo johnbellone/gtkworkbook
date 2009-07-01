@@ -161,14 +161,14 @@ localstatedir = ${prefix}/var
 mandir = ${prefix}/man
 mkdir_p = mkdir -p --
 oldincludedir = /usr/include
-prefix = /usr/local
+prefix = /home/jbellone/gtkworkbook
 program_transform_name = s,x,x,
 sbindir = ${exec_prefix}/sbin
 sharedstatedir = ${prefix}/com
 sysconfdir = ${prefix}/etc
 target_alias = 
 AUTOMAKE_OPTIONS = foreign
-SUBDIRS = gtkworkbook/OBJS src/OBJS src/realtime/OBJS
+SUBDIRS = cfg gtkworkbook/OBJS src/OBJS src/realtime/OBJS
 all: all-recursive
 
 .SUFFIXES:

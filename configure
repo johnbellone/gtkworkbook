@@ -19453,7 +19453,7 @@ fi
 done
 
 
-                                        ac_config_files="$ac_config_files Makefile gtkworkbook/OBJS/Makefile src/OBJS/Makefile src/realtime/OBJS/Makefile"
+                                                  ac_config_files="$ac_config_files Makefile gtkworkbook/OBJS/Makefile src/OBJS/Makefile src/realtime/OBJS/Makefile cfg/Makefile"
 cat >confcache <<\_ACEOF
 # This file is a shell script that caches the results of configure
 # tests run on this system so they can be shared between configure
@@ -20040,6 +20040,7 @@ do
   "gtkworkbook/OBJS/Makefile" ) CONFIG_FILES="$CONFIG_FILES gtkworkbook/OBJS/Makefile" ;;
   "src/OBJS/Makefile" ) CONFIG_FILES="$CONFIG_FILES src/OBJS/Makefile" ;;
   "src/realtime/OBJS/Makefile" ) CONFIG_FILES="$CONFIG_FILES src/realtime/OBJS/Makefile" ;;
+  "cfg/Makefile" ) CONFIG_FILES="$CONFIG_FILES cfg/Makefile" ;;
   "depfiles" ) CONFIG_COMMANDS="$CONFIG_COMMANDS depfiles" ;;
   *) { { echo "$as_me:$LINENO: error: invalid argument: $ac_config_target" >&5
 echo "$as_me: error: invalid argument: $ac_config_target" >&2;}

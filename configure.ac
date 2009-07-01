@@ -29,4 +29,5 @@ AC_CHECK_FUNCS([gethostbyname memset socket])
 AC_OUTPUT([Makefile
 	   gtkworkbook/OBJS/Makefile
 	   src/OBJS/Makefile
-	   src/realtime/OBJS/Makefile])
+	   src/realtime/OBJS/Makefile
+	   cfg/Makefile])

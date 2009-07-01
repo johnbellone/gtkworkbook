@@ -1,11 +1,6 @@
 TODO for Autotools branch
 
 * Autotools
-	- Bugs
-		o Object files currently build into directory with Makefile. Ideally they
-		should be built into hidden .obj directory just as .lib and .dep. 
-		o Binaries (including libraries) do not get copied into the /bin/ file of
-		the project's root
 	- Before Merge
 		o Checks for proper version of GTK+, GtkExtra, and Pixman. 
 	- Merge
