@@ -21,7 +21,7 @@
 #include <concurrent/ThreadArgs.hpp>
 #include <gtk/gtk.h>
 #include "../config.h"
-#include "../application.h"
+#include "../Application.hpp"
 #include "../plugin.h"
 
 /* Prototypes */
@@ -29,15 +29,15 @@ extern void thread_main (ThreadArgs *);
 
 static void
 open_csv_file (GtkWidget * w, gpointer data) {
-  ApplicationState * app = (ApplicationState *)data;
-  //Config * cfg = app->cfg;
+  Application * app = (Application *)data;
+  Config * cfg = app->config();
   
   GtkWidget * dialog = gtk_file_chooser_dialog_new ("Open File",
-						    GTK_WINDOW (app->gtk_window),
-						    GTK_FILE_CHOOSER_ACTION_OPEN,
-						    GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
-						    GTK_STOCK_OPEN, GTK_RESPONSE_ACCEPT,
-						    NULL);  
+																	 GTK_WINDOW (app->gtkwindow()),
+																	 GTK_FILE_CHOOSER_ACTION_OPEN,
+																	 GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
+																	 GTK_STOCK_OPEN, GTK_RESPONSE_ACCEPT,
+																	 NULL);  
   
   gtk_file_chooser_set_do_overwrite_confirmation (GTK_FILE_CHOOSER (dialog), TRUE);
 
@@ -51,7 +51,7 @@ open_csv_file (GtkWidget * w, gpointer data) {
 }
 
 static GtkWidget *
-largefile_mainmenu_new (ApplicationState * appstate, GtkWidget * window) {
+largefile_mainmenu_new (Application * appstate, GtkWidget * window) {
   GtkItemFactoryEntry menu_items[] = {
     {"/_File",         NULL,		NULL, 		0, 	"<Branch>"},
     {"/File/_Open",    "<CTRL>O",	(GtkItemFactoryCallback)open_csv_file,	0,	"<StockItem>", GTK_STOCK_OPEN},
@@ -80,23 +80,23 @@ largefile_mainmenu_new (ApplicationState * appstate, GtkWidget * window) {
 extern "C" {
 
   Workbook *
-  plugin_main (ApplicationState * appstate, Plugin * plugin) {
+  plugin_main (Application * appstate, Plugin * plugin) {
     ASSERT (appstate != NULL);
     ASSERT (plugin != NULL);
 	
     GtkWidget * box = gtk_vbox_new (FALSE, 0);
-    GtkWidget * mainmenu = largefile_mainmenu_new (appstate, appstate->gtk_window);
+    GtkWidget * mainmenu = largefile_mainmenu_new (appstate, appstate->gtkwindow());
     gtk_box_pack_start (GTK_BOX (box), mainmenu, FALSE, FALSE, 0);
 
     Workbook * wb = NULL;
-    if ((wb = workbook_open (appstate->gtk_window, "largefile")) == NULL) {
+    if ((wb = workbook_open (appstate->gtkwindow(), "largefile")) == NULL) {
       g_critical ("Failed opening workbook; exiting largefile plugin");
       return NULL;
     }
 
     gtk_box_pack_end (GTK_BOX (box), wb->gtk_notebook, FALSE, FALSE, 0);
 
-    wb->signals[SIG_WORKBOOK_CHANGED] = appstate->signals[SIG_SHEET_CHANGED];
+    wb->signals[SIG_WORKBOOK_CHANGED] = appstate->signals[Application::SHEET_CHANGED];
         
     wb->gtk_box = box;
     
@@ -104,8 +104,7 @@ extern "C" {
 
     ThreadArgs args;
     args.push_back ( (void *)wb );
-    args.push_back ( (void *)appstate->cfg );
-    args.push_back ( (void *)appstate->shutdown );
+    args.push_back ( (void *)appstate->config() );
 
     if (plugin->create_thread (plugin,
 			       (GThreadFunc)thread_main,
@@ -114,7 +113,7 @@ extern "C" {
       return NULL;
     }
 
-    gtk_box_pack_start (GTK_BOX (appstate->gtk_window_vbox), box, FALSE, FALSE, 0);
+    gtk_box_pack_start (GTK_BOX (appstate->gtkvbox()), box, FALSE, FALSE, 0);
     gtk_widget_show (box);	
     return wb;
   }

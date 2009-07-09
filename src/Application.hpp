@@ -22,30 +22,38 @@ public:
 		/**/
 		MAX_SIGNALS
 	};
+
+	GSourceFunc signals[MAX_SIGNALS];
 private:
 	typedef std::list<Workbook *> WorkbookList;
 	typedef std::list<Plugin *> PluginList;
-
-	GSourceFunc signals[MAX_SIGNALS];
+	
 	Workbook * active_workbook;
 	GtkWidget * gtk_window;
 	GtkWidget * gtk_window_vbox;
 	GtkWidget * gtk_menu;
 	Config * cfg;
-	proactor::Proactor proactor;
+	proactor::Proactor pro;
 	WorkbookList workbooks;
 	PluginList plugins;
 	gchar * absolute_path;
 	
-	void init (int argc, char ** argv);
+	void init (int argc, char *** argv);
 public:
-	Application (int argc, char ** argv);
+	Application (int argc, char *** argv);
 	~Application (void);
 
 	int run (void);
 	void shutdown (void);
 	Plugin * load_plugin (const gchar * filename);
 	void open_extension (const gchar * filename, gboolean absolute_path);
+
+	inline GtkWidget * gtkwindow() { return this->gtk_window; }
+	inline GtkWidget * gtkvbox() { return this->gtk_window_vbox; }
+	inline GtkWidget * gtkmenu() { return this->gtk_menu; }
+	inline Config * config() { return this->cfg; }
+	inline proactor::Proactor * proactor() { return &this->pro; }
+	inline Workbook * wb() { return this->active_workbook; }
 };
 
 #endif

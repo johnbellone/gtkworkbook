@@ -1,4 +1,22 @@
 #include "Application.hpp"
+#include <cstring>
+
+/* @description: This method takes the argument and clears the string of
+   everything except for the directories. Therefore the return value would
+   be a string sans anything before the last directory delimiter '/'. */
+static gchar *
+munchpath (gchar * path_) {
+	gchar * path = g_strdup(path_);
+	path = g_strreverse (path);
+	gchar * p = path;
+
+	while (p && (*p != '\0')) { if (*p == '/') break; p++; }
+
+	gchar * str = g_strdup (p);
+	str = g_strreverse (str);
+	FREE (path);
+	return str;
+}
 
 static guint
 signal_gtknotebook_removed (GtkNotebook * notebook,
@@ -121,7 +139,7 @@ signal_destroy_event (GtkWidget *window, gpointer data)
 	return FALSE;
 }
 
-Application::Application (int argc, char ** argv) {
+Application::Application (int argc, char *** argv) {
 	this->init (argc, argv);
 	this->cfg = NULL;
 	this->gtk_window = NULL;
@@ -197,10 +215,10 @@ Application::open_extension (const gchar * filename, gboolean absolute_path) {
 
 	Plugin * plugin = NULL;
 	if ((plugin = this->load_plugin (fname)) != NULL) {
-		typedef Workbook * (*Plugin_Main) (ApplicationState *, Plugin *);
+		typedef Workbook * (*Plugin_Main) (Application *, Plugin *);
       Plugin_Main plugin_main;
 	  
-      if ((plugin_main = plugin->method_register (plugin, "plugin_main")) == NULL) {
+      if ((plugin_main = (Plugin_Main)plugin->method_register (plugin, "plugin_main")) == NULL) {
 			g_critical ("Unable to register method with symbol 'plugin_main'");
 			exit (1);
 		}
@@ -214,7 +232,7 @@ Application::open_extension (const gchar * filename, gboolean absolute_path) {
 			/* Attach all of the signals for the Workbook object. */
 			gtk_signal_connect (GTK_OBJECT (wb->gtk_notebook),
 									  "switch-page",
-									  (GtkSignalFunc)this->signals[SIG_NOTEBOOK_SWITCHED], 
+									  (GtkSignalFunc)this->signals[NOTEBOOK_SWITCHED], 
 									  (gpointer)wb);
 	  
 			this->workbooks.push_back (wb);
@@ -225,7 +243,7 @@ Application::open_extension (const gchar * filename, gboolean absolute_path) {
 }
 
 void
-Application::init (int argc, char ** argv) {
+Application::init (int argc, char *** argv) {
 	int c;
 	
 	if (!g_thread_supported ()) {
@@ -233,12 +251,12 @@ Application::init (int argc, char ** argv) {
       gdk_threads_init ();
 	}
 
-	this->absolute_path = munchpath (*argv[0]);
+	this->absolute_path = ::munchpath (*argv[0]);
 	
 	/* This block parses the commandline for options. A better example on how
 		this code works can be found on the GNU website at the following URI:
 		http://gnu.org/software/libtool/manual/libc/Using-Getopt.html */
-	while ((c = getopt (*argc, *argv, "c:")) != -1) {
+	while ((c = getopt (argc, *argv, "c:")) != -1) {
       switch (c) {
 			case 'c': {
 				Config * cfg = config_new (optarg);
@@ -264,7 +282,7 @@ Application::init (int argc, char ** argv) {
 	}
 
 	gdk_threads_enter ();
-	gtk_init (argc, argv);
+	gtk_init (&argc, argv);
 
 	/* Create the window and connect two callback to the signals. */
 	this->gtk_window = gtk_window_new (GTK_WINDOW_TOPLEVEL);
@@ -307,7 +325,7 @@ Application::init (int argc, char ** argv) {
 
 			if (IS_NULL (ext)) {
 				g_critical ("Config 'extensions' vector is NULL");
-				return -1;
+				return;
 			}
       
 			while ((block = ext->get(ext, ii)) != NULL) {
@@ -332,7 +350,7 @@ Application::init (int argc, char ** argv) {
 
 int
 Application::run (void) {
-	if (proactor.start() == false) {
+	if (proactor()->start() == false) {
 		g_critical ("Failed to start the proactor thread; exiting application.");
 		return -1;
 	}

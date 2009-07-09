@@ -21,7 +21,7 @@
 #include <gtkworkbook/workbook.h>
 #include <concurrent/ThreadArgs.hpp>
 #include "../config.h"
-#include "../application.h"
+#include "../Application.hpp"
 #include "../plugin.h"
 
 /* Prototypes */
@@ -30,21 +30,19 @@ extern void thread_main (ThreadArgs *);
 extern "C"
 {
   Workbook *
-  plugin_main (ApplicationState * app, Plugin * plugin)
-  {
+  plugin_main (Application * app, Plugin * plugin) {
     ASSERT (app != NULL);
     ASSERT (plugin != NULL);
 
     Workbook * wb = NULL;
     GtkWidget * hbox = gtk_handle_box_new ();
     
-    if ((wb = workbook_open (app->gtk_window, "realtime")) == NULL)
-      {
-	g_critical ("Failed opening workbook; exiting plugin");
-	return NULL;
-      }
+    if ((wb = workbook_open (app->gtkwindow(), "realtime")) == NULL) {
+		 g_critical ("Failed opening workbook; exiting plugin");
+		 return NULL;
+	 }
 
-    wb->signals[SIG_WORKBOOK_CHANGED] = app->signals[SIG_SHEET_CHANGED];
+    wb->signals[SIG_WORKBOOK_CHANGED] = app->signals[Application::SHEET_CHANGED];
 
     gtk_container_add (GTK_CONTAINER (hbox), wb->gtk_notebook);
  
@@ -54,9 +52,8 @@ extern "C"
 
     ThreadArgs args;
     args.push_back( (void *)wb );
-    args.push_back( (void *)app->cfg );
-    args.push_back( (void *)app->shutdown );
-
+    args.push_back( (void *)app );
+  
     if (plugin->create_thread (plugin, 
 			       (GThreadFunc)thread_main,
 			       (gpointer)new ThreadArgs (args)
@@ -66,7 +63,7 @@ extern "C"
 	return NULL;
       }
 
-    gtk_box_pack_start (GTK_BOX (app->gtk_window_vbox), hbox, FALSE,FALSE, 0);
+    gtk_box_pack_start (GTK_BOX (app->gtkvbox()), hbox, FALSE,FALSE, 0);
     gtk_widget_show (hbox);
     return wb;
   }
