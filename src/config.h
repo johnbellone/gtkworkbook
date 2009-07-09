@@ -1,6 +1,4 @@
 /* 
-   config.h - Config Object/Parser Header File
-
    The GTKWorkbook Project <http://gtkworkbook.sourceforge.net/>
    Copyright (C) 2008, 2009 John Bellone, Jr. <jvb4@njit.edu>
 
@@ -31,7 +29,7 @@ typedef struct _ConfigPair ConfigPair;
 typedef struct _ConfigVector ConfigVector;
 
 #include <shared.h>
-#include <stdlib.h>
+#include <cstdlib>
 
 struct _ConfigPair
 {

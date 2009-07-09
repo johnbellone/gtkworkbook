@@ -1,7 +1,7 @@
 include ../Makefile.base
 
-SRCS=$(wildcard *.c)
-OBJS=$(patsubst %.c,${OBJDIR}/%.o,${SRCS})
+SRCS=$(wildcard *.cc) $(wildcard concurrent/*.cc) $(wildcard network/*.cc) $(wildcard proactor/*.cc) 
+OBJS=$(patsubst %.cc,${OBJDIR}/%.o,${SRCS})
 
 LFLAGS=-lgtkworkbook -lgtkextra-x11-2.0 -lgthread-2.0
 
@@ -10,7 +10,7 @@ all: 	gtkworkbook
 	make -C largefile/ all
 
 gtkworkbook: ${OBJS}
-	${CC} -o ${PROJDIR}/bin/gtkworkbook ${OBJS} ${LIBS} ${LFLAGS}
+	${CX} -o ${PROJDIR}/bin/gtkworkbook ${OBJS} ${LIBS} ${LFLAGS}
 
 clean:		
 	${MD} ${OBJDIR}	
@@ -24,8 +24,8 @@ install: all
 	make -C realtime/ install
 	make -C largefile/ install
 
-${OBJDIR}/%.o: %.c
-	${CC} ${INCS} -c ${CCFLAGS} $< -o $@
+${OBJDIR}/%.o: %.cc
+	${CX} ${INCS} -c ${CXFLAGS} $< -o $@
 
-.c.o:
-	${CC} ${INCS} -c ${CCFLAGS} $<
+.cc.o:
+	${CX} ${INCS} -c ${CXFLAGS} $<

@@ -1,6 +1,4 @@
 /*
-  config.c - Configuration File Object/Parser
-
   The GTKWorkbook Project <http://gtkworkbook.sourceforge.net/>
   Copyright (C) 2008, 2009 John Bellone, Jr. <jvb4@njit.edu>
 
@@ -18,9 +16,9 @@
   License along with the library; if not, write to the Free Software
   Foundation, Inc., 51 Franklin Street, Fifth Floor Boston, MA 02110-1301 USA
 */
-#include <config/config.h>
-#include <stdlib.h>
-#include <string.h>
+#include <cstdlib>
+#include <cstring>
+#include "config.h"
 #include "parse.h"
 
 /* config.c (static) */
@@ -356,7 +354,7 @@ config_method_load (Config * c, FILE * fp)
       return FALSE;
     }
 
-  gchar * buf = g_malloc (sizeof (char) * 1024);
+  gchar * buf = (gchar *)g_malloc (sizeof (char) * 1024);
   gchar word[1024];
   gchar * p = NULL, * q = NULL, * r = NULL;
 
@@ -735,7 +733,7 @@ configvector_method_get (ConfigVector * vec, gint index)
 
   if (index >= vec->array->len) return NULL;
 
-  gchar * rvalue = g_ptr_array_index (vec->array, index);
+  gchar * rvalue = (gchar *)g_ptr_array_index (vec->array, index);
   return rvalue;
 }
 
@@ -746,7 +744,7 @@ configvector_method_get_int (ConfigVector * vec, gint index)
 
   if (index >= vec->array->len) return -1;
 
-  gchar * rvalue = g_ptr_array_index (vec->array, index);
+  gchar * rvalue = (gchar *)g_ptr_array_index (vec->array, index);
   return atoi (rvalue);
 }
 
