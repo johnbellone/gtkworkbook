@@ -32,7 +32,7 @@ private:
 	GtkWidget * gtk_window_vbox;
 	GtkWidget * gtk_menu;
 	Config * cfg;
-	Proactor proactor;
+	proactor::Proactor proactor;
 	WorkbookList workbooks;
 	PluginList plugins;
 	gchar * absolute_path;
@@ -43,7 +43,9 @@ public:
 	~Application (void);
 
 	int run (void);
-	
+	void shutdown (void);
+	Plugin * load_plugin (const gchar * filename);
+	void open_extension (const gchar * filename, gboolean absolute_path);
 };
 
 #endif

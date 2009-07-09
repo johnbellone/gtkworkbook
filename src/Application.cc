@@ -92,10 +92,9 @@ signal_gtksheet_changed (GtkWidget * gtksheet,
    @event: A pointer to the associated GdkEvent information.
    @p: NULL */
 static guint
-application_signal_delete_event (GtkWindow * window, 
+signal_delete_event (GtkWindow * window, 
 											GdkEvent * event,
-											gpointer p)
-{
+											gpointer p) {
 	GtkWidget * dialog 
 		= gtk_message_dialog_new (window, GTK_DIALOG_MODAL,
 										  GTK_MESSAGE_QUESTION,
@@ -115,7 +114,7 @@ application_signal_delete_event (GtkWindow * window,
    @window: A pointer to the GtkWindow object.
    @data: NULL */
 static guint
-application_signal_destroy_event (GtkWidget *window, gpointer data)
+signal_destroy_event (GtkWidget *window, gpointer data)
 {
 	Application * app = (Application *)data;
 	app->shutdown();
@@ -171,9 +170,9 @@ Application::~Application (void) {
 
 Plugin *
 Application::load_plugin (const gchar * filename) {
-	Plugin * plugin = NULL;
+	Plugin * plugin = plugin_open (filename);
 
-	if ((plugin == plugin_open(filename)) != NULL) {
+	if (plugin) {
 		this->plugins.push_back (plugin);
 	}
 	return plugin;
@@ -182,7 +181,6 @@ Application::load_plugin (const gchar * filename) {
 void
 Application::shutdown(void) {
 	// STUB: shutdown the proactor threads here.
-	
 	gtk_main_quit ();
 }
 
