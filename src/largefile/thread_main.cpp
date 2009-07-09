@@ -17,8 +17,7 @@
    Foundation, Inc., 51 Franklin Street, Fifth Floor Boston, MA 02110-1301 USA
 */
 #include <gdk/gdkkeysyms.h>
-#include <workbook/workbook.h>
-#include <config/config.h>
+#include <gtkworkbook/workbook.h>
 #include <concurrent/Thread.hpp>
 #include <concurrent/ThreadArgs.hpp>
 #include <concurrent/ScopedMemoryLock.hpp>
@@ -31,6 +30,7 @@
 #include <sstream>
 #include "File.hpp"
 #include "CsvParser.hpp"
+#include "../config.h"
 
 using namespace largefile;
 

@@ -22,10 +22,10 @@
 typedef struct _ApplicationState ApplicationState;
 
 #include <gtk/gtk.h>
-#include <workbook/workbook.h>
-#include <config/config.h>
+#include <gtkworkbook/workbook.h>
 #include <shared.h>
 #include "plugin.h"
+#include "config.h"
 
 enum
 	{

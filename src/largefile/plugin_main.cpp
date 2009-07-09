@@ -17,9 +17,10 @@
    Foundation, Inc., 51 Franklin Street, Fifth Floor Boston, MA 02110-1301 USA
 */
 #include <iostream>
-#include <workbook/workbook.h>
+#include <gtkworkbook/workbook.h>
 #include <concurrent/ThreadArgs.hpp>
 #include <gtk/gtk.h>
+#include "../config.h"
 #include "../application.h"
 #include "../plugin.h"
 

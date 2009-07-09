@@ -1,4 +1,6 @@
-/*
+/* 
+   parse.h - Generic Parse Code Header File
+
    The GTKWorkbook Project <http://gtkworkbook.sourceforge.net/>
    Copyright (C) 2008, 2009 John Bellone, Jr. <jvb4@njit.edu>
 
@@ -16,31 +18,17 @@
    License along with the library; if not, write to the Free Software
    Foundation, Inc., 51 Franklin Street, Fifth Floor Boston, MA 02110-1301 USA
 */
-#ifndef HPP_LF_CSVPARSER
-#define HPP_LF_CSVPARSER
+#ifndef H_PARSE
+#define H_PARSE
 
-#include <proactor/Worker.hpp>
-#include <gtkworkbook/workbook.h>
-#include <concurrent/Thread.hpp>
-#include <libcsv/csv.h>
+#include <glib.h>
+#include <shared.h>
 
-namespace largefile {
+#define EXPECT(p,q,d) (*(q = munch (p)) == d)
 
-  class CsvParser : public proactor::Worker {
-  private:
-    Workbook * wb;
-    Cell ** fields;
-    FILE * log;
-    int verbosity;
-    int maxOfFields;
-    int sizeOfFields;
-  public:
-    CsvParser (Workbook * wb, FILE * log, int verbosity, int maxOfFields = 10);
-    virtual ~CsvParser (void);
-
-    void * run (void * null);
-  };
-
-} // end of namespace
+/* parse.c */
+extern gchar *munch (gchar *p);
+extern gchar *parse (gchar *p, gchar *word, gint n, const gchar delim);
+extern gchar *trim (gchar *p);
 
 #endif

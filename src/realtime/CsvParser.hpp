@@ -20,10 +20,10 @@
 #define HPP_CSVPARSER
 
 #include <proactor/Worker.hpp>
-#include <workbook/workbook.h>
-#include <workbook/sheet.h>
-#include <workbook/cell.h>
-#include <csv/csv.h>
+#include <gtkworkbook/workbook.h>
+#include <gtkworkbook/sheet.h>
+#include <gtkworkbook/cell.h>
+#include <libcsv/csv.h>
 #include <iostream>
 
 namespace realtime {

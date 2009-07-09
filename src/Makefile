@@ -3,7 +3,7 @@ include ../Makefile.base
 SRCS=$(wildcard *.c)
 OBJS=$(patsubst %.c,${OBJDIR}/%.o,${SRCS})
 
-LFLAGS=-lworkbook -lconfig -lgtkextra-x11-2.0 -lgthread-2.0
+LFLAGS=-lgtkworkbook -lgtkextra-x11-2.0 -lgthread-2.0
 
 all: 	gtkworkbook
 	make -C realtime/ all
