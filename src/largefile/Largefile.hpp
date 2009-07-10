@@ -7,6 +7,8 @@
 #include "../Application.hpp"
 #include "../config.h"
 
+extern "C++" {
+
 class Largefile : public Plugin {
 private:
 	typedef std::map<std::string,int> FilenameMap;
@@ -21,4 +23,6 @@ public:
 	bool exit_file (const std::string & filename);
 };
 
+}
+	
 #endif

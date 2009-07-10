@@ -19,7 +19,6 @@
 #include <gdk/gdkkeysyms.h>
 #include <gtkworkbook/workbook.h>
 #include <proactor/Proactor.hpp>
-#include <proactor/Worker.hpp>
 #include <proactor/Event.hpp>
 #include <vector>
 #include <fstream>
