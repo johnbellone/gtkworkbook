@@ -51,7 +51,8 @@ struct _ApplicationState
 	GtkWidget * gtk_window_vbox;
 	gchar * absolute_path;
 	gboolean * shutdown;
-
+	Workbook * active_workbook;
+	
 	/* Methods */
 	int (*run) (ApplicationState *);
 	void (*close) (ApplicationState *);

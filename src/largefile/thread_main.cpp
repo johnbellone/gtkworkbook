@@ -79,7 +79,46 @@ key_press_callback (GtkWidget * window, GdkEventKey * event, gpointer data) {
 	}
 	return FALSE;
 }
+
+static bool
+open_file (const gchar * filename, Workbook * wb, FILE * pktlog) {
+	int fdEventId = proactor::Event::uniqueEventId(); 
+	proactor::Proactor proactor;
+	FileDispatcher fdispatcher (fdEventId, &proactor);
+	CsvParser csv_parser (wb, pktlog, 0, 20);
+
+	if (proactor.start() == false) {
+		g_critical ("Failed starting Proactor; exiting thread.");
+		return false;
+	}
+
+	if (proactor.addWorker (fdEventId, &csv_parser) == false) {
+		g_critical ("Failed starting CsvParser; exiting thread.");
+		return false;
+	}
+
+	if (fdispatcher.open ("/home/jbellone/largefile.csv") == false) {
+		g_critical ("Failed opening /home/johnb/largefile.csv");
+		return false;
+	}
+
+	if (fdispatcher.start() == false) {
+		g_critical ("Failed starting file dispatcher; exiting thread.");
+		return false;
+	}
 	
+	std::vector<gpointer> signal_arguments;
+	signal_arguments.push_back( (gpointer)&fdispatcher );
+	signal_arguments.push_back( (gpointer)wb );
+	
+	gtk_signal_connect (GTK_OBJECT (wb->gtk_window), "key_press_event",
+							  GTK_SIGNAL_FUNC (key_press_callback),
+							  (gpointer)&signal_arguments);
+
+	csv_parser.stop();
+	return true;
+}
+
 void
 thread_main (ThreadArgs * args) {
 	Workbook * wb = (Workbook *)args->at(0);
@@ -102,45 +141,10 @@ thread_main (ThreadArgs * args) {
 		return;
     }
 
-	int fdEventId = proactor::Event::uniqueEventId(); 
-	proactor::Proactor proactor;
-	FileDispatcher fdispatcher (fdEventId, &proactor);
-	CsvParser csv_parser (wb, pktlog, 0, 20);
-
-	if (proactor.start() == false) {
-		g_critical ("Failed starting Proactor; exiting thread.");
-		return;
-	}
-
-	if (proactor.addWorker (fdEventId, &csv_parser) == false) {
-		g_critical ("Failed starting CsvParser; exiting thread.");
-		return;
-	}
-
-	if (fdispatcher.open ("/home/jbellone/largefile.csv") == false) {
-		g_critical ("Failed opening /home/johnb/largefile.csv");
-		return;
-	}
-
-	if (fdispatcher.start() == false) {
-		g_critical ("Failed starting file dispatcher; exiting thread.");
-		return;
-	}
-	
-	std::vector<gpointer> signal_arguments;
-	signal_arguments.push_back( (gpointer)&fdispatcher );
-	signal_arguments.push_back( (gpointer)wb );
-	
-	gtk_signal_connect (GTK_OBJECT (wb->gtk_window), "key_press_event",
-							  GTK_SIGNAL_FUNC (key_press_callback),
-							  (gpointer)&signal_arguments);
-
 	while (*SHUTDOWN == FALSE) {
 		concurrent::Thread::sleep (100);
 	}
 
-	csv_parser.stop();
-  
 	FCLOSE (pktlog);
 	delete args;
 }

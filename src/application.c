@@ -140,7 +140,7 @@ application_init (int * argc, char *** argv)
   
 	/* Set the initial size of the application; we could load this
 		from a configuration file eventually. */
-	gtk_widget_set_usize (appstate->gtk_window, 1024, 768);
+	gtk_widget_set_usize (appstate->gtk_window, 1024, 800);
   
 	/* Attach the window box to the window and present to the screen. */
 	GtkWidget * window_box = gtk_vbox_new (FALSE, 1);
