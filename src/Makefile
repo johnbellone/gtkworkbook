@@ -11,7 +11,7 @@ all: 	gtkworkbook
 	make -C largefile/ all
 
 gtkworkbook: ${OBJS}
-	${CX} -o ${PROJDIR}/bin/gtkworkbook ${OBJS} ${LIBS} ${LFLAGS}
+	${CX} -rdynamic -o ${PROJDIR}/bin/gtkworkbook ${OBJS} ${LIBS} ${LFLAGS}
 
 clean:		
 	${MD} ${OBJDIR}	
@@ -26,7 +26,7 @@ install: all
 	make -C largefile/ install
 
 ${OBJDIR}/%.o: %.cpp
-	${CX} ${INCS} -c ${CXFLAGS} $< -o $@
+	${CX} -rdynamic ${INCS} -c ${CXFLAGS} $< -o $@
 
 .cpp.o:
-	${CX} ${INCS} -c ${CXFLAGS} $<
+	${CX} -rdynamic ${INCS} -c ${CXFLAGS} $<

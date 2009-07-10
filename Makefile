@@ -8,7 +8,7 @@ libgtkworkbook:
 	${MD} OBJS/libgtkworkbook
 	${MAKE} gtkworkbook/ all
 
-libgtkworkbook:
+libgtkworkbookshared:
 	${MD} OBJS/libgtkworkbookshared
 	${MAKE} shared/ all
 

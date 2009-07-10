@@ -98,6 +98,9 @@ Largefile::Largefile (Application * appstate, Handle * platform)
     }
 }
 
+Largefile::~Largefile (void) {
+}
+
 bool
 Largefile::open_file (const std::string & filename) {
 	int fdEventId = proactor::Event::uniqueEventId();
