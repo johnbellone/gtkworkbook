@@ -7,9 +7,9 @@
 #include <cstdlib>
 #include <gtkworkbook/workbook.h>
 #include "config.h"
-#include "plugin.h"
 #include "proactor/Proactor.hpp"
 
+class Plugin;
 class Application {
 public:
 	enum sigs {
@@ -45,7 +45,7 @@ public:
 
 	int run (void);
 	void shutdown (void);
-	Plugin * load_plugin (const gchar * filename);
+	Plugin * load_plugin (const std::string filename);
 	void open_extension (const gchar * filename, gboolean absolute_path);
 
 	inline GtkWidget * gtkwindow() { return this->gtk_window; }

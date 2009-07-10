@@ -1,6 +1,6 @@
 include ../../Makefile.base
 
-INCS += -I${PROJDIR}/shared -I../
+INCS += -I../
 SRCS=$(wildcard *.cpp) 
 OBJS=$(patsubst %.cpp,${OBJDIR}/largefile/%.o,${SRCS})
 

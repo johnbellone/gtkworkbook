@@ -22,7 +22,7 @@
 #include <concurrent/ThreadArgs.hpp>
 #include "../config.h"
 #include "../Application.hpp"
-#include "../plugin.h"
+#include "../Plugin.hpp"
 
 /* Prototypes */
 extern void thread_main (ThreadArgs *);
@@ -30,7 +30,7 @@ extern void thread_main (ThreadArgs *);
 extern "C"
 {
   Workbook *
-  plugin_main (Application * app, Plugin * plugin) {
+  plugin_main (Application * app) {
     ASSERT (app != NULL);
     ASSERT (plugin != NULL);
 

@@ -1,4 +1,5 @@
 #include "Application.hpp"
+#include "Plugin.hpp"
 #include <cstring>
 
 /* @description: This method takes the argument and clears the string of
@@ -162,19 +163,6 @@ Application::Application (int argc, char *** argv) {
 }
 
 Application::~Application (void) {
-	/* Because of a change to the Plugin architecture it will now yield until
-		all threads that were instatiated are closed properly. We use the 
-		appstate->workbook_first variable in order to test for NULL. */
-	gdk_threads_leave();
-	{
-		PluginList::iterator it = this->plugins.begin();
-		while (it != this->plugins.end()) {
-			(*it)->destroy ( (*it) ); (*it) = NULL;
-			it++;
-		}
-	}
-	gdk_threads_enter();
-
 	WorkbookList::iterator it = this->workbooks.begin();
 	while (it != this->workbooks.end()) {
 		(*it)->destroy ( (*it) ); (*it) = NULL;
@@ -187,8 +175,8 @@ Application::~Application (void) {
 }
 
 Plugin *
-Application::load_plugin (const gchar * filename) {
-	Plugin * plugin = plugin_open (filename);
+Application::load_plugin (const std::string filename) {
+	Plugin * plugin = Plugin::open_plugin (this, filename);
 
 	if (plugin) {
 		this->plugins.push_back (plugin);
@@ -215,27 +203,18 @@ Application::open_extension (const gchar * filename, gboolean absolute_path) {
 
 	Plugin * plugin = NULL;
 	if ((plugin = this->load_plugin (fname)) != NULL) {
-		typedef Workbook * (*Plugin_Main) (Application *, Plugin *);
-      Plugin_Main plugin_main;
-	  
-      if ((plugin_main = (Plugin_Main)plugin->method_register (plugin, "plugin_main")) == NULL) {
-			g_critical ("Unable to register method with symbol 'plugin_main'");
-			exit (1);
-		}
-
-      Workbook * wb = plugin_main (this, plugin);
-      if (wb == NULL) {
+		if (plugin->workbook() == NULL) {
 			g_critical ("Plugin returned a NULL pointer instead of allocated"
 							" workbook.");
 			exit (1);
 		} else {
 			/* Attach all of the signals for the Workbook object. */
-			gtk_signal_connect (GTK_OBJECT (wb->gtk_notebook),
+			gtk_signal_connect (GTK_OBJECT (plugin->workbook()->gtk_notebook),
 									  "switch-page",
 									  (GtkSignalFunc)this->signals[NOTEBOOK_SWITCHED], 
-									  (gpointer)wb);
+									  (gpointer)plugin->workbook());
 	  
-			this->workbooks.push_back (wb);
+			this->workbooks.push_back (plugin->workbook());
 		}
 	}
 
@@ -364,4 +343,3 @@ Application::run (void) {
 	gdk_threads_leave ();
 	return 0;
 }
-
