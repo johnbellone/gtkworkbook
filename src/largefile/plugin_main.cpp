@@ -27,10 +27,15 @@
 extern void thread_main (ThreadArgs *);
 
 static void
+exit_application (GtkWidget * w, gpointer data) {
+	ApplicationState * app = (ApplicationState *)data;
+	app->exit_application(app);
+}
+
+static void
 open_csv_file (GtkWidget * w, gpointer data) {
   ApplicationState * app = (ApplicationState *)data;
-  //Config * cfg = app->cfg;
-  
+   
   GtkWidget * dialog = gtk_file_chooser_dialog_new ("Open File",
 						    GTK_WINDOW (app->gtk_window),
 						    GTK_FILE_CHOOSER_ACTION_OPEN,
@@ -43,6 +48,8 @@ open_csv_file (GtkWidget * w, gpointer data) {
   if (gtk_dialog_run (GTK_DIALOG (dialog)) == GTK_RESPONSE_ACCEPT) {
     gchar * filename = gtk_file_chooser_get_filename (GTK_FILE_CHOOSER (dialog));
 
+	 
+	 
     g_free (filename);
   }
 
@@ -51,29 +58,35 @@ open_csv_file (GtkWidget * w, gpointer data) {
 
 static GtkWidget *
 largefile_mainmenu_new (ApplicationState * appstate, GtkWidget * window) {
-  GtkItemFactoryEntry menu_items[] = {
-    {"/_File",         NULL,		NULL, 		0, 	"<Branch>"},
-    {"/File/_Open",    "<CTRL>O",	(GtkItemFactoryCallback)open_csv_file,	0,	"<StockItem>", GTK_STOCK_OPEN},
-    {"/File/_Close",   "<CTRL>C",	NULL,		0,	"<Item>"},
-    {"/File/sep1",     NULL,		NULL,		0,	"<Separator>"},
-    {"/File/_Quit",    "<CTRL>Q", 	gtk_main_quit,	0,	"<StockItem>", GTK_STOCK_QUIT},
-  };
-  
-  gint nmenu_items = sizeof (menu_items) / sizeof (menu_items[0]);
-  GtkAccelGroup * accel 
-    = gtk_accel_group_new ();
+	GtkWidget * menubar = gtk_menu_bar_new();
+	//GtkWidget * lfmenu = gtk_menu_new (); 
+	GtkWidget * lfmenu_item = gtk_menu_item_new_with_label ("Largefile");
+	GtkWidget * lfmenu_open = gtk_image_menu_item_new_from_stock (GTK_STOCK_OPEN, NULL);
+	GtkWidget * lfmenu_exit = gtk_image_menu_item_new_from_stock (GTK_STOCK_QUIT, NULL);
+
+	gtk_menu_shell_append (GTK_MENU_SHELL (menubar), lfmenu_open);
+	gtk_menu_shell_append (GTK_MENU_SHELL (menubar), lfmenu_exit);
 	
-  GtkItemFactory * item_factory 
-    = gtk_item_factory_new (GTK_TYPE_MENU_BAR, "<main>", accel);
-  
-  gtk_item_factory_create_items (item_factory, nmenu_items, menu_items, appstate);
+	gtk_menu_item_set_submenu (GTK_MENU_ITEM (lfmenu_item), menubar);
+	
+	g_signal_connect (G_OBJECT (lfmenu_open), "activate",
+							G_CALLBACK (open_csv_file), (gpointer)appstate);
+	
+	g_signal_connect (G_OBJECT (lfmenu_exit), "activate",
+							G_CALLBACK (exit_application), (gpointer)appstate);
 
-  gtk_window_add_accel_group (GTK_WINDOW (window), accel);
+	//gtk_container_add (GTK_CONTAINER (menubar), lfmenu);
 
-  GtkWidget * menu = gtk_item_factory_get_widget (item_factory, "<main>");
-  gtk_widget_show (menu);
+	gtk_widget_show_all (menubar);
+	return menubar;
+}
 
-  return menu;
+static GtkWidget *
+build_layout (ApplicationState * appstate, GtkWidget * gtk_window) {
+	GtkWidget * box = gtk_vbox_new (FALSE, 0);
+	GtkWidget * mainmenu = largefile_mainmenu_new (appstate, gtk_window);
+	gtk_box_pack_start (GTK_BOX (box), mainmenu, FALSE, FALSE, 0);
+	return box;
 }
 
 extern "C" {
@@ -83,11 +96,8 @@ extern "C" {
     ASSERT (appstate != NULL);
     ASSERT (plugin != NULL);
 	
-    GtkWidget * box = gtk_vbox_new (FALSE, 0);
-    GtkWidget * mainmenu = largefile_mainmenu_new (appstate, appstate->gtk_window);
-    gtk_box_pack_start (GTK_BOX (box), mainmenu, FALSE, FALSE, 0);
-
-    Workbook * wb = NULL;
+    GtkWidget * box = build_layout (appstate, appstate->gtk_window);
+	 Workbook * wb = NULL;
     if ((wb = workbook_open (appstate->gtk_window, "largefile")) == NULL) {
       g_critical ("Failed opening workbook; exiting largefile plugin");
       return NULL;
@@ -114,7 +124,7 @@ extern "C" {
     }
 
     gtk_box_pack_start (GTK_BOX (appstate->gtk_window_vbox), box, FALSE, FALSE, 0);
-    gtk_widget_show (box);	
+    gtk_widget_show_all (box);	
     return wb;
   }
 

@@ -38,6 +38,7 @@ static Plugin* application_method_loadplugin (ApplicationState *,
 static void application_method_openextension (ApplicationState *,
 															 const gchar *,
 															 gboolean);
+static void application_method_exitapplication (ApplicationState *);
 static guint application_signal_gtknotebook_switchpage (GtkNotebook *,
 																		  GtkNotebookPage *,
 																		  gint,
@@ -315,7 +316,8 @@ application_object_init (void)
 	app->close = application_method_close;
 	app->load_plugin = application_method_loadplugin;
 	app->open_extension = application_method_openextension;
-
+	app->exit_application = application_method_exitapplication;
+	
 	return app;
 }
 
@@ -449,6 +451,24 @@ application_signal_destroy_event (GtkWidget *window, gpointer data)
 
 	gtk_main_quit ();
 	return FALSE;
+}
+
+static void
+application_method_exitapplication (ApplicationState * app) {
+	GtkWidget * dialog 
+		= gtk_message_dialog_new (GTK_WINDOW (app->gtk_window), GTK_DIALOG_MODAL,
+										  GTK_MESSAGE_QUESTION,
+										  GTK_BUTTONS_YES_NO,
+										  "Are you sure that you want to quit?");
+	gtk_window_set_title (GTK_WINDOW (dialog), "Close Application");
+
+	gint result = gtk_dialog_run (GTK_DIALOG (dialog));
+	
+	gtk_widget_destroy (dialog);
+
+	if (result == GTK_RESPONSE_YES) {
+		application_signal_destroy_event (app->gtk_window, (gpointer)app);
+	}
 }
 
 /* @description: This method loads an extension from the filename

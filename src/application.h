@@ -57,6 +57,7 @@ struct _ApplicationState
 	void (*close) (ApplicationState *);
 	void (*open_extension) (ApplicationState *, const gchar *, gboolean);
 	Plugin *(*load_plugin) (ApplicationState *, const gchar *);
+	void (*exit_application) (ApplicationState *);
 };
 
 /* application.c */
