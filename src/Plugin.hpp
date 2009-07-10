@@ -22,6 +22,7 @@
 #include "Application.hpp"
 #include <dlfcn.h>
 #include <gtkworkbook/workbook.h>
+#include <concurrent/Mutex.hpp>
 #include <string>
 
 #ifdef WIN32
@@ -44,7 +45,7 @@ struct Handle {
 	PlatformHandle handle;
 };
 
-class Plugin {
+class Plugin : public concurrent::RecursiveMutex {
 protected:
 	Workbook * wb;
 	Application * appstate;

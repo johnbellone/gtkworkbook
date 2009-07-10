@@ -1,3 +1,21 @@
+/*
+  The GTKWorkbook Project <http://gtkworkbook.sourceforge.net/>
+  Copyright (C) 2008, 2009 John Bellone, Jr. <jvb4@njit.edu>
+
+  This library is free software; you can redistribute it and/or
+  modify it under the terms of the GNU Lesser General Public
+  License as published by the Free Software Foundation; either
+  version 2.1 of the License, or (at your option) any later version.
+
+  This library is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PRACTICAL PURPOSE. See the GNU
+  Lesser General Public License for more details.
+
+  You should have received a copy of the GNU Lesser General Public
+  License along with the library; if not, write to the Free Software
+  Foundation, Inc., 51 Franklin Street, Fifth Floor Boston, MA 02110-1301 USA
+*/
 #include "Application.hpp"
 #include "Plugin.hpp"
 #include <cstring>
@@ -112,8 +130,8 @@ signal_gtksheet_changed (GtkWidget * gtksheet,
    @p: NULL */
 static guint
 signal_delete_event (GtkWindow * window, 
-											GdkEvent * event,
-											gpointer p) {
+							GdkEvent * event,
+							gpointer p) {
 	GtkWidget * dialog 
 		= gtk_message_dialog_new (window, GTK_DIALOG_MODAL,
 										  GTK_MESSAGE_QUESTION,
@@ -216,6 +234,7 @@ Application::open_extension (const gchar * filename, gboolean absolute_path) {
 	  
 			this->workbooks.push_back (plugin->workbook());
 		}
+		gtk_widget_show_all (this->gtk_menu);
 	}
 
 	FREE (fname);
@@ -265,10 +284,12 @@ Application::init (int argc, char *** argv) {
 
 	/* Create the window and connect two callback to the signals. */
 	this->gtk_window = gtk_window_new (GTK_WINDOW_TOPLEVEL);
+	this->gtk_menu = gtk_menu_bar_new();
+	
 	gtk_signal_connect (GTK_OBJECT (this->gtk_window),
 							  "destroy",
 							  G_CALLBACK (this->signals[DESTROY_EVENT]),
-							  (gpointer *)this);
+							  (gpointer)this);
 	gtk_signal_connect (GTK_OBJECT (this->gtk_window),
 							  "delete_event",
 							  G_CALLBACK (this->signals[DELETE_EVENT]),
@@ -281,6 +302,7 @@ Application::init (int argc, char *** argv) {
 	/* Attach the window box to the window and present to the screen. */
 	GtkWidget * window_box = gtk_vbox_new (FALSE, 1);
 	gtk_container_add (GTK_CONTAINER (this->gtk_window), window_box);
+	gtk_box_pack_start (GTK_BOX (window_box), this->gtk_menu, FALSE, FALSE, 0);
 	this->gtk_window_vbox = window_box;
   
 	gtk_widget_show_all (this->gtk_window);

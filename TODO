@@ -1,22 +1,27 @@
 TODO for GTKWorkbook
 
 * Application
-	- Convert the structures to C++ classes for autotools merge.
+	- Bugs
+		o Probable issue with new plugin architecture unloading library inside
+		  the object's destructor. 
+		o Segementation fault on graceful exit of application.
 * largefile
-	- Bug fixes
-		o Offset by one for file dispatcher read() method
-		o Integer problem (total line offset) needs to be fixed
+	- Bugs	
+		o Possible heap memory corruption happening in current working branch.	
 	- Priorities (before merge)
 		o Absolute line goto dialog
 		o Index indicator
 		o Panning/Paging controls
 		o Move shared library into application folder
+		o Page up, page down for panning
+		o Control + G for GOTO line
+		o Control + O for percentage offset
+		o Control + I for index up to line
 	- Priorities (after merge)
 		o Framebuffering and Caching
 		o Statistics on writing to screen, reading, and panning/paging
 		o Staging for the indexer... N percentile increments
 	- Merge
-		o Autotools merge happens *before* largefile merge
 		o Largefile merge happens into an autotools branch
 		o Final merge back into the master branch
 	- Release
@@ -24,11 +29,5 @@ TODO for GTKWorkbook
 		o Largefile must be merged into autotools
 	- Documentation	
 		o Point release after main beta release
-
-* Visualization 
-	- Controls
-		o Page up, page down for panning
-		o Control + G for GOTO line
-		o Control + O for percentage offset
-		o Control + I for index up to line
+	
 	

@@ -10,7 +10,7 @@ all: 	largefile
 
 largefile: ${OBJS}
 	${CX} ${_CXFLAGS} -shared -Wl -o ${PROJDIR}/bin/largefile.so ${OBJS} ${LIBS} \
-	-lgthread-2.0 -lpthread -lcsv -lgtkworkbookshared -lgtkworkbook
+	-lgthread-2.0 -lpthread -lcsv
 
 clean:		
 	${MD} ${OBJDIR}/largefile

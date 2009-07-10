@@ -13,13 +13,15 @@ libgtkworkbookshared:
 	${MAKE} shared/ all
 
 gtkworkbook:
-	${MD} OBJS/realtime
+	${MD} OBJS/realtime ${MD}/largefile
 	$(MAKE) src/ all
+	$(MAKE) src/largefile all
 
 clean:
 	${MAKE} shared/ clean
 	${MAKE} gtkworkbook/ clean
 	$(MAKE) src/ clean
+	$(MAKE) src/largefile clean
 
 install: all
 	${MAKE} shared/ install

@@ -44,7 +44,7 @@ open_csv_file (GtkWidget * w, gpointer data) {
     gchar * filename = gtk_file_chooser_get_filename (GTK_FILE_CHOOSER (dialog));
 
 	 if (lf->open_file (filename) == true) {
-		 std::cout << filename << "\n";
+		 lf->workbook()->add_new_sheet (lf->workbook(), filename, 1000, 20);
 	 }
 	 else {
 		 // STUB: The opening of the file failed. Do something meaningful here.
@@ -57,24 +57,25 @@ open_csv_file (GtkWidget * w, gpointer data) {
 }
 
 static GtkWidget *
-largefile_mainmenu_new (Application * appstate, GtkWidget * window) {
+largefile_mainmenu_new (Application * appstate, Largefile * lf, GtkWidget * window) {
 	GtkWidget * lfmenu = gtk_menu_new();
 	GtkWidget * lfmenu_item = gtk_menu_item_new_with_label ("Largefile");
 	GtkWidget * lfmenu_open = gtk_image_menu_item_new_from_stock (GTK_STOCK_OPEN, NULL);
 	gtk_menu_shell_append (GTK_MENU_SHELL (lfmenu), lfmenu_open);
 
+	g_signal_connect (G_OBJECT (lfmenu_open), "activate",
+							G_CALLBACK (open_csv_file), (gpointer)lf);
+	
 	gtk_menu_item_set_submenu (GTK_MENU_ITEM (lfmenu_item), lfmenu);
-
-	gtk_widget_show_all (lfmenu);
-	return lfmenu;
+	return lfmenu_item;
 }
 
 static GtkWidget *
-build_layout (Application * app, Largefile * lf, Workbook * wb) {
+build_layout (Application * app, Largefile * lf) {
+	Workbook * wb = lf->workbook();
 	GtkWidget * gtk_menu = app->gtkmenu();
 	GtkWidget * box = gtk_vbox_new (FALSE, 0);
-	
-	GtkWidget * largefile_menu = largefile_mainmenu_new (app, app->gtkwindow());
+	GtkWidget * largefile_menu = largefile_mainmenu_new (app, lf, app->gtkwindow());
 	gtk_menu_shell_append (GTK_MENU_SHELL (gtk_menu), largefile_menu);
 
 	gtk_box_pack_end (GTK_BOX (box), wb->gtk_notebook, FALSE, FALSE, 0);
@@ -92,14 +93,8 @@ extern "C" {
     ASSERT (appstate != NULL);
     ASSERT (platform != NULL);
 	 Largefile * lf = new Largefile (appstate, platform);
-	 Workbook * wb = lf->workbook();
-	 
-    if ((wb = workbook_open (appstate->gtkwindow(), "largefile")) == NULL) {
-      g_critical ("Failed opening workbook; exiting largefile plugin");
-      return NULL;
-    }
-	 
-	 GtkWidget * box = build_layout (appstate, lf, wb);
+
+	 GtkWidget * box = build_layout (appstate, lf);
 	 gtk_widget_show (box);	 
     return lf;
   }

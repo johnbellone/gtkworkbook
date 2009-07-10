@@ -45,8 +45,8 @@ static gint
 key_press_callback (GtkWidget * window, GdkEventKey * event, gpointer data) {
 	std::vector<gpointer> * arguments = (std::vector<gpointer> *)data;
 	FileDispatcher * fd = (FileDispatcher *)arguments->at(0);
-	Workbook * wb = (Workbook *)arguments->at(1);
-	GtkSheet * gtksheet = GTK_SHEET (wb->sheet_first->gtk_sheet);
+	//Workbook * wb = (Workbook *)arguments->at(1);
+	//GtkSheet * gtksheet = GTK_SHEET (wb->sheet_first->gtk_sheet);
 
 	//	int vposition = std::abs((int)gtksheet->vadjustment->value);
 	static off64_t cursor = 0;
@@ -80,6 +80,8 @@ key_press_callback (GtkWidget * window, GdkEventKey * event, gpointer data) {
 Largefile::Largefile (Application * appstate, Handle * platform)
 	: Plugin (appstate, platform) {
 
+	this->wb = workbook_open (appstate->gtkwindow(), "largefile");
+	
 	ConfigPair * logpath =
 		appstate->config()->get_pair (appstate->config(), "largefile", "log", "path");
 
@@ -103,38 +105,50 @@ Largefile::~Largefile (void) {
 
 bool
 Largefile::open_file (const std::string & filename) {
+	this->lock();
+	
 	int fdEventId = proactor::Event::uniqueEventId();
 	FileDispatcher * fd = new FileDispatcher (fdEventId, appstate->proactor());
 	CsvParser * csv = new CsvParser (this->wb, this->pktlog, 0, 20);
 
 	if (appstate->proactor()->addWorker (fdEventId, csv) == false) {
 		g_critical ("Failed starting CsvParser for file %s", filename.c_str());
+		this->unlock();
 		return false;
 	}
 
-	if (fd->open (filename.c_str()) == false) {
+	if (fd->open (filename) == false) {
 		g_critical ("Failed opening %s", filename.c_str());
+		this->unlock();
 		return false;
 	}
 
 	if (fd->start() == false) {
 		g_critical ("Failed starting file dispatcher for file %s", filename.c_str());
+		this->unlock();
 		return false;
 	}
 
-	this->mapping.insert (std::make_pair (filename, fdEventId));
+	this->mapping.insert (std::make_pair (std::string(filename), fdEventId));
+	
+	this->unlock();
 	return true;
 }
 
 bool
 Largefile::exit_file (const std::string & filename) {
+	this->lock();
+	
 	FilenameMap::iterator it = this->mapping.find(filename);
 	if (it == this->mapping.end()) {
 		// STUB: something meaningful here to mention that the file does not exist inside
 		// of the map. They're trying to exit from a file that seemingly has not been opened.
+		this->unlock();
 		return false;
 	}
 	// STUB: procedure for shutting down a file dispatcher and CsvParser.
 	this->mapping.erase (it);
+
+	this->unlock();
 	return true;
 }

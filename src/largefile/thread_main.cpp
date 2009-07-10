@@ -48,10 +48,10 @@ static gint
 key_press_callback (GtkWidget * window, GdkEventKey * event, gpointer data) {
 	std::vector<gpointer> * arguments = (std::vector<gpointer> *)data;
 	FileDispatcher * fd = (FileDispatcher *)arguments->at(0);
-	Workbook * wb = (Workbook *)arguments->at(1);
-	GtkSheet * gtksheet = GTK_SHEET (wb->sheet_first->gtk_sheet);
+	//Workbook * wb = (Workbook *)arguments->at(1);
+	//GtkSheet * gtksheet = GTK_SHEET (wb->sheet_first->gtk_sheet);
 
-	int vposition = std::abs((int)gtksheet->vadjustment->value);
+	//int vposition = std::abs((int)gtksheet->vadjustment->value);
 	static off64_t cursor = 0;
 	//	float N = vposition, K = 24388, V = (N/K);
 	

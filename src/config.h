@@ -55,8 +55,8 @@ struct _ConfigVector
 
   /* Methods */
   void (*add) (ConfigVector *, const gchar *);
-  gint (*get_int) (ConfigVector *, gint);
-  gchar *(*get) (ConfigVector *, gint);
+  gint (*get_int) (ConfigVector *, guint);
+  gchar *(*get) (ConfigVector *, guint);
   void (*destroy) (ConfigVector *);
 };
 
