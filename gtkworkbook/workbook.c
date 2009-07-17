@@ -79,28 +79,13 @@ workbook_method_addnewsheet (Workbook * book,
 
 	sheet = sheet_new (book, label, rows, cols);
 
-<<<<<<< HEAD:workbook/workbook.c
-	LINK_OBJECT (book->sheet_first,
-					 book->sheet_last, 
-					 sheet);
-
-	/* We are the first and only sheet; make sure we are set to have focus. */
-	/* BUGFIX: This was in the wrong place... needs to be below LINK_OBJECT */
-	if ((book->sheet_first == sheet))
-	{
-      sheet->has_focus = TRUE;
-      book->focus_sheet = sheet;
-	}
-
-=======
 	LINK_OBJECT (book->sheet_first, book->sheet_last, sheet);
 
 	if (IS_NULL (book->focus_sheet)) {
 		sheet->has_focus = TRUE;
 		book->focus_sheet = sheet;
 	}
-	
->>>>>>> e749749c2b8e3b9d700ffd4ce1f0096c46fb5493:gtkworkbook/workbook.c
+
 	return sheet;
 }
 
@@ -241,11 +226,9 @@ workbook_object_init (GtkWidget * window, const gchar * filename)
 	gtk_notebook_set_show_tabs (notebook, TRUE);
 	gtk_notebook_set_show_border (notebook, TRUE);
 	gtk_widget_set_usize (book->gtk_notebook, 1024, 768);
-<<<<<<< HEAD:workbook/workbook.c
-	gtk_widget_show (book->gtk_notebook);
-=======
+
 	gtk_widget_show_all (book->gtk_notebook);
->>>>>>> e749749c2b8e3b9d700ffd4ce1f0096c46fb5493:gtkworkbook/workbook.c
+
 	gdk_threads_leave ();
 
 	/* Members */
