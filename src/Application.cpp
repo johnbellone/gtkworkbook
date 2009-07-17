@@ -217,7 +217,7 @@ Application::open_extension (const gchar * filename, gboolean absolute_path) {
 
 	Plugin * plugin = NULL;
 	if ((plugin = this->load_plugin (fname)) != NULL) {
-
+		
 		if (plugin->workbook() == NULL) {
 			g_critical ("Plugin returned a NULL pointer instead of allocated"
 							" workbook.");

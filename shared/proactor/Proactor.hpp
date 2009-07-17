@@ -30,33 +30,33 @@
 
 namespace proactor {
 
-  class Proactor : public Dispatcher {
-  private:
-    typedef concurrent::List<Dispatcher *> DispatcherList;
-    typedef concurrent::Map<int, WorkerListType *> EventMapType;
-    typedef concurrent::Queue<Event> EventQueueType;
+	class Proactor : public Dispatcher {
+	private:
+		typedef concurrent::List<Dispatcher *> DispatcherList;
+		typedef concurrent::Map<int, WorkerListType *> EventMapType;
+		typedef concurrent::Queue<Event> EventQueueType;
 
-    EventMapType eventsToHandlers;
-    DispatcherList dispatchers;
-    EventQueueType events;
-  public:
-    Proactor (void);
-    virtual ~Proactor (void);
+		EventMapType eventsToHandlers;
+		DispatcherList dispatchers;
+		EventQueueType events;
+	public:
+		Proactor (void);
+		virtual ~Proactor (void);
 
-    bool addWorker (int e, Worker * w);
-    bool removeWorker (int e, Worker * w);
-    void addDispatcher (Dispatcher * d);
-    bool removeDispatcher (Dispatcher * d);
+		bool addWorker (int e, Worker * w);
+		bool removeWorker (int e, Worker * w);
+		void addDispatcher (Dispatcher * d);
+		bool removeDispatcher (Dispatcher * d);
     
-    void * run (void * null);
+		void * run (void * null);
  
-    void onReadComplete (Event e);
-    void onReadComplete (int e, const char * buf);
+		void onReadComplete (Event e);
+		void onReadComplete (int e, const char * buf);
 
-    inline const std::string & peekInputQueue (void) {
-      return (this->events.front()).buf;
-    }
-  };
+		inline const std::string & peekInputQueue (void) {
+			return (this->events.front()).buf;
+		}
+	};
 
 } // end of namespace
 

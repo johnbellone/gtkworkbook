@@ -24,29 +24,33 @@
 
 namespace proactor {
 
-  class Proactor;
+	class Proactor;
 
-  class InputDispatcher : public EventDispatcher {
-  protected:
-    typedef concurrent::Queue<Event> InputQueueType;
+	class InputDispatcher : public EventDispatcher {
+	protected:
+		typedef concurrent::Queue<Event> InputQueueType;
 
-    Proactor * pro;
-    InputQueueType inputQueue;
-  public:
-    virtual ~InputDispatcher (void);
+		Proactor * pro;
+		InputQueueType inputQueue;
+	public:
+		virtual ~InputDispatcher (void);
 
-    void * stop (void);
+		void * stop (void);
     
-    inline void onReadComplete (const char * buf) {
-      this->inputQueue.push ( Event (getEventId(), std::string(buf)) );
-    }
+		inline void onReadComplete (const char * buf) {
+			this->inputQueue.push ( Event (getEventId(), std::string(buf)) );
+		}
 
-    inline void onReadComplete (std::string buf) {
-      this->inputQueue.push ( Event (getEventId(), buf) );
-    }
+		inline void onReadComplete (const std::string & buf) {
+			this->inputQueue.push ( Event (getEventId(), std::string (buf) ) );
+		}
 
-    void * run (void * null);
-  };
+		inline void onReadComplete (std::string buf) {
+			this->inputQueue.push ( Event (getEventId(), std::string (buf) ) );
+		}
+
+		void * run (void * null);
+	};
 
 } // end of namespace
 

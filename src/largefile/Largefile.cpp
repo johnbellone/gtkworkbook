@@ -35,26 +35,83 @@ using namespace largefile;
    uses the pid of the process as its suffix. 
    @pre: The prefix (should be a file path, obviously). */
 static std::string
-append_pidname (const gchar * pre) {
+AppendProcessId (const gchar * pre) {
   std::stringstream s;
   s << pre << getppid();
   return s.str();
 }
 
+static void
+GotoDialogResponseCallback (GtkWidget * dialog, gint response, gpointer data) {
+	Largefile * lf = (Largefile *)data;
+
+	gdk_threads_enter();
+	
+	if (response == GTK_RESPONSE_OK) {
+		GList * children = gtk_container_get_children ( GTK_CONTAINER (GTK_DIALOG(dialog)->vbox) );
+		GtkWidget * entry = (GtkWidget *)g_list_nth_data (children, 0);
+		const gchar * value = gtk_entry_get_text ( GTK_ENTRY (entry) );
+
+		if (value && *value != '\0') {
+			lf->read (lf->workbook()->focus_sheet, atol (value) - 1, 1000);
+		}
+
+		gtk_entry_set_text (GTK_ENTRY (entry), "");
+	}
+	
+	gtk_widget_hide_all (dialog);
+
+	gdk_threads_leave();
+}
+
 static gint
-key_press_callback (GtkWidget * window, GdkEventKey * event, gpointer data) {
+GtkKeypressCallback (GtkWidget * window, GdkEventKey * event, gpointer data) {
+	static GtkWidget * goto_dialog = NULL;
 	Largefile * lf = (Largefile *)data;
 	Workbook * wb = lf->workbook();
 	Sheet * sheet = wb->focus_sheet;
+
+	// Only create the dialog the first time we run this method. 
+	if (goto_dialog == NULL) {
+		gdk_threads_enter ();
 		
+		goto_dialog = gtk_dialog_new_with_buttons ("Goto position ", GTK_WINDOW (window),
+																 (GtkDialogFlags) (GTK_DIALOG_MODAL | GTK_DIALOG_NO_SEPARATOR),
+																 GTK_STOCK_OK,
+																 GTK_RESPONSE_OK,
+																 GTK_STOCK_CANCEL,
+																 GTK_RESPONSE_CANCEL,
+																 NULL);
+		
+		GtkWidget * box = GTK_DIALOG (goto_dialog)->vbox;
+		GtkWidget * entry = gtk_entry_new_with_max_length (30);
+
+		gtk_box_set_spacing (GTK_BOX (box), 18);
+			
+		gtk_box_pack_start (GTK_BOX (box), entry, TRUE, TRUE, 0);
+				
+		gtk_widget_show_all (box);
+
+		gdk_threads_leave();
+		
+		g_signal_connect (G_OBJECT (goto_dialog), "response", G_CALLBACK (GotoDialogResponseCallback), lf);
+		
+		g_signal_connect (G_OBJECT (goto_dialog), "delete-event",
+								G_CALLBACK (gtk_widget_hide_on_delete), NULL);
+		
+	}	
+	
 	//	int vposition = std::abs((int)gtksheet->vadjustment->value);
 	static off64_t cursor = 0;
 	//	float N = vposition, K = 24388, V = (N/K);
 	
 	switch (event->keyval) {
 		case GDK_F1: {
-		
-			//lf->read(sheet, 1012121,1000);
+			if (sheet != NULL) {
+				gdk_threads_enter();
+				gtk_widget_show_all (goto_dialog);
+				gdk_threads_leave();
+			}
 		}
 		break;
 		
@@ -91,16 +148,16 @@ Largefile::Largefile (Application * appstate, Handle * platform)
 	}
 	
 	std::string logname = std::string (logpath->value).append("/");
-	logname.append (append_pidname("largefile.").append(".log"));
+	logname.append (AppendProcessId("largefile.").append(".log"));
 	
 	if ((pktlog = fopen (logname.c_str(), "w")) == NULL) {
 		g_critical ("Failed opening file '%s' for packet logging; exiting"
 					" thread", logname.c_str());
 		return;
     }
-
+	
 	gtk_signal_connect (GTK_OBJECT (this->wb->gtk_window), "key_press_event",
-							  GTK_SIGNAL_FUNC (key_press_callback), this);
+							  GTK_SIGNAL_FUNC (GtkKeypressCallback), this);
 }
 
 Largefile::~Largefile (void) {

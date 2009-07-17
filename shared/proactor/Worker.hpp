@@ -36,8 +36,8 @@ namespace proactor {
   public:
     virtual ~Worker (void);
 
-    inline void pushInputQueue (std::string buf) {
-      this->inputQueue.push (buf);
+    inline void pushInputQueue (const std::string & buf) {
+		 this->inputQueue.push (std::string (buf));
     }
   };
 

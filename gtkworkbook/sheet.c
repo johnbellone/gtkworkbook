@@ -119,9 +119,13 @@ Sheet *
 sheet_new (Workbook * book, const gchar * label, gint rows, gint columns)
 {
 	ASSERT (book != NULL);
-  
+
+	gdk_threads_enter();
+	
 	Sheet * sheet = sheet_object_init (book, label, rows, columns);
 
+	gdk_threads_leave();
+	
 	/* STUB: Perform anything that is based on a style here. */
 
 	return sheet;
@@ -137,7 +141,6 @@ sheet_object_init (Workbook * book,
 						 const gchar * label, 
 						 gint rows, gint columns)
 {
-	gdk_threads_enter ();
 	Sheet * sheet = NEW (Sheet);
 
 	/* Create the sheet containers and GtkSheet object. */
@@ -197,8 +200,6 @@ sheet_object_init (Workbook * book,
 		*/
 	}
 
-	gdk_threads_leave ();
-	
 	gtk_widget_show_all (sheet->gtk_box);
 	return sheet;
 }
@@ -417,16 +418,17 @@ sheet_method_apply_cellrow (Sheet * sheet,
 	if (row > gtksheet->maxrow || row < 0) return;
 	if (size > gtksheet->maxcol || size < 0) return;
 
-	gdk_threads_enter();
+	gdk_threads_enter();	
 
 	for (int col = 0; col < size; col++) {
 		item = array[col]; 
 		cell = &gtksheet->data[row][col];
-    
+
 		gtk_sheet_set_cell_text (gtksheet,
 										 row,
 										 col,
 										 item->value->str);
+			
 		/*
 		  if (*cell == NULL)
 		  (*cell) = gtk_sheet_cell_new();
@@ -442,7 +444,7 @@ sheet_method_apply_cellrow (Sheet * sheet,
 
 		item->value->str[0] = item->attributes.bgcolor->str[0] = item->attributes.fgcolor->str[0] = 0;
 	}
-
+	
 	gdk_threads_leave();
 }
 

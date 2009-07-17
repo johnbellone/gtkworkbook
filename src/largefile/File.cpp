@@ -143,6 +143,7 @@ namespace largefile {
 		// going to get away from having to sequentially read this file in, but once we
 		// have line numbers we can jump throughout the file pretty quickly.
 		while ((ch = fgetc(this->fp)) != EOF) {
+			
 			if (ch=='\n') count++;
 
   			if (this->marks[index].byte == cursor++) {
@@ -153,6 +154,7 @@ namespace largefile {
 				
 				if (index == LINE_INDEX_MAX)
 					break;
+				
 			}
 
 			if (ch=='\n') byte_beg = cursor + 1;
@@ -213,7 +215,7 @@ namespace largefile {
 			if (std::fgets (buf, 4096, this->fp) == NULL)		
 				break;
       
-			this->dispatcher->onReadComplete (std::string (buf));
+			this->dispatcher->onReadComplete (buf);
 		}
 
 		fseeko64 (this->fp, start, SEEK_SET);

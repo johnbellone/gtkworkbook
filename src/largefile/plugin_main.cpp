@@ -27,61 +27,65 @@
 using largefile::Largefile;
 
 static void
-open_csv_file (GtkWidget * w, gpointer data) {
-  Largefile * lf = (Largefile *)data;
-  
-  GtkWidget * dialog = gtk_file_chooser_dialog_new ("Open File",
-																	 GTK_WINDOW (lf->app()->gtkwindow()),
-																	 GTK_FILE_CHOOSER_ACTION_OPEN,
-																	 GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
-																	 GTK_STOCK_OPEN, GTK_RESPONSE_ACCEPT,
-																	 NULL);  
-  
-  gtk_file_chooser_set_do_overwrite_confirmation (GTK_FILE_CHOOSER (dialog), TRUE);
-  
-  if (gtk_dialog_run (GTK_DIALOG (dialog)) == GTK_RESPONSE_ACCEPT) {
-    gchar * filename = gtk_file_chooser_get_filename (GTK_FILE_CHOOSER (dialog));
+CSVOpenDialogCallback (GtkWidget * w, gpointer data) {
+	GtkWidget * open_dialog = NULL;
+	Largefile * lf = (Largefile *)data;
 
-	 Sheet * sheet = lf->workbook()->add_new_sheet (lf->workbook(), filename, 1000, 20);
+	gdk_threads_enter();
+	
+	open_dialog = gtk_file_chooser_dialog_new ("Open CSV File",
+															 GTK_WINDOW (lf->app()->gtkwindow()),
+															 GTK_FILE_CHOOSER_ACTION_OPEN,
+															 GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
+															 GTK_STOCK_OPEN, GTK_RESPONSE_ACCEPT,
+															 NULL);  
+  
+	gtk_file_chooser_set_do_overwrite_confirmation (GTK_FILE_CHOOSER (open_dialog), TRUE);
+				
+	if (gtk_dialog_run (GTK_DIALOG (open_dialog)) == GTK_RESPONSE_ACCEPT) {
+		gchar * filename = gtk_file_chooser_get_filename (GTK_FILE_CHOOSER (open_dialog));
 
-	 if (sheet == NULL) {
-		 g_warning ("Failed adding new sheet because one already exists");
-	 }
-	 else {
-	 	 if (lf->open_file (sheet, filename) == true) {
-			 // STUB: Do something magical.
-		 }
-		 else {
-			 // STUB: The opening of the file failed. Do something meaningful here.
-		 }
-	 }
-	 
-    g_free (filename);
-  }
+		Sheet * sheet = lf->workbook()->add_new_sheet (lf->workbook(), filename, 1000, 20);
 
-	gtk_widget_destroy (dialog);
+		if (sheet == NULL) {
+			g_warning ("Failed adding new sheet because one already exists");
+		}
+		else {
+			if (lf->open_file (sheet, filename) == true) {
+				// STUB: Do something magical.
+			}
+			else {
+				// STUB: The opening of the file failed. Do something meaningful here.
+			}
+		}
+		
+		g_free (filename);
+	}
+
+	gtk_widget_destroy (open_dialog);
+	gdk_threads_leave();
 }
 
 static GtkWidget *
-largefile_mainmenu_new (Application * appstate, Largefile * lf, GtkWidget * window) {
+CreateLargefileMenu (Application * appstate, Largefile * lf, GtkWidget * window) {
 	GtkWidget * lfmenu = gtk_menu_new();
 	GtkWidget * lfmenu_item = gtk_menu_item_new_with_label ("Largefile");
 	GtkWidget * lfmenu_open = gtk_image_menu_item_new_from_stock (GTK_STOCK_OPEN, NULL);
 	gtk_menu_shell_append (GTK_MENU_SHELL (lfmenu), lfmenu_open);
 
 	g_signal_connect (G_OBJECT (lfmenu_open), "activate",
-							G_CALLBACK (open_csv_file), lf);
+							G_CALLBACK (CSVOpenDialogCallback), lf);
 	
 	gtk_menu_item_set_submenu (GTK_MENU_ITEM (lfmenu_item), lfmenu);
 	return lfmenu_item;
 }
 
 static GtkWidget *
-build_layout (Application * app, Largefile * lf) {
+BuildNotebookLayout (Application * app, Largefile * lf) {
 	Workbook * wb = lf->workbook();
 	GtkWidget * gtk_menu = app->gtkmenu();
 	GtkWidget * box = gtk_vbox_new (FALSE, 0);
-	GtkWidget * largefile_menu = largefile_mainmenu_new (app, lf, app->gtkwindow());
+	GtkWidget * largefile_menu = CreateLargefileMenu (app, lf, app->gtkwindow());
 	gtk_menu_shell_append (GTK_MENU_SHELL (gtk_menu), largefile_menu);
 
 	gtk_box_pack_end (GTK_BOX (box), wb->gtk_notebook, FALSE, FALSE, 0);
@@ -101,8 +105,12 @@ extern "C" {
     ASSERT (platform != NULL);
 	 Largefile * lf = new Largefile (appstate, platform);
 
-	 GtkWidget * box = build_layout (appstate, lf);
-	 gtk_widget_show (box);	 
+	 gdk_threads_enter();
+	 
+	 GtkWidget * box = BuildNotebookLayout (appstate, lf);
+	 gtk_widget_show (box);
+
+	 gdk_threads_leave();
     return lf;
   }
 } 

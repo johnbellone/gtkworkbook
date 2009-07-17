@@ -49,7 +49,10 @@ workbook_open (GtkWidget * window, const gchar * filename)
 		At this point we would load up the configuration files for the styles,
 		sheets and plugins to be loaded then this would all be executed here. */
 
+	gdk_threads_enter();
 	Workbook * book = workbook_object_init (window, filename);
+	gdk_threads_leave();
+	
 	return book;
 }
 
@@ -183,7 +186,9 @@ workbook_method_move_sheet (Workbook * wb,
 					  sheet->name, wb->filename);
       return FALSE;
 	}
-  
+
+	gdk_threads_enter ();
+	
 	gint page = gtk_notebook_page_num (GTK_NOTEBOOK (wb->gtk_notebook),
 												  sh->gtk_box);
 	if (page == -1)
@@ -195,8 +200,7 @@ workbook_method_move_sheet (Workbook * wb,
 
 	if (after == TRUE)  page++;
 	else                page--;
-
-	gdk_threads_enter ();
+	
 	gtk_notebook_reorder_child (GTK_NOTEBOOK (wb->gtk_notebook),
 										 sheet->gtk_box,
 										 page);
@@ -216,7 +220,7 @@ workbook_object_init (GtkWidget * window, const gchar * filename)
 	book->signals[SIG_WORKBOOK_CHANGED] = NULL;
 
 	/* Set up the notebook */
-	gdk_threads_enter ();
+
 	book->gtk_notebook = gtk_notebook_new ();
   
 	GtkNotebook * notebook = GTK_NOTEBOOK (book->gtk_notebook);
@@ -228,8 +232,6 @@ workbook_object_init (GtkWidget * window, const gchar * filename)
 	gtk_widget_set_usize (book->gtk_notebook, 1024, 768);
 
 	gtk_widget_show_all (book->gtk_notebook);
-
-	gdk_threads_leave ();
 
 	/* Members */
 	book->sheet_first = book->sheet_last = NULL;
