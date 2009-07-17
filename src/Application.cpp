@@ -229,8 +229,8 @@ Application::open_extension (const gchar * filename, gboolean absolute_path) {
 			/* Attach all of the signals for the Workbook object. */
 			gtk_signal_connect (GTK_OBJECT (plugin->workbook()->gtk_notebook),
 									  "switch-page",
-									  (GtkSignalFunc)this->signals[NOTEBOOK_SWITCHED], 
-									  (gpointer)plugin->workbook());
+									  (GtkSignalFunc)signal_gtknotebook_switchpage, 
+									  plugin->workbook());
 	  
 			this->workbooks.push_back (plugin->workbook());
 		}
@@ -288,16 +288,16 @@ Application::init (int argc, char *** argv) {
 	
 	gtk_signal_connect (GTK_OBJECT (this->gtk_window),
 							  "destroy",
-							  G_CALLBACK (this->signals[DESTROY_EVENT]),
-							  (gpointer)this);
+							  G_CALLBACK (signal_destroy_event),
+							  this);
 	gtk_signal_connect (GTK_OBJECT (this->gtk_window),
 							  "delete_event",
-							  G_CALLBACK (this->signals[DELETE_EVENT]),
+							  G_CALLBACK (signal_delete_event),
 							  NULL);
   
 	/* Set the initial size of the application; we could load this
 		from a configuration file eventually. */
-	gtk_widget_set_usize (this->gtk_window, 1024, 768);
+	gtk_widget_set_usize (this->gtk_window, 1024, 800);
   
 	/* Attach the window box to the window and present to the screen. */
 	GtkWidget * window_box = gtk_vbox_new (FALSE, 1);
