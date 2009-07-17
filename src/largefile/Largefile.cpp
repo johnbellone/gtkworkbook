@@ -53,7 +53,8 @@ key_press_callback (GtkWidget * window, GdkEventKey * event, gpointer data) {
 	
 	switch (event->keyval) {
 		case GDK_F1: {
-			lf->read(sheet, 1012121,1000);
+		
+			//lf->read(sheet, 1012121,1000);
 		}
 		break;
 		

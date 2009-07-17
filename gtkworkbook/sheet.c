@@ -137,7 +137,7 @@ sheet_object_init (Workbook * book,
 						 const gchar * label, 
 						 gint rows, gint columns)
 {
-	/*gdk_threads_enter ();*/
+	gdk_threads_enter ();
 	Sheet * sheet = NEW (Sheet);
 
 	/* Create the sheet containers and GtkSheet object. */
@@ -197,7 +197,7 @@ sheet_object_init (Workbook * book,
 		*/
 	}
 
-	/*gdk_threads_leave ();*/
+	gdk_threads_leave ();
 	
 	gtk_widget_show_all (sheet->gtk_box);
 	return sheet;
