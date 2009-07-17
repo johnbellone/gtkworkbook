@@ -21,9 +21,9 @@
 
 #include <proactor/Worker.hpp>
 #include "Packet.hpp"
-#include <workbook/cell.h>
-#include <workbook/sheet.h>
-#include <workbook/workbook.h>
+#include <gtkworkbook/cell.h>
+#include <gtkworkbook/sheet.h>
+#include <gtkworkbook/workbook.h>
 #include <string>
 #include <queue>
 #include <ctime>

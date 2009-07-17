@@ -94,6 +94,8 @@ namespace concurrent {
 		if (this->running == true)
 			return false;
 
+		this->running = true;
+		
 		if (this->runner != NULL) {
 			if (pthread_create (&this->thread,
 									  NULL,
@@ -109,7 +111,6 @@ namespace concurrent {
 				return false;
 		}
 
-		this->running = true;
 		return true;
 	}
 

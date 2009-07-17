@@ -16,8 +16,7 @@
    License along with the library; if not, write to the Free Software
    Foundation, Inc., 51 Franklin Street, Fifth Floor Boston, MA 02110-1301 USA
 */
-#include <workbook/workbook.h>
-#include <config/config.h>
+#include <gtkworkbook/workbook.h>
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <unistd.h>
@@ -34,6 +33,7 @@
 #include "CsvParser.hpp"
 #include "PacketParser.hpp"
 #include "Packet.hpp"
+#include "../config.h"
 
 using namespace realtime;
 

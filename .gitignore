@@ -6,3 +6,6 @@ lib/
 csv/libcsv.*
 massif*
 *.log
+\#*\#
+.\#*
+

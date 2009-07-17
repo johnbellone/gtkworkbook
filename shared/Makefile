@@ -1,26 +1,26 @@
 include ../Makefile.base
 
-SRCS=$(wildcard *.cpp) $(wildcard concurrent/*.cpp) \
-$(wildcard network/*.cpp) $(wildcard proactor/*.cpp)
-OBJS=$(patsubst %.cpp,${OBJDIR}/libshared/%.o,${SRCS})
+SRCS=$(wildcard *.cc) $(wildcard concurrent/*.cc) \
+$(wildcard network/*.cc) $(wildcard proactor/*.cc)
+OBJS=$(patsubst %.cc,${OBJDIR}/libgtkworkbookshared/%.o,${SRCS})
 
-all: 	shared
+all: 	gtkworkbookshared
 
-shared: ${OBJS}
-	${CX} -shared -Wl -o ${PROJDIR}/lib/libshared.so ${OBJS} ${LIBS} \
+gtkworkbookshared: ${OBJS}
+	${CX} -shared -Wl -o ${PROJDIR}/lib/libgtkworkbookshared.so ${OBJS} ${LIBS} \
 	-lpthread
-	${CP} ${PROJDIR}/lib/libshared.so ${PROJDIR}/lib/libshared.so.1
+	${CP} ${PROJDIR}/lib/libgtkworkbookshared.so ${PROJDIR}/lib/libgtkworkbookshared.so.1
 
 clean:		
-	${MD} ${OBJDIR}/libshared/concurrent ${OBJDIR}/libshared/network \
-	${OBJDIR}/libshared/proactor
-	${RM} ${OBJS} ${PROJDIR}/lib/libshared.so ${PROJDIR}/lib/libshared.so.1
+	${MD} ${OBJDIR}/libgtkworkbookshared/concurrent ${OBJDIR}/libgtkworkbookshared/network \
+	${OBJDIR}/libgtkworkbookshared/proactor
+	${RM} ${OBJS} ${PROJDIR}/lib/libgtkworkbookshared.so ${PROJDIR}/lib/libgtkworkbookshared.so.1
 
 install: all
 	${MD} ${INSEXTDIR}
 
-${OBJDIR}/libshared/%.o: %.cpp
+${OBJDIR}/libgtkworkbookshared/%.o: %.cc
 	${CX} ${INCS} -c -fPIC ${CXFLAGS} $< -o $@
 
-.cpp.o:
+.cc.o:
 	${CX} ${INCS} -c -fPIC ${CXFLAGS} $<

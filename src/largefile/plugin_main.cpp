@@ -17,105 +17,92 @@
    Foundation, Inc., 51 Franklin Street, Fifth Floor Boston, MA 02110-1301 USA
 */
 #include <iostream>
-#include <workbook/workbook.h>
+#include <gtkworkbook/workbook.h>
 #include <concurrent/ThreadArgs.hpp>
 #include <gtk/gtk.h>
-#include "../application.h"
-#include "../plugin.h"
+#include "Largefile.hpp"
+#include "../config.h"
+#include "../Application.hpp"
 
-/* Prototypes */
-extern void thread_main (ThreadArgs *);
+using largefile::Largefile;
 
 static void
 open_csv_file (GtkWidget * w, gpointer data) {
-	ApplicationState * app = (ApplicationState *)data;
-	Workbook * wb = app->active_workbook;
-   
-	GtkWidget * dialog = gtk_file_chooser_dialog_new ("Open File",
-																	  GTK_WINDOW (app->gtk_window),
-																	  GTK_FILE_CHOOSER_ACTION_OPEN,
-																	  GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
-																	  GTK_STOCK_OPEN, GTK_RESPONSE_ACCEPT,
-																	  NULL);  
+  Largefile * lf = (Largefile *)data;
   
-	gtk_file_chooser_set_do_overwrite_confirmation (GTK_FILE_CHOOSER (dialog), TRUE);
+  GtkWidget * dialog = gtk_file_chooser_dialog_new ("Open File",
+																	 GTK_WINDOW (lf->app()->gtkwindow()),
+																	 GTK_FILE_CHOOSER_ACTION_OPEN,
+																	 GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
+																	 GTK_STOCK_OPEN, GTK_RESPONSE_ACCEPT,
+																	 NULL);  
+  
+  gtk_file_chooser_set_do_overwrite_confirmation (GTK_FILE_CHOOSER (dialog), TRUE);
+  
+  if (gtk_dialog_run (GTK_DIALOG (dialog)) == GTK_RESPONSE_ACCEPT) {
+    gchar * filename = gtk_file_chooser_get_filename (GTK_FILE_CHOOSER (dialog));
 
-	if (gtk_dialog_run (GTK_DIALOG (dialog)) == GTK_RESPONSE_ACCEPT) {
-		gchar * filename = gtk_file_chooser_get_filename (GTK_FILE_CHOOSER (dialog));
+	 Sheet * sheet = lf->workbook()->add_new_sheet (lf->workbook(), filename, 1000, 20);
 
-		wb->add_new_sheet (wb, filename, 1000, 20);
+	 if (sheet == NULL) {
+		 g_warning ("Failed adding new sheet because one already exists");
+	 }
+	 else {
+	 	 if (lf->open_file (sheet, filename) == true) {
+			 // STUB: Do something magical.
+		 }
+		 else {
+			 // STUB: The opening of the file failed. Do something meaningful here.
+		 }
+	 }
 	 
-		g_free (filename);
-	}
+    g_free (filename);
+  }
 
 	gtk_widget_destroy (dialog);
 }
 
 static GtkWidget *
-largefile_mainmenu_new (ApplicationState * appstate, GtkWidget * window) {
-	GtkWidget * menubar = gtk_menu_bar_new();
+largefile_mainmenu_new (Application * appstate, Largefile * lf, GtkWidget * window) {
 	GtkWidget * lfmenu = gtk_menu_new();
 	GtkWidget * lfmenu_item = gtk_menu_item_new_with_label ("Largefile");
 	GtkWidget * lfmenu_open = gtk_image_menu_item_new_from_stock (GTK_STOCK_OPEN, NULL);
-
 	gtk_menu_shell_append (GTK_MENU_SHELL (lfmenu), lfmenu_open);
+
+	g_signal_connect (G_OBJECT (lfmenu_open), "activate",
+							G_CALLBACK (open_csv_file), lf);
 	
 	gtk_menu_item_set_submenu (GTK_MENU_ITEM (lfmenu_item), lfmenu);
-	
-	g_signal_connect (G_OBJECT (lfmenu_open), "activate",
-							G_CALLBACK (open_csv_file), (gpointer)appstate);
-
-	gtk_menu_shell_append (GTK_MENU_SHELL (menubar), lfmenu_item);
-	
-	gtk_widget_show_all (menubar);
-	return menubar;
+	return lfmenu_item;
 }
 
 static GtkWidget *
-build_layout (ApplicationState * appstate, GtkWidget * gtk_window) {
+build_layout (Application * app, Largefile * lf) {
+	Workbook * wb = lf->workbook();
+	GtkWidget * gtk_menu = app->gtkmenu();
 	GtkWidget * box = gtk_vbox_new (FALSE, 0);
-	GtkWidget * mainmenu = largefile_mainmenu_new (appstate, gtk_window);
-	gtk_box_pack_start (GTK_BOX (box), mainmenu, FALSE, FALSE, 0);
+	GtkWidget * largefile_menu = largefile_mainmenu_new (app, lf, app->gtkwindow());
+	gtk_menu_shell_append (GTK_MENU_SHELL (gtk_menu), largefile_menu);
+
+	gtk_box_pack_end (GTK_BOX (box), wb->gtk_notebook, FALSE, FALSE, 0);
+
+	wb->signals[SIG_WORKBOOK_CHANGED] = app->signals[Application::SHEET_CHANGED];
+	wb->gtk_box = box;
+
+	gtk_box_pack_start (GTK_BOX (app->gtkvbox()), box, FALSE, FALSE, 0);
+
 	return box;
 }
 
 extern "C" {
-
-  Workbook *
-  plugin_main (ApplicationState * appstate, Plugin * plugin) {
+  Plugin *
+  plugin_main (Application * appstate, Handle * platform) {
     ASSERT (appstate != NULL);
-    ASSERT (plugin != NULL);
-	
-	 Workbook * wb = NULL;
-    if ((wb = workbook_open (appstate->gtk_window, "largefile")) == NULL) {
-      g_critical ("Failed opening workbook; exiting largefile plugin");
-      return NULL;
-    }
+    ASSERT (platform != NULL);
+	 Largefile * lf = new Largefile (appstate, platform);
 
-	 appstate->active_workbook = wb;
-	 
-    GtkWidget * box = build_layout (appstate, appstate->gtk_window);
-    gtk_box_pack_end (GTK_BOX (box), wb->gtk_notebook, FALSE, FALSE, 0);
-
-    wb->signals[SIG_WORKBOOK_CHANGED] = appstate->signals[SIG_SHEET_CHANGED];
-        
-    wb->gtk_box = box;
-    
-	 ThreadArgs args;
-    args.push_back ( (void *)wb );
-    args.push_back ( (void *)appstate->cfg );
-    args.push_back ( (void *)appstate->shutdown );
-
-    if (plugin->create_thread (plugin,
-			       (GThreadFunc)thread_main,
-			       (gpointer)new ThreadArgs (args)) == NULL) {
-      g_critical ("Failed creating thread; exiting 'largefile' plugin");
-      return NULL;
-    }
-
-    gtk_box_pack_start (GTK_BOX (appstate->gtk_window_vbox), box, FALSE, FALSE, 0);
-    gtk_widget_show_all (box);	
-    return wb;
+	 GtkWidget * box = build_layout (appstate, lf);
+	 gtk_widget_show (box);	 
+    return lf;
   }
-
 } 

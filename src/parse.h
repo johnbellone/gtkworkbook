@@ -16,17 +16,17 @@
    License along with the library; if not, write to the Free Software
    Foundation, Inc., 51 Franklin Street, Fifth Floor Boston, MA 02110-1301 USA
 */
-#include "application.h"
+#ifndef H_PARSE
+#define H_PARSE
 
-int 
-main(int argc, char *argv[])
-{
-	ApplicationState *app = application_init (&argc, &argv);
+#include <glib.h>
+#include <shared.h>
 
-	app->run (app);
-	app->close (app);
+#define EXPECT(p,q,d) (*(q = munch (p)) == d)
 
-	return 0; 
-}
+/* parse.c */
+extern gchar *munch (gchar *p);
+extern gchar *parse (gchar *p, gchar *word, gint n, const gchar delim);
+extern gchar *trim (gchar *p);
 
-
+#endif

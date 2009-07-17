@@ -1,6 +1,6 @@
 include ../../Makefile.base
 
-INCS += -I${PROJDIR}/shared
+INCS += -I${PROJDIR}/shared -I../
 SRCS = $(wildcard *.cpp) 
 OBJS = $(patsubst %.cpp,${OBJDIR}/realtime/%.o,${SRCS}) 
 
@@ -8,7 +8,7 @@ all: 	realtime
 
 realtime: ${OBJS}
 	${CX} -shared -Wl -o ${PROJDIR}/bin/realtime.so ${OBJS} ${LIBS} \
-	-lgthread-2.0 -lpthread -lcsv -lshared
+	-lgthread-2.0 -lpthread -lcsv
 
 clean:		
 	${MD} ${OBJDIR}/realtime

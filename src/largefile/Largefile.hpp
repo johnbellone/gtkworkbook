@@ -16,32 +16,33 @@
   License along with the library; if not, write to the Free Software
   Foundation, Inc., 51 Franklin Street, Fifth Floor Boston, MA 02110-1301 USA
 */
-#ifndef HPP_LF_CSVPARSER
-#define HPP_LF_CSVPARSER
+#ifndef HPP_LARGEFILE
+#define HPP_LARGEFILE
 
-#include <proactor/Worker.hpp>
-#include <gtkworkbook/workbook.h>
-#include <concurrent/Thread.hpp>
-#include <libcsv/csv.h>
+#include <map>
+#include <string>
+#include "File.hpp"
+#include "../Plugin.hpp"
+#include "../Application.hpp"
+#include "../config.h"
 
 namespace largefile {
 
-	class CsvParser : public proactor::Worker {
+	class Largefile : public Plugin {
 	private:
-		Sheet * sheet;
-		Workbook * wb;
-		Cell ** fields;
-		FILE * log;
-		int verbosity;
-		int maxOfFields;
-		int sizeOfFields;
+		typedef std::map<std::string,FileDispatcher *> FilenameMap;
+	
+		FILE * pktlog;
+		FilenameMap mapping;
 	public:
-		CsvParser (Sheet * sheet, FILE * log, int verbosity, int maxOfFields = 10);
-		virtual ~CsvParser (void);
+		Largefile (Application * appstate, Handle * platform);
+		virtual ~Largefile (void);
 
-		void * run (void * null);
+		bool open_file (Sheet * sheet, const std::string & filename);
+		bool exit_file (const std::string & filename);
+		bool read (Sheet * sheet, off64_t start, off64_t N);
 	};
 
-} // end of namespace
-
+}
+	
 #endif

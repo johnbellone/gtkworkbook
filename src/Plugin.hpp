@@ -16,58 +16,49 @@
    License along with the library; if not, write to the Free Software
    Foundation, Inc., 51 Franklin Street, Fifth Floor Boston, MA 02110-1301 USA
 */
-#ifndef H_PLUGIN
-#define H_PLUGIN
+#ifndef HPP_PLUGIN
+#define HPP_PLUGIN
 
-typedef struct _PluginMethod PluginMethod;
-typedef struct _Plugin Plugin;
+#include "Application.hpp"
+#include <dlfcn.h>
+#include <gtkworkbook/workbook.h>
+#include <concurrent/Mutex.hpp>
+#include <string>
 
 #ifdef WIN32
 #include <windows.h>
-typedef HINSTANCE LibraryHandle;
+typedef HINSTANCE PlatformHandle;
 #define LIBRARY_CLOSE(handle) FreeLibrary(handle)
 #define LIBRARY_OPEN(filename) LoadLibrary(filename)
 #define LIBRARY_SYM(handle, symbol) GetProcAddress(handle, symbol)
 #define LIBRARY_ERROR() GetLastError()
 #else
-typedef void * LibraryHandle;
+typedef void * PlatformHandle;
 #define LIBRARY_CLOSE(handle) dlclose(handle)
 #define LIBRARY_OPEN(filename) dlopen(filename, RTLD_LAZY)
 #define LIBRARY_SYM(handle, symbol) dlsym(handle, symbol)
 #define LIBRARY_ERROR() dlerror()
 #endif
 
-#include <shared.h>
-#include <dlfcn.h>
-#include <glib/gthread.h>
-
-struct _Plugin
-{
-	/* Members */
-	LibraryHandle pfnhandle;
-	PluginMethod * first, * last;
-	Plugin * next, * prev;
-	GPtrArray * threads;
-
-	/* Methods */
-	void *(*method_register) (Plugin *, gchar *);
-	void (*method_deregister) (Plugin *, PluginMethod *);
-	void (*destroy) (Plugin *);
-	GThread *(*create_thread) (Plugin *, GThreadFunc, gpointer);
+struct Handle {
+	Handle() :handle(NULL) { }
+	PlatformHandle handle;
 };
 
-struct _PluginMethod
-{
-	/* Members */
-	void * pfnmethod;
-	PluginMethod * next, * prev;
-	Plugin * plugin;
+class Plugin : public concurrent::RecursiveMutex {
+protected:
+	Workbook * wb;
+	Application * appstate;
+private:
+	Handle * platform;
+public:
+	static Plugin * open_plugin (Application * appstate, const std::string filename);
+	
+	Plugin (Application * appstate, Handle * platform);
+	virtual ~Plugin (void);
 
-	/* Methods */
-	void (*deregister) (PluginMethod *method, Plugin *plugin);
+	Workbook * workbook (void);
+	Application * app (void);
 };
-
-/* plugin.c */
-Plugin * plugin_open (const gchar * filename);
 
 #endif

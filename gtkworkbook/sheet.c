@@ -16,7 +16,7 @@
    License along with the library; if not, write to the Free Software
    Foundation, Inc., 51 Franklin Street, Fifth Floor Boston, MA 02110-1301 USA
 */
-#include <workbook/sheet.h>
+#include <gtkworkbook/sheet.h>
 #include <gtkextra/gtksheet.h>
 #include <string.h>
 
@@ -57,59 +57,57 @@ struct geometryFileEntry {
 	GdkColor cellForeground;
 	GdkColor cellBackground;
 };
-
 /*
-  static GtkSheetCell *
-  gtk_sheet_cell_new (void) {
-  GtkSheetCell * cell = g_new (GtkSheetCell, 1);
-  cell->text = NULL;
-  cell->link = NULL;
-  cell->attributes = NULL;
-  return cell;
-  }
-*/
-/*
-  static void
-  GrowSheet (GtkSheet * tbl, gint newrows, gint newcols) {
-  gint ii, jj, inirow, inicol;
+static GtkSheetCell *
+gtk_sheet_cell_new (void) {
+	GtkSheetCell * cell = g_new (GtkSheetCell, 1);
+	cell->text = NULL;
+	cell->link = NULL;
+	cell->attributes = NULL;
+	return cell;
+}
 
-  inirow = tbl->maxallocrow + 1;
-  inicol = tbl->maxalloccol + 1;
+static void
+GrowSheet (GtkSheet * tbl, gint newrows, gint newcols) {
+	gint ii, jj, inirow, inicol;
 
-  tbl->maxalloccol = tbl->maxalloccol + newcols;
-  tbl->maxallocrow = tbl->maxallocrow + newrows;
+	inirow = tbl->maxallocrow + 1;
+	inicol = tbl->maxalloccol + 1;
 
-  if (newrows > 0) {
-  tbl->data = (GtkSheetCell ***) g_realloc (tbl->data,
-  (tbl->maxallocrow+1)*sizeof(GtkSheetCell**)+sizeof(double));
+	tbl->maxalloccol = tbl->maxalloccol + newcols;
+	tbl->maxallocrow = tbl->maxallocrow + newrows;
 
-  for (ii = inirow; ii <= tbl->maxallocrow; ii++) {
-  tbl->data[ii] = (GtkSheetCell **) g_malloc ((tbl->maxcol+1)*sizeof(GtkSheetCell*)+sizeof(double));
+	if (newrows > 0) {
+		tbl->data = (GtkSheetCell ***) g_realloc (tbl->data,
+																(tbl->maxallocrow+1)*sizeof(GtkSheetCell**)+sizeof(double));
 
-  for (jj = 0; jj < inicol; jj++)
-  tbl->data[ii][jj] = NULL;
-  }
-  }
+		for (ii = inirow; ii <= tbl->maxallocrow; ii++) {
+			tbl->data[ii] = (GtkSheetCell **) g_malloc ((tbl->maxcol+1)*sizeof(GtkSheetCell*)+sizeof(double));
 
-  if (newcols > 0) {
-  for (ii = 0; ii <= tbl->maxallocrow; ii++) {
-  tbl->data[ii] = (GtkSheetCell **) g_realloc (tbl->data[ii],
-  (tbl->maxalloccol+1)*sizeof(GtkSheetCell*)+sizeof(double));
+			for (jj = 0; jj < inicol; jj++)
+				tbl->data[ii][jj] = NULL;
+		}
+	}
 
-  for (jj = inicol; jj <= tbl->maxalloccol; jj++)
-  tbl->data[ii][jj] = NULL;
-  }
-  }
-  }
+	if (newcols > 0) {
+		for (ii = 0; ii <= tbl->maxallocrow; ii++) {
+			tbl->data[ii] = (GtkSheetCell **) g_realloc (tbl->data[ii],
+																		(tbl->maxalloccol+1)*sizeof(GtkSheetCell*)+sizeof(double));
 
-  static void
-  CheckBounds (GtkSheet * tbl, gint row, gint col) {
-  gint newrows = 0, newcols = 0;
+			for (jj = inicol; jj <= tbl->maxalloccol; jj++)
+				tbl->data[ii][jj] = NULL;
+		}
+	}
+}
 
-  if (col > tbl->maxalloccol) newcols = col - tbl->maxalloccol;
-  if (row > tbl->maxallocrow) newrows = row - tbl->maxallocrow;
-  if (newrows > 0 || newcols > 0) GrowSheet (tbl, newrows, newcols);
-  }
+static void
+CheckBounds (GtkSheet * tbl, gint row, gint col) {
+	gint newrows = 0, newcols = 0;
+
+	if (col > tbl->maxalloccol) newcols = col - tbl->maxalloccol;
+	if (row > tbl->maxallocrow) newrows = row - tbl->maxallocrow;
+	if (newrows > 0 || newcols > 0) GrowSheet (tbl, newrows, newcols);
+}
 */
 /* @description: This method creates a new Sheet object and returns the
    pointer to that object. It calls the constructor function to do so.
@@ -139,12 +137,11 @@ sheet_object_init (Workbook * book,
 						 const gchar * label, 
 						 gint rows, gint columns)
 {
-	//gdk_threads_enter ();
+	/*gdk_threads_enter ();*/
 	Sheet * sheet = NEW (Sheet);
 
 	/* Create the sheet containers and GtkSheet object. */
-	sheet->gtk_box = gtk_vbox_new (FALSE, 0);
-	gtk_widget_show (sheet->gtk_box);
+	sheet->gtk_box = gtk_vbox_new (FALSE, 1);
 
 	GtkWidget * scrolled_window = gtk_scrolled_window_new (NULL, NULL);
 	gtk_box_pack_start (GTK_BOX (sheet->gtk_box), scrolled_window, 1,1,1);
@@ -159,7 +156,6 @@ sheet_object_init (Workbook * book,
 	gtk_sheet_set_autoresize (GTK_SHEET (sheet->gtk_sheet), TRUE);
 	gtk_container_add (GTK_CONTAINER (scrolled_window),
 							 GTK_WIDGET (sheet->gtk_sheet));
-	
 
 	/* We should be able to use sheet->gtk_box now throughout all of our
 		tests when iterating through a GtkNotebook structure. The page number
@@ -169,8 +165,6 @@ sheet_object_init (Workbook * book,
 														 sheet->gtk_box,
 														 sheet->gtk_label);
 
-	gtk_widget_show_all (book->gtk_notebook);
-	
 	/* Members */
 	sheet->workbook = book;
 	sheet->name = g_strdup (label);
@@ -197,13 +191,15 @@ sheet_object_init (Workbook * book,
 	/* Connect any signals that we need to. */
 	if (!IS_NULL (sheet->workbook->signals[SIG_WORKBOOK_CHANGED]))
 	{
-      gtk_signal_connect (GTK_OBJECT (sheet->gtk_sheet),
-								  "changed",
-								  G_CALLBACK (sheet->workbook->signals[SIG_WORKBOOK_CHANGED]),
-								  (gpointer)sheet);
+		/*
+      gtk_signal_connect (GTK_OBJECT (sheet->gtk_sheet), "changed",
+								  G_CALLBACK (sheet->workbook->signals[SIG_WORKBOOK_CHANGED]), sheet);
+		*/
 	}
 
-	//gdk_threads_leave ();
+	/*gdk_threads_leave ();*/
+	
+	gtk_widget_show_all (sheet->gtk_box);
 	return sheet;
 }
 

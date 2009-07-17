@@ -16,7 +16,7 @@
    License along with the library; if not, write to the Free Software
    Foundation, Inc., 51 Franklin Street, Fifth Floor Boston, MA 02110-1301 USA
 */
-#include <workbook/workbook.h>
+#include <gtkworkbook/workbook.h>
 #include <glib/gthread.h>
 #include <string.h>
 
@@ -79,6 +79,7 @@ workbook_method_addnewsheet (Workbook * book,
 
 	sheet = sheet_new (book, label, rows, cols);
 
+<<<<<<< HEAD:workbook/workbook.c
 	LINK_OBJECT (book->sheet_first,
 					 book->sheet_last, 
 					 sheet);
@@ -91,6 +92,15 @@ workbook_method_addnewsheet (Workbook * book,
       book->focus_sheet = sheet;
 	}
 
+=======
+	LINK_OBJECT (book->sheet_first, book->sheet_last, sheet);
+
+	if (IS_NULL (book->focus_sheet)) {
+		sheet->has_focus = TRUE;
+		book->focus_sheet = sheet;
+	}
+	
+>>>>>>> e749749c2b8e3b9d700ffd4ce1f0096c46fb5493:gtkworkbook/workbook.c
 	return sheet;
 }
 
@@ -231,7 +241,11 @@ workbook_object_init (GtkWidget * window, const gchar * filename)
 	gtk_notebook_set_show_tabs (notebook, TRUE);
 	gtk_notebook_set_show_border (notebook, TRUE);
 	gtk_widget_set_usize (book->gtk_notebook, 1024, 768);
+<<<<<<< HEAD:workbook/workbook.c
 	gtk_widget_show (book->gtk_notebook);
+=======
+	gtk_widget_show_all (book->gtk_notebook);
+>>>>>>> e749749c2b8e3b9d700ffd4ce1f0096c46fb5493:gtkworkbook/workbook.c
 	gdk_threads_leave ();
 
 	/* Members */
