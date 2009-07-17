@@ -57,7 +57,7 @@ struct geometryFileEntry {
 	GdkColor cellForeground;
 	GdkColor cellBackground;
 };
-
+/*
 static GtkSheetCell *
 gtk_sheet_cell_new (void) {
 	GtkSheetCell * cell = g_new (GtkSheetCell, 1);
@@ -108,7 +108,7 @@ CheckBounds (GtkSheet * tbl, gint row, gint col) {
 	if (row > tbl->maxallocrow) newrows = row - tbl->maxallocrow;
 	if (newrows > 0 || newcols > 0) GrowSheet (tbl, newrows, newcols);
 }
-
+*/
 /* @description: This method creates a new Sheet object and returns the
    pointer to that object. It calls the constructor function to do so.
    @book: A pointer to the Workbook that the object will be a part of.
@@ -191,8 +191,10 @@ sheet_object_init (Workbook * book,
 	/* Connect any signals that we need to. */
 	if (!IS_NULL (sheet->workbook->signals[SIG_WORKBOOK_CHANGED]))
 	{
+		/*
       gtk_signal_connect (GTK_OBJECT (sheet->gtk_sheet), "changed",
 								  G_CALLBACK (sheet->workbook->signals[SIG_WORKBOOK_CHANGED]), sheet);
+		*/
 	}
 
 	/*gdk_threads_leave ();*/

@@ -24,8 +24,7 @@
 #include "../config.h"
 #include "../Application.hpp"
 
-/* Prototypes */
-extern void thread_main (ThreadArgs *);
+using largefile::Largefile;
 
 static void
 open_csv_file (GtkWidget * w, gpointer data) {
@@ -43,11 +42,18 @@ open_csv_file (GtkWidget * w, gpointer data) {
   if (gtk_dialog_run (GTK_DIALOG (dialog)) == GTK_RESPONSE_ACCEPT) {
     gchar * filename = gtk_file_chooser_get_filename (GTK_FILE_CHOOSER (dialog));
 
-	 if (lf->open_file (filename) == true) {
-		 lf->workbook()->add_new_sheet (lf->workbook(), filename, 1000, 20);
+	 Sheet * sheet = lf->workbook()->add_new_sheet (lf->workbook(), filename, 1000, 20);
+
+	 if (sheet == NULL) {
+		 g_warning ("Failed adding new sheet because one already exists");
 	 }
 	 else {
-		 // STUB: The opening of the file failed. Do something meaningful here.
+	 	 if (lf->open_file (sheet, filename) == true) {
+			 // STUB: Do something magical.
+		 }
+		 else {
+			 // STUB: The opening of the file failed. Do something meaningful here.
+		 }
 	 }
 	 
     g_free (filename);
@@ -64,7 +70,7 @@ largefile_mainmenu_new (Application * appstate, Largefile * lf, GtkWidget * wind
 	gtk_menu_shell_append (GTK_MENU_SHELL (lfmenu), lfmenu_open);
 
 	g_signal_connect (G_OBJECT (lfmenu_open), "activate",
-							G_CALLBACK (open_csv_file), (gpointer)lf);
+							G_CALLBACK (open_csv_file), lf);
 	
 	gtk_menu_item_set_submenu (GTK_MENU_ITEM (lfmenu_item), lfmenu);
 	return lfmenu_item;

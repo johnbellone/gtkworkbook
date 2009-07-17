@@ -43,23 +43,22 @@ append_pidname (const gchar * pre) {
 
 static gint
 key_press_callback (GtkWidget * window, GdkEventKey * event, gpointer data) {
-	std::vector<gpointer> * arguments = (std::vector<gpointer> *)data;
-	FileDispatcher * fd = (FileDispatcher *)arguments->at(0);
-	//Workbook * wb = (Workbook *)arguments->at(1);
-	//GtkSheet * gtksheet = GTK_SHEET (wb->sheet_first->gtk_sheet);
-
+	Largefile * lf = (Largefile *)data;
+	Workbook * wb = lf->workbook();
+	Sheet * sheet = wb->focus_sheet;
+		
 	//	int vposition = std::abs((int)gtksheet->vadjustment->value);
 	static off64_t cursor = 0;
 	//	float N = vposition, K = 24388, V = (N/K);
 	
 	switch (event->keyval) {
 		case GDK_F1: {
-			fd->read(1012121,1000);
+			lf->read(sheet, 1012121,1000);
 		}
 		break;
 		
 		case GDK_Page_Up: {
-			fd->read(cursor, 100);
+			lf->read(sheet, cursor, 100);
 			cursor += 100;
 		}
 		return TRUE;
@@ -70,7 +69,7 @@ key_press_callback (GtkWidget * window, GdkEventKey * event, gpointer data) {
 			else
 				cursor -= 100;
 			
-			fd->read(cursor, 100);
+			lf->read(sheet, cursor, 100);
 		}
 		return TRUE;
 	}
@@ -98,18 +97,38 @@ Largefile::Largefile (Application * appstate, Handle * platform)
 					" thread", logname.c_str());
 		return;
     }
+
+	gtk_signal_connect (GTK_OBJECT (this->wb->gtk_window), "key_press_event",
+							  GTK_SIGNAL_FUNC (key_press_callback), this);
 }
 
 Largefile::~Largefile (void) {
 }
 
 bool
-Largefile::open_file (const std::string & filename) {
+Largefile::read (Sheet * sheet, off64_t start, off64_t N) {
+	this->lock();
+	std::string key = sheet->name;
+	
+	FilenameMap::iterator it = this->mapping.find (key);
+	if (it == this->mapping.end()) {
+		this->unlock();
+		return false;
+	}
+
+	FileDispatcher * fd = it->second;
+	fd->read (start, N);
+	this->unlock();
+	return true;
+}
+
+bool
+Largefile::open_file (Sheet * sheet, const std::string & filename) {
 	this->lock();
 	
 	int fdEventId = proactor::Event::uniqueEventId();
 	FileDispatcher * fd = new FileDispatcher (fdEventId, appstate->proactor());
-	CsvParser * csv = new CsvParser (this->wb, this->pktlog, 0, 20);
+	CsvParser * csv = new CsvParser (sheet, this->pktlog, 0, 20);
 
 	if (appstate->proactor()->addWorker (fdEventId, csv) == false) {
 		g_critical ("Failed starting CsvParser for file %s", filename.c_str());
@@ -129,7 +148,7 @@ Largefile::open_file (const std::string & filename) {
 		return false;
 	}
 
-	this->mapping.insert (std::make_pair (std::string(filename), fdEventId));
+	this->mapping.insert (std::make_pair (std::string(filename), fd));
 	
 	this->unlock();
 	return true;
