@@ -186,8 +186,6 @@ Application::~Application (void) {
 	}
 	
 	FREE (this->absolute_path);
-
-	this->shutdown();
 }
 
 Plugin *
