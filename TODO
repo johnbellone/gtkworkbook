@@ -2,12 +2,13 @@ TODO for GTKWorkbook
 
 * Application
 	- Bugs
-		o Probable issue with new plugin architecture unloading library inside
+		o Possible issue with new plugin architecture unloading library inside
 		  the object's destructor. 
-		o Segementation fault on graceful exit of application.
 * largefile
 	- Bugs	
-		o Possible heap memory corruption happening in current working branch.	
+		o Likely heap corruption inside of commented out GtkSheet management code
+		  which was yanked from GtkExtra distribution. This needs to be run inside
+		  of heap profiler for testing.
 	- Priorities (before merge)
 		o Absolute line goto dialog
 		o Index indicator
