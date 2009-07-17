@@ -92,9 +92,7 @@ signal_gtknotebook_switchpage (GtkNotebook * notebook,
 			it->notices = 0;
 	
 			/* Reset the label on the notebook tab to the object's name. */
-			gtk_notebook_set_tab_label_text (notebook,
-														it->gtk_box,
-														it->name);
+			gtk_notebook_set_tab_label_text (notebook, it->gtk_box, it->name);
 			book->focus_sheet = it;
 			break;
       }
@@ -221,20 +219,21 @@ Application::open_extension (const gchar * filename, gboolean absolute_path) {
 
 	Plugin * plugin = NULL;
 	if ((plugin = this->load_plugin (fname)) != NULL) {
+
 		if (plugin->workbook() == NULL) {
 			g_critical ("Plugin returned a NULL pointer instead of allocated"
 							" workbook.");
 			exit (1);
-		} else {
-			/* Attach all of the signals for the Workbook object. */
-			gtk_signal_connect (GTK_OBJECT (plugin->workbook()->gtk_notebook),
-									  "switch-page",
-									  (GtkSignalFunc)signal_gtknotebook_switchpage, 
-									  plugin->workbook());
-	  
-			this->workbooks.push_back (plugin->workbook());
 		}
+		
+		/* Attach all of the signals for the Workbook object. */
+		gtk_signal_connect (GTK_OBJECT (plugin->workbook()->gtk_notebook),
+								  "switch-page",
+								  (GtkSignalFunc)signal_gtknotebook_switchpage, 
+								  plugin->workbook());
+	
 		gtk_widget_show_all (this->gtk_menu);
+		this->workbooks.push_back (plugin->workbook());
 	}
 
 	FREE (fname);

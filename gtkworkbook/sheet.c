@@ -137,12 +137,11 @@ sheet_object_init (Workbook * book,
 						 const gchar * label, 
 						 gint rows, gint columns)
 {
-	gdk_threads_enter ();
+	/*gdk_threads_enter ();*/
 	Sheet * sheet = NEW (Sheet);
 
 	/* Create the sheet containers and GtkSheet object. */
 	sheet->gtk_box = gtk_vbox_new (FALSE, 1);
-	gtk_widget_show (sheet->gtk_box);
 
 	GtkWidget * scrolled_window = gtk_scrolled_window_new (NULL, NULL);
 	gtk_box_pack_start (GTK_BOX (sheet->gtk_box), scrolled_window, 1,1,1);
@@ -157,7 +156,6 @@ sheet_object_init (Workbook * book,
 	gtk_sheet_set_autoresize (GTK_SHEET (sheet->gtk_sheet), TRUE);
 	gtk_container_add (GTK_CONTAINER (scrolled_window),
 							 GTK_WIDGET (sheet->gtk_sheet));
-	gtk_widget_show_all (sheet->gtk_sheet);
 
 	/* We should be able to use sheet->gtk_box now throughout all of our
 		tests when iterating through a GtkNotebook structure. The page number
@@ -166,6 +164,7 @@ sheet_object_init (Workbook * book,
 	sheet->page = gtk_notebook_append_page (GTK_NOTEBOOK (book->gtk_notebook),
 														 sheet->gtk_box,
 														 sheet->gtk_label);
+
 	/* Members */
 	sheet->workbook = book;
 	sheet->name = g_strdup (label);
@@ -196,7 +195,9 @@ sheet_object_init (Workbook * book,
 								  G_CALLBACK (sheet->workbook->signals[SIG_WORKBOOK_CHANGED]), sheet);
 	}
 
-	gdk_threads_leave ();
+	/*gdk_threads_leave ();*/
+	
+	gtk_widget_show_all (sheet->gtk_box);
 	return sheet;
 }
 

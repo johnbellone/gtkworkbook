@@ -25,15 +25,15 @@ static void workbook_method_destroy (Workbook *);
 static Workbook *workbook_object_init (GtkWidget *, const gchar *);
 static Workbook *workbook_object_free (Workbook *);
 static Sheet *workbook_method_addnewsheet (Workbook *, 
-					   const gchar *, 
-					   gint, gint);
+														 const gchar *, 
+														 gint, gint);
 static Sheet *workbook_method_get_sheet (Workbook *, const gchar *);
 static void workbook_method_remove_sheet (Workbook *, Sheet *);
 static gboolean workbook_method_move_sheet_index (Workbook *, Sheet *, gint);
 static gboolean workbook_method_move_sheet (Workbook *, 
-					    Sheet *,
-					    const gchar *,
-					    gboolean);
+														  Sheet *,
+														  const gchar *,
+														  gboolean);
 
 /* @description: This method "opens" a Workbook. In the future it will load
    a Workbook from a specified filename (which will most likely be a GZIP
@@ -43,14 +43,14 @@ static gboolean workbook_method_move_sheet (Workbook *,
 Workbook *
 workbook_open (GtkWidget * window, const gchar * filename)
 {
-  ASSERT (window != NULL);
+	ASSERT (window != NULL);
 
-  /* STUB: A workbook is opened here from some form of an archived file.
-     At this point we would load up the configuration files for the styles,
-     sheets and plugins to be loaded then this would all be executed here. */
+	/* STUB: A workbook is opened here from some form of an archived file.
+		At this point we would load up the configuration files for the styles,
+		sheets and plugins to be loaded then this would all be executed here. */
 
-  Workbook * book = workbook_object_init (window, filename);
-  return book;
+	Workbook * book = workbook_object_init (window, filename);
+	return book;
 }
 
 /* @description: This method adds a new Sheet to the Workbook object. The
@@ -63,35 +63,30 @@ workbook_open (GtkWidget * window, const gchar * filename)
    @cols: Number of columns the GtkSheet object should have.*/
 static Sheet *
 workbook_method_addnewsheet (Workbook * book,
-			     const gchar * label, 
-			     gint rows, 
-			     gint cols)
+									  const gchar * label, 
+									  gint rows, 
+									  gint cols)
 {
-  ASSERT (book != NULL);
+	ASSERT (book != NULL);
 
-  Sheet * sheet = book->get_sheet (book, label);
-  if (sheet != NULL) 
-    {
+	Sheet * sheet = book->get_sheet (book, label);
+	if (sheet != NULL) 
+	{
       g_warning ("Cannot create '%s' because it already exists", 
-		 label);
+					  label);
       return NULL;
-    }
+	}
 
-  sheet = sheet_new (book, label, rows, cols);
+	sheet = sheet_new (book, label, rows, cols);
 
-  LINK_OBJECT (book->sheet_first,
-	       book->sheet_last, 
-	       sheet);
+	LINK_OBJECT (book->sheet_first, book->sheet_last, sheet);
 
-  /* We are the first and only sheet; make sure we are set to have focus. */
-  /* BUGFIX: This was in the wrong place... needs to be below LINK_OBJECT */
-  if ((book->sheet_first == sheet) && IS_NULL (book->sheet_last))
-    {
-      sheet->has_focus = TRUE;
-      book->focus_sheet = sheet;
-    }
-
-  return sheet;
+	if (IS_NULL (book->focus_sheet)) {
+		sheet->has_focus = TRUE;
+		book->focus_sheet = sheet;
+	}
+	
+	return sheet;
 }
 
 /* @description: This method performs a search of all the Workbooks and
@@ -101,20 +96,20 @@ workbook_method_addnewsheet (Workbook * book,
 static Sheet *
 workbook_method_get_sheet (Workbook * wb, const gchar * sheet)
 {
-  ASSERT (wb != NULL);
+	ASSERT (wb != NULL);
 
-  if (!IS_NULLSTR (sheet))
-    {
+	if (!IS_NULLSTR (sheet))
+	{
       ITERATE_BEGIN (Sheet, wb->sheet_first);
       {
-	if (!sheet) return NULL;
-	if (!strcmp (sheet, it->name))
-	  return it;
+			if (!sheet) return NULL;
+			if (!strcmp (sheet, it->name))
+				return it;
       }
       ITERATE_END ();
-    }
+	}
 
-  return NULL;
+	return NULL;
 }
 
 /* @description: This method removes a Sheet object from the Workbook. It also
@@ -124,33 +119,33 @@ workbook_method_get_sheet (Workbook * wb, const gchar * sheet)
 static void
 workbook_method_remove_sheet (Workbook * wb, Sheet * sheet)
 {
-  ASSERT (wb != NULL);
+	ASSERT (wb != NULL);
 
-  if (sheet->workbook != wb)
-    {
+	if (sheet->workbook != wb)
+	{
       g_warning ("'%s' does not belong to workbook '%s'",
-		 sheet->name, wb->filename);
+					  sheet->name, wb->filename);
       return;
-    }
+	}
   
-  ITERATE_BEGIN (Sheet, wb->sheet_first);
-  {
-    /* Remove the sheet from the GtkNotebook */
-    if (it == sheet)
+	ITERATE_BEGIN (Sheet, wb->sheet_first);
+	{
+		/* Remove the sheet from the GtkNotebook */
+		if (it == sheet)
       {
-	gdk_threads_enter ();
-	gint page = gtk_notebook_page_num (GTK_NOTEBOOK (wb->gtk_notebook),
-					   sheet->gtk_box);
-	gtk_notebook_remove_page (GTK_NOTEBOOK (wb->gtk_notebook), page); 
-	gtk_widget_queue_draw (wb->gtk_notebook);
-	gdk_threads_leave ();
-	return;
+			gdk_threads_enter ();
+			gint page = gtk_notebook_page_num (GTK_NOTEBOOK (wb->gtk_notebook),
+														  sheet->gtk_box);
+			gtk_notebook_remove_page (GTK_NOTEBOOK (wb->gtk_notebook), page); 
+			gtk_widget_queue_draw (wb->gtk_notebook);
+			gdk_threads_leave ();
+			return;
       }
-  }
-  ITERATE_END ();
+	}
+	ITERATE_END ();
 
-  g_warning ("Sheet '%s' was not found inside of workbook '%s'", 
-	     sheet->name, wb->filename);
+	g_warning ("Sheet '%s' was not found inside of workbook '%s'", 
+				  sheet->name, wb->filename);
 }
 
 /* @description: This method moves the Sheet's GtkSheet tab inside of the
@@ -161,52 +156,52 @@ workbook_method_remove_sheet (Workbook * wb, Sheet * sheet)
 static gboolean
 workbook_method_move_sheet_index (Workbook * wb, Sheet * sheet, gint index)
 {
-  gdk_threads_enter ();
-  gtk_notebook_reorder_child (GTK_NOTEBOOK (wb->gtk_notebook),
-			      sheet->gtk_box,
-			      index);
-  gdk_threads_leave ();
-  return TRUE;
+	gdk_threads_enter ();
+	gtk_notebook_reorder_child (GTK_NOTEBOOK (wb->gtk_notebook),
+										 sheet->gtk_box,
+										 index);
+	gdk_threads_leave ();
+	return TRUE;
 }
 
 static gboolean
 workbook_method_move_sheet (Workbook * wb, 
-			    Sheet * sheet, 
-			    const gchar * id,
-			    gboolean after)
+									 Sheet * sheet, 
+									 const gchar * id,
+									 gboolean after)
 {
-  ASSERT (wb != NULL);
-  ASSERT (sheet != NULL);
+	ASSERT (wb != NULL);
+	ASSERT (sheet != NULL);
 
-  if (IS_NULLSTR (id))
-    return FALSE;
+	if (IS_NULLSTR (id))
+		return FALSE;
 
-  Sheet * sh = wb->get_sheet (wb, id);
-  if (IS_NULL (sh))
-    {
+	Sheet * sh = wb->get_sheet (wb, id);
+	if (IS_NULL (sh))
+	{
       g_warning ("Sheet '%s' does not exist in workbook '%s'", 
-		 sheet->name, wb->filename);
+					  sheet->name, wb->filename);
       return FALSE;
-    }
+	}
   
-  gint page = gtk_notebook_page_num (GTK_NOTEBOOK (wb->gtk_notebook),
-				     sh->gtk_box);
-  if (page == -1)
-    {
+	gint page = gtk_notebook_page_num (GTK_NOTEBOOK (wb->gtk_notebook),
+												  sh->gtk_box);
+	if (page == -1)
+	{
       g_warning ("Sheet '%s' does not appear to be in workbook '%s' notebook",
-		 sheet->name, wb->filename);
+					  sheet->name, wb->filename);
       return FALSE;
-    }
+	}
 
-  if (after == TRUE)  page++;
-  else                page--;
+	if (after == TRUE)  page++;
+	else                page--;
 
-  gdk_threads_enter ();
-  gtk_notebook_reorder_child (GTK_NOTEBOOK (wb->gtk_notebook),
-			      sheet->gtk_box,
-			      page);
-  gdk_threads_leave ();
-  return TRUE;
+	gdk_threads_enter ();
+	gtk_notebook_reorder_child (GTK_NOTEBOOK (wb->gtk_notebook),
+										 sheet->gtk_box,
+										 page);
+	gdk_threads_leave ();
+	return TRUE;
 }
 
 /* @description: This is a Workbook object's constructor. 
@@ -215,41 +210,41 @@ workbook_method_move_sheet (Workbook * wb,
 static Workbook *
 workbook_object_init (GtkWidget * window, const gchar * filename)
 {
-  Workbook * book = NEW (Workbook);
+	Workbook * book = NEW (Workbook);
 
-  /* Set up the signals. */
-  book->signals[SIG_WORKBOOK_CHANGED] = NULL;
+	/* Set up the signals. */
+	book->signals[SIG_WORKBOOK_CHANGED] = NULL;
 
-  /* Set up the notebook */
-  gdk_threads_enter ();
-  book->gtk_notebook = gtk_notebook_new ();
+	/* Set up the notebook */
+	gdk_threads_enter ();
+	book->gtk_notebook = gtk_notebook_new ();
   
-  GtkNotebook * notebook = GTK_NOTEBOOK (book->gtk_notebook);
+	GtkNotebook * notebook = GTK_NOTEBOOK (book->gtk_notebook);
 
-  gtk_notebook_set_tab_pos (notebook, GTK_POS_BOTTOM);
-  gtk_notebook_popup_enable (notebook);
-  gtk_notebook_set_show_tabs (notebook, TRUE);
-  gtk_notebook_set_show_border (notebook, TRUE);
-  gtk_widget_set_usize (book->gtk_notebook, 1024, 768);
-  gtk_widget_show_all (book->gtk_notebook);
-  gdk_threads_leave ();
+	gtk_notebook_set_tab_pos (notebook, GTK_POS_BOTTOM);
+	gtk_notebook_popup_enable (notebook);
+	gtk_notebook_set_show_tabs (notebook, TRUE);
+	gtk_notebook_set_show_border (notebook, TRUE);
+	gtk_widget_set_usize (book->gtk_notebook, 1024, 768);
+	gtk_widget_show_all (book->gtk_notebook);
+	gdk_threads_leave ();
 
-  /* Members */
-  book->sheet_first = book->sheet_last = NULL;
-  book->next = book->prev = NULL;
-  book->focus_sheet = NULL;
-  book->gtk_window = window;
-  book->filename = g_strdup (filename);
+	/* Members */
+	book->sheet_first = book->sheet_last = NULL;
+	book->next = book->prev = NULL;
+	book->focus_sheet = NULL;
+	book->gtk_window = window;
+	book->filename = g_strdup (filename);
     
-  /* Methods */
-  book->destroy = workbook_method_destroy;
-  book->add_new_sheet = workbook_method_addnewsheet;
-  book->get_sheet = workbook_method_get_sheet;
-  book->remove_sheet = workbook_method_remove_sheet;
-  book->move_sheet_index = workbook_method_move_sheet_index;
-  book->move_sheet = workbook_method_move_sheet;
+	/* Methods */
+	book->destroy = workbook_method_destroy;
+	book->add_new_sheet = workbook_method_addnewsheet;
+	book->get_sheet = workbook_method_get_sheet;
+	book->remove_sheet = workbook_method_remove_sheet;
+	book->move_sheet_index = workbook_method_move_sheet_index;
+	book->move_sheet = workbook_method_move_sheet;
 
-  return book;
+	return book;
 }
 
 /* @description: This method destroys the Workbook object and all of the
@@ -258,19 +253,19 @@ workbook_object_init (GtkWidget * window, const gchar * filename)
 static void
 workbook_method_destroy (Workbook * book)
 {
-  ASSERT (book != NULL);
+	ASSERT (book != NULL);
 
-  /* Wrap anything up here. */
-  Sheet * current = book->sheet_first, * next = NULL;
-  while (current)
-    {
+	/* Wrap anything up here. */
+	Sheet * current = book->sheet_first, * next = NULL;
+	while (current)
+	{
       next = current->next;
       current->destroy (current);
       current = next;
-    }
+	}
 
-  UNLINK_OBJECT (book);
-  workbook_object_free (book);
+	UNLINK_OBJECT (book);
+	workbook_object_free (book);
 }
 
 /* @description: This method frees the memory that the Workbook object has 
@@ -279,11 +274,11 @@ workbook_method_destroy (Workbook * book)
 static Workbook *
 workbook_object_free (Workbook * book)
 {
-  ASSERT (book != NULL);
+	ASSERT (book != NULL);
 
-  book->sheet_first = book->sheet_last = NULL;
+	book->sheet_first = book->sheet_last = NULL;
 
-  FREE (book->filename);
-  FREE (book);
-  return book;
+	FREE (book->filename);
+	FREE (book);
+	return book;
 }
