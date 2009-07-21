@@ -209,15 +209,13 @@ sheet_method_load (Sheet * sheet, const gchar * filepath)
 {
 	ASSERT (sheet != NULL);
 
-	if (IS_NULLSTR (filepath))
-	{
+	if (IS_NULLSTR (filepath)) {
       g_warning ("%s: filepath cannot be a NULL string", __FUNCTION__);
       return FALSE;
 	}
 
 	FILE * fp = NULL;
-	if ((fp = fopen (filepath, "rb")) == NULL)
-	{
+	if ((fp = fopen (filepath, "rb")) == NULL) {
       g_warning ("%s: failed opening file '%s' for reading", 
 					  __FUNCTION__,
 					  filepath);
@@ -225,14 +223,14 @@ sheet_method_load (Sheet * sheet, const gchar * filepath)
 	}
 
 	gdk_threads_enter ();
+	
 	GtkSheet * gtksheet = GTK_SHEET (sheet->gtk_sheet);
 	struct geometryFileHeader header = {-1,-1,-1};
 	struct geometryFileEntry entry = {-1,-1,-1};
  
 	fread ((void *)&header, sizeof (struct geometryFileHeader), 1, fp);
 
-	if (header.fileVersion != GEOMETRY_FILE_VERSION)
-	{
+	if (header.fileVersion != GEOMETRY_FILE_VERSION) {
       g_warning ("Geometry file version %d is not accepted. (%d)",
 					  header.fileVersion, GEOMETRY_FILE_VERSION);
       FCLOSE (fp);
@@ -272,19 +270,16 @@ sheet_method_load (Sheet * sheet, const gchar * filepath)
 }
 
 static gboolean
-sheet_method_save (Sheet * sheet, const gchar * filepath)
-{
+sheet_method_save (Sheet * sheet, const gchar * filepath) {
 	ASSERT (sheet != NULL);
 
-	if (IS_NULLSTR (filepath))
-	{
+	if (IS_NULLSTR (filepath)) {
       g_warning ("%s: filepath cannot be a NULL string", __FUNCTION__);
       return FALSE;
 	}
 
 	FILE * fp = NULL;
-	if ((fp = fopen (filepath, "wb")) == NULL)
-	{
+	if ((fp = fopen (filepath, "wb")) == NULL) {
       g_warning ("%s: failed opening file '%s' for writing", 
 					  __FUNCTION__, 
 					  filepath);
@@ -292,33 +287,29 @@ sheet_method_save (Sheet * sheet, const gchar * filepath)
 	}
   
 	gdk_threads_enter ();
+
 	GtkSheetCell *** data = GTK_SHEET (sheet->gtk_sheet)->data;
-	struct geometryFileHeader header =
-		{
-			GEOMETRY_FILE_VERSION,
-			GTK_SHEET (sheet->gtk_sheet)->maxallocrow,
-			GTK_SHEET (sheet->gtk_sheet)->maxalloccol
-		};
+	struct geometryFileHeader header = {
+		GEOMETRY_FILE_VERSION,
+		GTK_SHEET (sheet->gtk_sheet)->maxallocrow,
+		GTK_SHEET (sheet->gtk_sheet)->maxalloccol
+	};
 
 	fwrite ((void *)&header, sizeof(struct geometryFileHeader), 1, fp);
 
-	for (gint ii = 0; ii <= header.maxRow; ii++)
-	{
-      for (gint jj = 0; jj <= header.maxColumn; jj++)
-		{
+	for (gint ii = 0; ii <= header.maxRow; ii++) {
+      for (gint jj = 0; jj <= header.maxColumn; jj++) {
 			GtkSheetCell * cell = data[ii][jj];
 
-			if (!IS_NULL (cell) && !IS_NULLSTR(cell->text))
-			{
-				struct geometryFileEntry entry =
-					{
-						cell->row,
-						cell->col,
-						strlen (cell->text),
-						cell->attributes->is_visible,
-						cell->attributes->is_editable,
-						cell->attributes->justification
-					};
+			if (!IS_NULL (cell) && !IS_NULLSTR(cell->text)) {
+				struct geometryFileEntry entry = {
+					cell->row,
+					cell->col,
+					strlen (cell->text),
+					cell->attributes->is_visible,
+					cell->attributes->is_editable,
+					cell->attributes->justification
+				};
 
 				entry.cellForeground.pixel = cell->attributes->foreground.pixel;
 				entry.cellForeground.red = cell->attributes->foreground.red;
@@ -346,8 +337,7 @@ sheet_method_save (Sheet * sheet, const gchar * filepath)
    @sheet: A pointer to the Sheet object.
    @attention: The attention level. */
 static void 
-sheet_method_set_attention (Sheet * sheet, gint attention)
-{
+sheet_method_set_attention (Sheet * sheet, gint attention) {
 	ASSERT (sheet != NULL);
 	gdk_threads_enter ();
 
@@ -365,8 +355,7 @@ sheet_method_set_attention (Sheet * sheet, gint attention)
 /* @description: This method destroys the Sheet object.
    @sheet: A pointer to the object that will be destroyed. */
 static void
-sheet_method_destroy (Sheet * sheet)
-{
+sheet_method_destroy (Sheet * sheet) {
 	ASSERT (sheet != NULL);
 	gdk_threads_enter ();
 
@@ -381,8 +370,7 @@ sheet_method_destroy (Sheet * sheet)
    object. This should only be called from sheet->destroy()
    @sheet: A pointer to the Sheet object that will be freed. */
 static void
-sheet_object_free (Sheet * sheet)
-{
+sheet_object_free (Sheet * sheet) {
 	ASSERT (sheet != NULL);
 
 	FREE (sheet->name);
@@ -393,8 +381,7 @@ sheet_object_free (Sheet * sheet)
 static void
 sheet_method_apply_cellrange (Sheet * sheet, 
 										const GtkSheetRange * range,
-										const CellAttributes * attrib)
-{
+										const CellAttributes * attrib) {
 	ASSERT (sheet != NULL);
 	g_return_if_fail (range != NULL);
 	g_return_if_fail (attrib != NULL);
@@ -410,15 +397,14 @@ sheet_method_apply_cellrow (Sheet * sheet,
 									 gint size) {
 	ASSERT (sheet != NULL);
 	g_return_if_fail (array != NULL);
-
+	gdk_threads_enter();
+	
 	GtkSheet * gtksheet = GTK_SHEET (sheet->gtk_sheet);
 	GtkSheetCell ** cell;
 	Cell * item;
 
 	if (row > gtksheet->maxrow || row < 0) return;
 	if (size > gtksheet->maxcol || size < 0) return;
-
-	gdk_threads_enter();	
 
 	for (int col = 0; col < size; col++) {
 		item = array[col]; 
@@ -455,10 +441,9 @@ sheet_method_apply_cellarray (Sheet * sheet,
 {
 	ASSERT (sheet != NULL);
 	g_return_if_fail (array != NULL);
-
-	GtkSheet * gtksheet = GTK_SHEET (sheet->gtk_sheet);
-
 	gdk_threads_enter ();
+	
+	GtkSheet * gtksheet = GTK_SHEET (sheet->gtk_sheet);
 
 	/* We'll see how this performs for now. In the future we may want to go
 		directly into the GtkSheet structures to get a little more performance
@@ -498,7 +483,6 @@ sheet_method_apply_cell (Sheet * sheet, const Cell * cell)
 {
 	ASSERT (sheet != NULL);
 	g_return_if_fail (cell != NULL);
-
 	gdk_threads_enter ();
 
 	if (sheet->has_focus == FALSE)
@@ -591,8 +575,8 @@ sheet_method_set_cell (Sheet * sheet,
 							  const gchar * value)
 {
 	ASSERT (sheet != NULL);
-
 	gdk_threads_enter ();
+
 	if (sheet->has_focus == FALSE)
 		sheet->notices++;
 	gtk_sheet_set_cell (GTK_SHEET (sheet->gtk_sheet), 
@@ -600,5 +584,6 @@ sheet_method_set_cell (Sheet * sheet,
 							  col, 
 							  GTK_JUSTIFY_LEFT, 
 							  value);
+
 	gdk_threads_leave ();
 }

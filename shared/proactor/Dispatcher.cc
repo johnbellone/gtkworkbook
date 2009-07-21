@@ -28,27 +28,34 @@ namespace proactor {
    
 	bool
 	Dispatcher::addWorker (Worker * w) {
+		this->workers.lock();
+		
 		WorkerListType::iterator it = std::find (this->workers.begin(),
 															  this->workers.end(),
 															  w);
 		if (it == this->workers.end()) {
 			this->workers.push_back (w);
+			this->workers.unlock();
 			return w->start();
       }
+		this->workers.unlock();
 		return false;
 	}
   
 	bool
 	Dispatcher::removeWorker (Worker * w) {
+		this->workers.lock();
+		
 		WorkerListType::iterator it = std::find (this->workers.begin(),
 															  this->workers.end(),
 															  w);
-
-		if (it == this->workers.end())
-			return false;
-  
-		this->workers.erase (it);
-		return true;
+		bool result = false;
+		if (it != this->workers.end()) {
+			this->workers.erase (it);
+			result = true;
+		}
+		this->workers.unlock();
+		return result;
 	}
 
 } // end of namesapce

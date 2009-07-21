@@ -44,8 +44,6 @@ AppendProcessId (const gchar * pre) {
 static void
 GotoDialogResponseCallback (GtkWidget * dialog, gint response, gpointer data) {
 	Largefile * lf = (Largefile *)data;
-
-	gdk_threads_enter();
 	
 	if (response == GTK_RESPONSE_OK) {
 		GList * children = gtk_container_get_children ( GTK_CONTAINER (GTK_DIALOG(dialog)->vbox) );
@@ -60,8 +58,6 @@ GotoDialogResponseCallback (GtkWidget * dialog, gint response, gpointer data) {
 	}
 	
 	gtk_widget_hide_all (dialog);
-
-	gdk_threads_leave();
 }
 
 static gint
