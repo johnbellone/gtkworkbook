@@ -92,7 +92,6 @@ namespace largefile {
 
 	void *
 	CsvParser::run (void * null) {
-		this->running = true;
 		std::queue<std::string> queue;
 		struct csv_parser csv;
 		struct csv_column column = {sheet,
@@ -108,7 +107,7 @@ namespace largefile {
 			return NULL;
 		}
 
-		while (this->running == true) {
+		while (this->isRunning() == true) {
 			if (this->inputQueue.size() > 0) {
 	
 				// Lock, copy, clear, unlock. - Free this up.
@@ -121,7 +120,7 @@ namespace largefile {
 					std::string buf = queue.front(); queue.pop();
 					size_t bytes = buf.length();
 
-					if (this->running == false)
+					if (this->isRunning() == false)
 						break;
 
 					if ((bytes = csv_parse (&csv, buf.c_str(), bytes, cb1, cb2, &column)) == bytes) {
@@ -133,10 +132,14 @@ namespace largefile {
 
 					csv_fini (&csv, cb1, cb2, &column);
 
+					gdk_threads_enter ();
+					
 					sheet->apply_row (sheet,
 											this->fields,
 											column.row - 1,
 											this->sizeOfFields);
+
+					gdk_threads_leave ();
 
 					if (column.row >= (column.sheet)->max_rows)
 						column.row = 0;

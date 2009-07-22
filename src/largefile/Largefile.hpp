@@ -38,9 +38,9 @@ namespace largefile {
 		Largefile (Application * appstate, Handle * platform);
 		virtual ~Largefile (void);
 
-		bool open_file (Sheet * sheet, const std::string & filename);
-		bool exit_file (const std::string & filename);
-		bool read (Sheet * sheet, off64_t start, off64_t N);
+		bool OpenFile (Sheet * sheet, const std::string & filename);
+		bool CloseFile (const std::string & filename);
+		bool Read (Sheet * sheet, off64_t start, off64_t N);
 	};
 
 }

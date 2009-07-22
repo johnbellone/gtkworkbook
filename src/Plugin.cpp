@@ -46,7 +46,7 @@ Plugin::open_plugin (Application * appstate, const std::string filename) {
 
 	// Grab the main method from the plugin so we can execute to get an object back.
 	Plugin_Main plugin_main;
-	if ((plugin_main = (Plugin_Main)LIBRARY_SYM(platform->handle, "plugin_main")) == NULL) {
+	if ((plugin_main = (Plugin_Main)LIBRARY_SYM(platform->handle, "PluginFactoryCreate")) == NULL) {
 		fprintf (stderr, "%s\n", LIBRARY_ERROR());
 		exit(1);
 	}

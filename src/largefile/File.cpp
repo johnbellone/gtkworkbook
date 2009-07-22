@@ -34,23 +34,23 @@ namespace largefile {
 
 	FileDispatcher::~FileDispatcher (void) {
 		if (this->fp != NULL)
-			this->close();
+			this->Close ();
 	}
 
 	void
-	FileDispatcher::read (off64_t start, off64_t N) {
+	FileDispatcher::Read (off64_t start, off64_t N) {
 		LineReader * reader = new LineReader (this, this->fp, this->marks, start, N);
 		this->addWorker (reader);
 	}
 
 	void
-	FileDispatcher::index (void) {
+	FileDispatcher::Index (void) {
 		LineIndexer * indexer = new LineIndexer (this, this->fp, this->marks);
 		this->addWorker (indexer);
 	}
 
 	bool
-	FileDispatcher::open (const std::string & filename) {
+	FileDispatcher::OpenFile (const std::string & filename) {
 		if (filename.length() == 0)
 			return false;
 
@@ -82,7 +82,7 @@ namespace largefile {
 	}
 
 	bool 
-	FileDispatcher::close (void) {
+	FileDispatcher::Close (void) {
 		concurrent::ScopedMemoryLock mutex ((unsigned long int)this->fp);
 		if (this->fp == NULL)
 			return false;
@@ -94,15 +94,13 @@ namespace largefile {
   
 	void *
 	FileDispatcher::run (void * null) {
-		this->running = true;
-
-		this->index();
+		this->Index();
 		
-		while (this->running == true) {
+		while (this->isRunning() == true) {
 			this->inputQueue.lock();
       
 			while (this->inputQueue.size() > 0) {
-				if (this->running == false)
+				if (this->isRunning() == false)
 					break;
 
 				this->pro->onReadComplete (this->inputQueue.pop());
@@ -129,7 +127,6 @@ namespace largefile {
 
 	void *
 	LineIndexer::run (void * null) {
-		this->running = true;
 		int ch, index = 0;
 		off64_t cursor = 0, count = 0, byte_beg = 0;
 
@@ -164,7 +161,6 @@ namespace largefile {
 
 		std::cout<<"ms: "<<((((end.tv_sec-start.tv_sec) * 1000) + ((end.tv_usec-start.tv_usec)/1000.0)) + 0.5)<<"\n";
 		
-		this->running = false;
 		this->dispatcher->removeWorker (this);
 		return NULL;
 	}
@@ -186,7 +182,6 @@ namespace largefile {
 
 	void *
 	LineReader::run (void * null) {
-		this->running = false;
 		char buf[4096];
 
 		concurrent::ScopedMemoryLock mutex ((unsigned long int)this->fp, true);
@@ -220,7 +215,6 @@ namespace largefile {
 
 		fseeko64 (this->fp, start, SEEK_SET);
 		
-		this->running = false;
 		this->dispatcher->removeWorker (this);
 		return NULL;
 	}

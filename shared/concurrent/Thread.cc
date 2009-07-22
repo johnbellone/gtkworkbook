@@ -25,7 +25,11 @@ namespace concurrent {
 
 	static void *
 	thread_run (void * runner) {
-		void * rvalue = ((IRunnable *)runner)->run (NULL);
+		IRunnable * thread = (IRunnable *)runner;
+
+		thread->setRunning(true);
+		void * rvalue = thread->run (NULL);
+		thread->setRunning(false);
 		return rvalue;
 	}
 
@@ -53,15 +57,15 @@ namespace concurrent {
 	}
 
 	Thread::~Thread (void) {
-		if (this->running == true) {
-			this->running = false;
+		if (this->isRunning() == true) {
+			this->setRunning(false);
 			this->join();
 		}
 	}
 
 	void 
 	Thread::interrupt (void) {
-		this->running = false;
+		this->setRunning(false);
 		pthread_cancel (this->thread);
 		pthread_detach (this->thread);
 	}
@@ -73,7 +77,7 @@ namespace concurrent {
 
 	void * 
 	Thread::stop (void) {
-		this->running = false;
+		this->setRunning(false);
 		return this->join();
 	}
 
@@ -91,10 +95,8 @@ namespace concurrent {
 
 	bool 
 	Thread::start (void) {
-		if (this->running == true)
+		if (this->isRunning() == true)
 			return false;
-
-		this->running = true;
 		
 		if (this->runner != NULL) {
 			if (pthread_create (&this->thread,
@@ -110,7 +112,6 @@ namespace concurrent {
 									  this))
 				return false;
 		}
-
 		return true;
 	}
 
@@ -123,7 +124,8 @@ namespace concurrent {
 	}
 
 	void *
-	Thread::run (void *null) {
+	Thread::run (void * null) {
+		std::cerr << "Thread::run : null runner\n";
 		pthread_exit (null);
 	}
 

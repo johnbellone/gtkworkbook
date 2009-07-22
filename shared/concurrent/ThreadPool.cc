@@ -27,9 +27,7 @@ namespace concurrent {
 
   void *
   ThreadPool::Task::run (void * null) {
-    this->running = true;
-
-    while (this->running == true) {
+	  while (this->isRunning() == true) {
 		 if (this->pool->isRunning() == false)
 			 break;
       

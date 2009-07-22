@@ -16,25 +16,29 @@
    License along with the library; if not, write to the Free Software
    Foundation, Inc., 51 Franklin Street, Fifth Floor Boston, MA 02110-1301 USA
 */
-#ifndef HPP_CONCURRENT_RUNNABLE
-#define HPP_CONCURRENT_RUNNABLE
-
-#include "Mutex.hpp"
+#include "Runnable.hpp"
 
 namespace concurrent {
+	IRunnable::IRunnable (void)
+		: running(false) {
+	}
 
-	class IRunnable {
-	private:
-		RecursiveMutex mutex;
-		volatile bool running;
-	public:
-		IRunnable (void);
-		virtual ~IRunnable (void);
+	IRunnable::~IRunnable (void) {
+	}
 
-		virtual void * run (void *) = 0;
-  
-		bool isRunning (void);
-		void setRunning (bool r);
-	};
+	bool
+	IRunnable::isRunning (void) {
+		bool result;
+		this->mutex.lock();
+		result = this->running;
+		this->mutex.unlock();
+		return result;
+	}
+
+	void
+	IRunnable::setRunning (bool r) {
+		this->mutex.lock();
+		this->running = r;
+		this->mutex.unlock();
+	}
 }
-#endif

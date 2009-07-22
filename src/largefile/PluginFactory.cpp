@@ -30,9 +30,6 @@ static void
 CSVOpenDialogCallback (GtkWidget * w, gpointer data) {
 	GtkWidget * open_dialog = NULL;
 	Largefile * lf = (Largefile *)data;
-
-	gdk_threads_enter();
-	
 	open_dialog = gtk_file_chooser_dialog_new ("Open CSV File",
 															 GTK_WINDOW (lf->app()->gtkwindow()),
 															 GTK_FILE_CHOOSER_ACTION_OPEN,
@@ -51,7 +48,7 @@ CSVOpenDialogCallback (GtkWidget * w, gpointer data) {
 			g_warning ("Failed adding new sheet because one already exists");
 		}
 		else {
-			if (lf->open_file (sheet, filename) == true) {
+			if (lf->OpenFile (sheet, filename) == true) {
 				// STUB: Do something magical.
 			}
 			else {
@@ -63,7 +60,6 @@ CSVOpenDialogCallback (GtkWidget * w, gpointer data) {
 	}
 
 	gtk_widget_destroy (open_dialog);
-	gdk_threads_leave();
 }
 
 static GtkWidget *
@@ -100,17 +96,13 @@ BuildNotebookLayout (Application * app, Largefile * lf) {
 
 extern "C" {
   Plugin *
-  plugin_main (Application * appstate, Handle * platform) {
+  PluginFactoryCreate (Application * appstate, Handle * platform) {
     ASSERT (appstate != NULL);
     ASSERT (platform != NULL);
 	 Largefile * lf = new Largefile (appstate, platform);
-
-	 gdk_threads_enter();
 	 
 	 GtkWidget * box = BuildNotebookLayout (appstate, lf);
 	 gtk_widget_show (box);
-
-	 gdk_threads_leave();
     return lf;
   }
 } 

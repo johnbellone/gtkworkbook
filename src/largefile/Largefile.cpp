@@ -51,7 +51,7 @@ GotoDialogResponseCallback (GtkWidget * dialog, gint response, gpointer data) {
 		const gchar * value = gtk_entry_get_text ( GTK_ENTRY (entry) );
 
 		if (value && *value != '\0') {
-			lf->read (lf->workbook()->focus_sheet, atol (value) - 1, 1000);
+			lf->Read (lf->workbook()->focus_sheet, atol (value) - 1, 1000);
 		}
 
 		gtk_entry_set_text (GTK_ENTRY (entry), "");
@@ -62,6 +62,7 @@ GotoDialogResponseCallback (GtkWidget * dialog, gint response, gpointer data) {
 
 static gint
 GtkKeypressCallback (GtkWidget * window, GdkEventKey * event, gpointer data) {
+	gint result = FALSE;
 	static GtkWidget * goto_dialog = NULL;
 	Largefile * lf = (Largefile *)data;
 	Workbook * wb = lf->workbook();
@@ -69,8 +70,6 @@ GtkKeypressCallback (GtkWidget * window, GdkEventKey * event, gpointer data) {
 
 	// Only create the dialog the first time we run this method. 
 	if (goto_dialog == NULL) {
-		gdk_threads_enter ();
-		
 		goto_dialog = gtk_dialog_new_with_buttons ("Goto position ", GTK_WINDOW (window),
 																 (GtkDialogFlags) (GTK_DIALOG_MODAL | GTK_DIALOG_NO_SEPARATOR),
 																 GTK_STOCK_OK,
@@ -87,8 +86,6 @@ GtkKeypressCallback (GtkWidget * window, GdkEventKey * event, gpointer data) {
 		gtk_box_pack_start (GTK_BOX (box), entry, TRUE, TRUE, 0);
 				
 		gtk_widget_show_all (box);
-
-		gdk_threads_leave();
 		
 		g_signal_connect (G_OBJECT (goto_dialog), "response", G_CALLBACK (GotoDialogResponseCallback), lf);
 		
@@ -104,30 +101,30 @@ GtkKeypressCallback (GtkWidget * window, GdkEventKey * event, gpointer data) {
 	switch (event->keyval) {
 		case GDK_F1: {
 			if (sheet != NULL) {
-				gdk_threads_enter();
 				gtk_widget_show_all (goto_dialog);
-				gdk_threads_leave();
 			}
 		}
 		break;
 		
 		case GDK_Page_Up: {
-			lf->read(sheet, cursor, 100);
+			lf->Read (sheet, cursor, 100);
 			cursor += 100;
 		}
-		return TRUE;
-
+		result = TRUE;
+		break;
+		
 		case GDK_Page_Down: {
 			if (cursor <= 100)
 				cursor = 0;
 			else
 				cursor -= 100;
 			
-			lf->read(sheet, cursor, 100);
+			lf->Read (sheet, cursor, 100);
 		}
-		return TRUE;
+		result = TRUE;
+		break;
 	}
-	return FALSE;
+	return result;
 }
 
 Largefile::Largefile (Application * appstate, Handle * platform)
@@ -160,7 +157,7 @@ Largefile::~Largefile (void) {
 }
 
 bool
-Largefile::read (Sheet * sheet, off64_t start, off64_t N) {
+Largefile::Read (Sheet * sheet, off64_t start, off64_t N) {
 	this->lock();
 	std::string key = sheet->name;
 	
@@ -171,13 +168,13 @@ Largefile::read (Sheet * sheet, off64_t start, off64_t N) {
 	}
 
 	FileDispatcher * fd = it->second;
-	fd->read (start, N);
+	fd->Read (start, N);
 	this->unlock();
 	return true;
 }
 
 bool
-Largefile::open_file (Sheet * sheet, const std::string & filename) {
+Largefile::OpenFile (Sheet * sheet, const std::string & filename) {
 	this->lock();
 	
 	int fdEventId = proactor::Event::uniqueEventId();
@@ -190,7 +187,7 @@ Largefile::open_file (Sheet * sheet, const std::string & filename) {
 		return false;
 	}
 
-	if (fd->open (filename) == false) {
+	if (fd->OpenFile (filename) == false) {
 		g_critical ("Failed opening %s", filename.c_str());
 		this->unlock();
 		return false;
@@ -209,7 +206,7 @@ Largefile::open_file (Sheet * sheet, const std::string & filename) {
 }
 
 bool
-Largefile::exit_file (const std::string & filename) {
+Largefile::CloseFile (const std::string & filename) {
 	this->lock();
 	
 	FilenameMap::iterator it = this->mapping.find(filename);

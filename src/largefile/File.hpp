@@ -45,12 +45,12 @@ namespace largefile {
 		FileDispatcher (int e, proactor::Proactor * pro);
 		virtual ~FileDispatcher (void);
 
-		bool open (const std::string & filename);
-		bool close (void);
+		bool OpenFile (const std::string & filename);
+		bool Close (void);
 		void * run (void * null);
 
-		void read (off64_t start, off64_t N);
-		void index (void);
+		void Read (off64_t start, off64_t N);
+		void Index (void);
 
 		inline bool isIndexed(void) const { return (this->marks[LINE_INDEX_MAX-1].line != -1); }
 	};

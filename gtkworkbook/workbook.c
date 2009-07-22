@@ -49,9 +49,7 @@ workbook_open (GtkWidget * window, const gchar * filename)
 		At this point we would load up the configuration files for the styles,
 		sheets and plugins to be loaded then this would all be executed here. */
 
-	gdk_threads_enter();
 	Workbook * book = workbook_object_init (window, filename);
-	gdk_threads_leave();
 	
 	return book;
 }
@@ -136,12 +134,10 @@ workbook_method_remove_sheet (Workbook * wb, Sheet * sheet)
 		/* Remove the sheet from the GtkNotebook */
 		if (it == sheet)
       {
-			gdk_threads_enter ();
 			gint page = gtk_notebook_page_num (GTK_NOTEBOOK (wb->gtk_notebook),
 														  sheet->gtk_box);
 			gtk_notebook_remove_page (GTK_NOTEBOOK (wb->gtk_notebook), page); 
 			gtk_widget_queue_draw (wb->gtk_notebook);
-			gdk_threads_leave ();
 			return;
       }
 	}
@@ -159,11 +155,9 @@ workbook_method_remove_sheet (Workbook * wb, Sheet * sheet)
 static gboolean
 workbook_method_move_sheet_index (Workbook * wb, Sheet * sheet, gint index)
 {
-	gdk_threads_enter ();
 	gtk_notebook_reorder_child (GTK_NOTEBOOK (wb->gtk_notebook),
 										 sheet->gtk_box,
 										 index);
-	gdk_threads_leave ();
 	return TRUE;
 }
 
@@ -186,8 +180,6 @@ workbook_method_move_sheet (Workbook * wb,
 					  sheet->name, wb->filename);
       return FALSE;
 	}
-
-	gdk_threads_enter ();
 	
 	gint page = gtk_notebook_page_num (GTK_NOTEBOOK (wb->gtk_notebook),
 												  sh->gtk_box);
@@ -204,7 +196,6 @@ workbook_method_move_sheet (Workbook * wb,
 	gtk_notebook_reorder_child (GTK_NOTEBOOK (wb->gtk_notebook),
 										 sheet->gtk_box,
 										 page);
-	gdk_threads_leave ();
 	return TRUE;
 }
 

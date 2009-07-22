@@ -119,13 +119,9 @@ Sheet *
 sheet_new (Workbook * book, const gchar * label, gint rows, gint columns)
 {
 	ASSERT (book != NULL);
-
-	gdk_threads_enter();
 	
 	Sheet * sheet = sheet_object_init (book, label, rows, columns);
 
-	gdk_threads_leave();
-	
 	/* STUB: Perform anything that is based on a style here. */
 
 	return sheet;
@@ -221,8 +217,6 @@ sheet_method_load (Sheet * sheet, const gchar * filepath)
 					  filepath);
       return FALSE;
 	}
-
-	gdk_threads_enter ();
 	
 	GtkSheet * gtksheet = GTK_SHEET (sheet->gtk_sheet);
 	struct geometryFileHeader header = {-1,-1,-1};
@@ -234,8 +228,7 @@ sheet_method_load (Sheet * sheet, const gchar * filepath)
       g_warning ("Geometry file version %d is not accepted. (%d)",
 					  header.fileVersion, GEOMETRY_FILE_VERSION);
       FCLOSE (fp);
-      gdk_threads_leave ();
-      return FALSE;
+		return FALSE;
 	}
 
 	while (fread ((void *)&entry, sizeof (struct geometryFileEntry), 1, fp) > 0)
@@ -265,7 +258,6 @@ sheet_method_load (Sheet * sheet, const gchar * filepath)
 	}
 
 	FCLOSE (fp);
-	gdk_threads_leave ();
 	return TRUE;
 }
 
@@ -285,8 +277,6 @@ sheet_method_save (Sheet * sheet, const gchar * filepath) {
 					  filepath);
       return FALSE;
 	}
-  
-	gdk_threads_enter ();
 
 	GtkSheetCell *** data = GTK_SHEET (sheet->gtk_sheet)->data;
 	struct geometryFileHeader header = {
@@ -329,7 +319,6 @@ sheet_method_save (Sheet * sheet, const gchar * filepath) {
 	}
 
 	FCLOSE (fp);
-	gdk_threads_leave ();
 	return TRUE;
 }
 
@@ -339,7 +328,6 @@ sheet_method_save (Sheet * sheet, const gchar * filepath) {
 static void 
 sheet_method_set_attention (Sheet * sheet, gint attention) {
 	ASSERT (sheet != NULL);
-	gdk_threads_enter ();
 
 	sheet->attention = attention;
 
@@ -348,8 +336,6 @@ sheet_method_set_attention (Sheet * sheet, gint attention) {
 	if ((sheet->has_focus == FALSE) && (sheet->notices > 0)) {
       
 	}
-
-	gdk_threads_leave ();
 }
 
 /* @description: This method destroys the Sheet object.
@@ -357,13 +343,10 @@ sheet_method_set_attention (Sheet * sheet, gint attention) {
 static void
 sheet_method_destroy (Sheet * sheet) {
 	ASSERT (sheet != NULL);
-	gdk_threads_enter ();
 
 	DOUBLE_UNLINK (sheet);
 
 	sheet_object_free (sheet);
-
-	gdk_threads_leave ();
 }
 
 /* @description: This method frees the memory that was used by the Sheet
@@ -385,9 +368,6 @@ sheet_method_apply_cellrange (Sheet * sheet,
 	ASSERT (sheet != NULL);
 	g_return_if_fail (range != NULL);
 	g_return_if_fail (attrib != NULL);
-	gdk_threads_enter ();
-
-	gdk_threads_leave ();
 }
 
 static void
@@ -397,7 +377,6 @@ sheet_method_apply_cellrow (Sheet * sheet,
 									 gint size) {
 	ASSERT (sheet != NULL);
 	g_return_if_fail (array != NULL);
-	gdk_threads_enter();
 	
 	GtkSheet * gtksheet = GTK_SHEET (sheet->gtk_sheet);
 	GtkSheetCell ** cell;
@@ -430,8 +409,6 @@ sheet_method_apply_cellrow (Sheet * sheet,
 
 		item->value->str[0] = item->attributes.bgcolor->str[0] = item->attributes.fgcolor->str[0] = 0;
 	}
-	
-	gdk_threads_leave();
 }
 
 static void
@@ -441,7 +418,6 @@ sheet_method_apply_cellarray (Sheet * sheet,
 {
 	ASSERT (sheet != NULL);
 	g_return_if_fail (array != NULL);
-	gdk_threads_enter ();
 	
 	GtkSheet * gtksheet = GTK_SHEET (sheet->gtk_sheet);
 
@@ -469,8 +445,6 @@ sheet_method_apply_cellarray (Sheet * sheet,
 
 		cell->value->str[0] = cell->attributes.bgcolor->str[0] = cell->attributes.fgcolor->str[0] = 0;
 	}
-
-	gdk_threads_leave ();
 }
 
 /* @description: This method applies the settings from a Cell object into the
@@ -483,7 +457,6 @@ sheet_method_apply_cell (Sheet * sheet, const Cell * cell)
 {
 	ASSERT (sheet != NULL);
 	g_return_if_fail (cell != NULL);
-	gdk_threads_enter ();
 
 	if (sheet->has_focus == FALSE)
 		sheet->notices++;
@@ -493,7 +466,6 @@ sheet_method_apply_cell (Sheet * sheet, const Cell * cell)
 							  cell->column,
 							  cell->attributes.justification,
 							  cell->value->str);
-	gdk_threads_leave ();
 
 	if (!IS_NULLSTR (cell->attributes.bgcolor->str))
 		sheet->range_set_background (sheet, 
@@ -527,14 +499,12 @@ sheet_method_range_set_background (Sheet * sheet,
 
 	/* The color needs to be taken from the colormap; there is an alternative
 		way to do this if we use #rgb or #rrggbb formats. */
-	gdk_threads_enter ();
 	gdk_color_parse (desc, &color);
 	gdk_color_alloc (gtk_widget_get_colormap (sheet->gtk_sheet),
 						  &color);
   
 	gtk_sheet_range_set_background (GTK_SHEET (sheet->gtk_sheet),
 											  range, &color);
-	gdk_threads_leave ();
 }
 
 /* @description: This method changes the foreground color over a range of
@@ -553,14 +523,12 @@ sheet_method_range_set_foreground (Sheet * sheet,
   
    /* The color needs to be taken from the colormap; there is an alternative
 		way to do this if we use #rgb or #rrggbb formats. */
-	gdk_threads_enter ();
 	gdk_color_parse (desc, &color);
 	gdk_color_alloc (gtk_widget_get_colormap (sheet->gtk_sheet),
 						  &color);
       
 	gtk_sheet_range_set_foreground (GTK_SHEET (sheet->gtk_sheet),
 											  range, &color);
-	gdk_threads_leave ();
 }
 
 /* @description: This method manually sets a GtkSheet cell's value. It does
@@ -575,7 +543,6 @@ sheet_method_set_cell (Sheet * sheet,
 							  const gchar * value)
 {
 	ASSERT (sheet != NULL);
-	gdk_threads_enter ();
 
 	if (sheet->has_focus == FALSE)
 		sheet->notices++;
@@ -584,6 +551,4 @@ sheet_method_set_cell (Sheet * sheet,
 							  col, 
 							  GTK_JUSTIFY_LEFT, 
 							  value);
-
-	gdk_threads_leave ();
 }

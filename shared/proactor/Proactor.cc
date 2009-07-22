@@ -116,18 +116,12 @@ namespace proactor {
 
 	void *
 	Proactor::run (void * null) {
-		this->running = true;
-  
 		WorkerListType::iterator it;
 
-		while (this->running == true) {
+		while (this->isRunning() == true) {
 			this->events.lock();
 
 			while (this->events.size() > 0) {
-
-				if (this->running == false)
-					break;
-
 				Event e = this->events.pop();
 
 				// We are throwing events with no handlers to catch them.
@@ -138,10 +132,6 @@ namespace proactor {
 				it = this->eventsToHandlers[e.id]->begin();
 	  
 				while (it != this->eventsToHandlers[e.id]->end()) {
-
-					if (this->running == false)
-						break;
-
 					Worker * j = (*it);
 	      
 					j->pushInputQueue (e.buf);

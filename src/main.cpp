@@ -21,8 +21,10 @@
 
 int
 main (int argc, char ** argv) {
-	if (!g_thread_supported())
+	if (!g_thread_supported()) {
 		g_thread_init (NULL);
+		gdk_threads_init();
+	}
 	
 	Application app (argc, &argv);
 	return app.run();
