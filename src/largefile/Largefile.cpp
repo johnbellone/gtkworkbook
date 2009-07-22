@@ -60,6 +60,42 @@ GotoDialogResponseCallback (GtkWidget * dialog, gint response, gpointer data) {
 	gtk_widget_hide_all (dialog);
 }
 
+static void
+CsvOpenDialogCallback (GtkWidget * w, gpointer data) {
+	GtkWidget * open_dialog = NULL;
+	Largefile * lf = (Largefile *)data;
+	open_dialog = gtk_file_chooser_dialog_new ("Open CSV File",
+															 GTK_WINDOW (lf->app()->gtkwindow()),
+															 GTK_FILE_CHOOSER_ACTION_OPEN,
+															 GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
+															 GTK_STOCK_OPEN, GTK_RESPONSE_ACCEPT,
+															 NULL);  
+  
+	gtk_file_chooser_set_do_overwrite_confirmation (GTK_FILE_CHOOSER (open_dialog), TRUE);
+				
+	if (gtk_dialog_run (GTK_DIALOG (open_dialog)) == GTK_RESPONSE_ACCEPT) {
+		gchar * filename = gtk_file_chooser_get_filename (GTK_FILE_CHOOSER (open_dialog));
+
+		Sheet * sheet = lf->workbook()->add_new_sheet (lf->workbook(), filename, 1000, 20);
+
+		if (sheet == NULL) {
+			g_warning ("Failed adding new sheet because one already exists");
+		}
+		else {
+			if (lf->OpenFile (sheet, filename) == true) {
+				// STUB: Do something magical.
+			}
+			else {
+				// STUB: The opening of the file failed. Do something meaningful here.
+			}
+		}
+		
+		g_free (filename);
+	}
+
+	gtk_widget_destroy (open_dialog);
+}
+
 static gint
 GtkKeypressCallback (GtkWidget * window, GdkEventKey * event, gpointer data) {
 	gint result = FALSE;
@@ -154,6 +190,46 @@ Largefile::Largefile (Application * appstate, Handle * platform)
 }
 
 Largefile::~Largefile (void) {
+}
+
+GtkWidget *
+Largefile::CreateStatusBar (void) {
+	GtkWidget * statusbar = gtk_statusbar_new();
+
+	return statusbar;
+}
+
+GtkWidget *
+Largefile::CreateMainMenu (void) {
+	GtkWidget * lfmenu = gtk_menu_new();
+	GtkWidget * lfmenu_item = gtk_menu_item_new_with_label ("Largefile");
+	GtkWidget * lfmenu_open = gtk_image_menu_item_new_from_stock (GTK_STOCK_OPEN, NULL);
+	gtk_menu_shell_append (GTK_MENU_SHELL (lfmenu), lfmenu_open);
+
+	g_signal_connect (G_OBJECT (lfmenu_open), "activate",
+							G_CALLBACK (CsvOpenDialogCallback), this);
+	
+	gtk_menu_item_set_submenu (GTK_MENU_ITEM (lfmenu_item), lfmenu);
+	return lfmenu_item;
+}
+
+GtkWidget *
+Largefile::BuildLayout (void) {
+	GtkWidget * gtk_menu = this->app()->gtkmenu();
+	GtkWidget * statusbar = this->CreateStatusBar();
+	GtkWidget * box = gtk_vbox_new (FALSE, 0);
+	GtkWidget * largefile_menu = this->CreateMainMenu();
+	gtk_menu_shell_append (GTK_MENU_SHELL (gtk_menu), largefile_menu);
+
+	gtk_box_pack_end (GTK_BOX (box), wb->gtk_notebook, FALSE, FALSE, 0);
+
+	wb->signals[SIG_WORKBOOK_CHANGED] = this->app()->signals[Application::SHEET_CHANGED];
+	wb->gtk_box = box;
+
+	gtk_box_pack_start (GTK_BOX (this->app()->gtkvbox()), box, FALSE, FALSE, 0);
+
+	this->statusbar = statusbar;
+	return box;
 }
 
 bool

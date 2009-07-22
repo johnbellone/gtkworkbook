@@ -34,10 +34,16 @@ namespace largefile {
 	
 		FILE * pktlog;
 		FilenameMap mapping;
+
+		void CreateMainMenu (void);
+		void CreateStatusBar (void);
 	public:
 		Largefile (Application * appstate, Handle * platform);
 		virtual ~Largefile (void);
 
+		void BuildLayout (void);
+		void CreateMainMenu (void);
+		
 		bool OpenFile (Sheet * sheet, const std::string & filename);
 		bool CloseFile (const std::string & filename);
 		bool Read (Sheet * sheet, off64_t start, off64_t N);

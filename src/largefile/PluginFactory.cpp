@@ -24,84 +24,14 @@
 #include "../config.h"
 #include "../Application.hpp"
 
-using largefile::Largefile;
-
-static void
-CSVOpenDialogCallback (GtkWidget * w, gpointer data) {
-	GtkWidget * open_dialog = NULL;
-	Largefile * lf = (Largefile *)data;
-	open_dialog = gtk_file_chooser_dialog_new ("Open CSV File",
-															 GTK_WINDOW (lf->app()->gtkwindow()),
-															 GTK_FILE_CHOOSER_ACTION_OPEN,
-															 GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
-															 GTK_STOCK_OPEN, GTK_RESPONSE_ACCEPT,
-															 NULL);  
-  
-	gtk_file_chooser_set_do_overwrite_confirmation (GTK_FILE_CHOOSER (open_dialog), TRUE);
-				
-	if (gtk_dialog_run (GTK_DIALOG (open_dialog)) == GTK_RESPONSE_ACCEPT) {
-		gchar * filename = gtk_file_chooser_get_filename (GTK_FILE_CHOOSER (open_dialog));
-
-		Sheet * sheet = lf->workbook()->add_new_sheet (lf->workbook(), filename, 1000, 20);
-
-		if (sheet == NULL) {
-			g_warning ("Failed adding new sheet because one already exists");
-		}
-		else {
-			if (lf->OpenFile (sheet, filename) == true) {
-				// STUB: Do something magical.
-			}
-			else {
-				// STUB: The opening of the file failed. Do something meaningful here.
-			}
-		}
-		
-		g_free (filename);
-	}
-
-	gtk_widget_destroy (open_dialog);
-}
-
-static GtkWidget *
-CreateLargefileMenu (Application * appstate, Largefile * lf, GtkWidget * window) {
-	GtkWidget * lfmenu = gtk_menu_new();
-	GtkWidget * lfmenu_item = gtk_menu_item_new_with_label ("Largefile");
-	GtkWidget * lfmenu_open = gtk_image_menu_item_new_from_stock (GTK_STOCK_OPEN, NULL);
-	gtk_menu_shell_append (GTK_MENU_SHELL (lfmenu), lfmenu_open);
-
-	g_signal_connect (G_OBJECT (lfmenu_open), "activate",
-							G_CALLBACK (CSVOpenDialogCallback), lf);
-	
-	gtk_menu_item_set_submenu (GTK_MENU_ITEM (lfmenu_item), lfmenu);
-	return lfmenu_item;
-}
-
-static GtkWidget *
-BuildNotebookLayout (Application * app, Largefile * lf) {
-	Workbook * wb = lf->workbook();
-	GtkWidget * gtk_menu = app->gtkmenu();
-	GtkWidget * box = gtk_vbox_new (FALSE, 0);
-	GtkWidget * largefile_menu = CreateLargefileMenu (app, lf, app->gtkwindow());
-	gtk_menu_shell_append (GTK_MENU_SHELL (gtk_menu), largefile_menu);
-
-	gtk_box_pack_end (GTK_BOX (box), wb->gtk_notebook, FALSE, FALSE, 0);
-
-	wb->signals[SIG_WORKBOOK_CHANGED] = app->signals[Application::SHEET_CHANGED];
-	wb->gtk_box = box;
-
-	gtk_box_pack_start (GTK_BOX (app->gtkvbox()), box, FALSE, FALSE, 0);
-
-	return box;
-}
-
 extern "C" {
   Plugin *
   PluginFactoryCreate (Application * appstate, Handle * platform) {
     ASSERT (appstate != NULL);
     ASSERT (platform != NULL);
-	 Largefile * lf = new Largefile (appstate, platform);
-	 
-	 GtkWidget * box = BuildNotebookLayout (appstate, lf);
+	 largefile::Largefile * lf = new largefile::Largefile (appstate, platform);
+	 GtkWidget * box = lf->BuildLayout();
+
 	 gtk_widget_show (box);
     return lf;
   }
