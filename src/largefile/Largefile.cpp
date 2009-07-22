@@ -47,7 +47,7 @@ GotoDialogResponseCallback (GtkWidget * dialog, gint response, gpointer data) {
 	
 	if (response == GTK_RESPONSE_OK) {
 		GList * children = gtk_container_get_children ( GTK_CONTAINER (GTK_DIALOG(dialog)->vbox) );
-		GtkWidget * entry = (GtkWidget *)g_list_nth_data (children, 0);
+		GtkWidget * entry = (GtkWidget *)g_list_nth_data (children, 1);
 		const gchar * value = gtk_entry_get_text ( GTK_ENTRY (entry) );
 
 		if (value && *value != '\0') {
@@ -113,21 +113,38 @@ GtkKeypressCallback (GtkWidget * window, GdkEventKey * event, gpointer data) {
 																 GTK_STOCK_CANCEL,
 																 GTK_RESPONSE_CANCEL,
 																 NULL);
+
+		GtkWidget * gtk_frame = gtk_frame_new ("Jump Options");
+		GtkWidget * gtk_hbox = gtk_hbox_new (FALSE, 0);
+		GtkWidget * gtk_radiobyte = gtk_radio_button_new_with_label (NULL,
+																						 "Offset");
+		GtkWidget * gtk_radioline = gtk_radio_button_new_with_label_from_widget (GTK_RADIO_BUTTON (gtk_radiobyte),
+																						  "Line");
+		GtkWidget * gtk_radioperc = gtk_radio_button_new_with_label_from_widget (GTK_RADIO_BUTTON (gtk_radiobyte),
+																						  "Percent");
+		GSList * group = gtk_radio_button_get_group (GTK_RADIO_BUTTON (gtk_radiobyte));
 		
 		GtkWidget * box = GTK_DIALOG (goto_dialog)->vbox;
 		GtkWidget * entry = gtk_entry_new_with_max_length (30);
+		
+		gtk_container_add (GTK_CONTAINER (gtk_hbox), gtk_radiobyte);
+		gtk_container_add (GTK_CONTAINER (gtk_hbox), gtk_radioline);
+		gtk_container_add (GTK_CONTAINER (gtk_hbox), gtk_radioperc);
+		gtk_container_add (GTK_CONTAINER (gtk_frame), gtk_hbox);
 
 		gtk_box_set_spacing (GTK_BOX (box), 18);
 			
-		gtk_box_pack_start (GTK_BOX (box), entry, TRUE, TRUE, 0);
-				
+		gtk_box_pack_start (GTK_BOX (box), gtk_frame, TRUE, TRUE, 0);
+		gtk_box_pack_end (GTK_BOX (box), entry, TRUE, TRUE, 0);
+								
 		gtk_widget_show_all (box);
 		
 		g_signal_connect (G_OBJECT (goto_dialog), "response", G_CALLBACK (GotoDialogResponseCallback), lf);
 		
 		g_signal_connect (G_OBJECT (goto_dialog), "delete-event",
 								G_CALLBACK (gtk_widget_hide_on_delete), NULL);
-		
+
+		lf->setGotoDialogRadioGroup (group);
 	}	
 	
 	//	int vposition = std::abs((int)gtksheet->vadjustment->value);
@@ -167,6 +184,8 @@ Largefile::Largefile (Application * appstate, Handle * platform)
 	: Plugin (appstate, platform) {
 
 	this->wb = workbook_open (appstate->gtkwindow(), "largefile");
+	this->gtk_statusbar = NULL;
+	this->gtk_togglegroup = NULL;
 	
 	ConfigPair * logpath =
 		appstate->config()->get_pair (appstate->config(), "largefile", "log", "path");
@@ -195,7 +214,12 @@ Largefile::~Largefile (void) {
 GtkWidget *
 Largefile::CreateStatusBar (void) {
 	GtkWidget * statusbar = gtk_statusbar_new();
+	
+	gtk_statusbar_push (GTK_STATUSBAR (statusbar),
+							  gtk_statusbar_get_context_id(GTK_STATUSBAR (statusbar), "Ready"),
+							  "Ready");
 
+	gtk_widget_show (statusbar);
 	return statusbar;
 }
 
@@ -216,19 +240,19 @@ Largefile::CreateMainMenu (void) {
 GtkWidget *
 Largefile::BuildLayout (void) {
 	GtkWidget * gtk_menu = this->app()->gtkmenu();
-	GtkWidget * statusbar = this->CreateStatusBar();
+	//	GtkWidget * statusbar = this->CreateStatusBar();
 	GtkWidget * box = gtk_vbox_new (FALSE, 0);
 	GtkWidget * largefile_menu = this->CreateMainMenu();
 	gtk_menu_shell_append (GTK_MENU_SHELL (gtk_menu), largefile_menu);
 
-	gtk_box_pack_end (GTK_BOX (box), wb->gtk_notebook, FALSE, FALSE, 0);
-
 	wb->signals[SIG_WORKBOOK_CHANGED] = this->app()->signals[Application::SHEET_CHANGED];
 	wb->gtk_box = box;
 
+	//	gtk_box_pack_end (GTK_BOX (box), statusbar, FALSE, FALSE, 0);
+	gtk_box_pack_start (GTK_BOX (box), wb->gtk_notebook, FALSE, FALSE, 0);
 	gtk_box_pack_start (GTK_BOX (this->app()->gtkvbox()), box, FALSE, FALSE, 0);
 
-	this->statusbar = statusbar;
+	//	this->gtk_statusbar = statusbar;
 	return box;
 }
 

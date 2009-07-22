@@ -31,22 +31,27 @@ namespace largefile {
 	class Largefile : public Plugin {
 	private:
 		typedef std::map<std::string,FileDispatcher *> FilenameMap;
-	
+
+		GtkWidget * gtk_statusbar;
 		FILE * pktlog;
 		FilenameMap mapping;
-
-		void CreateMainMenu (void);
-		void CreateStatusBar (void);
+		GSList * gtk_togglegroup;
+		
+		GtkWidget * CreateMainMenu (void);
+		GtkWidget * CreateStatusBar (void);
 	public:
 		Largefile (Application * appstate, Handle * platform);
 		virtual ~Largefile (void);
 
-		void BuildLayout (void);
-		void CreateMainMenu (void);
-		
+		GtkWidget * BuildLayout (void);
+				
 		bool OpenFile (Sheet * sheet, const std::string & filename);
 		bool CloseFile (const std::string & filename);
 		bool Read (Sheet * sheet, off64_t start, off64_t N);
+
+		inline GtkWidget * statusbar (void) { return this->gtk_statusbar; }
+		inline void setGotoDialogRadioGroup (GSList * group) { this->gtk_togglegroup = group; }
+		inline GSList * togglegroup (void) { return this->gtk_togglegroup; }
 	};
 
 }

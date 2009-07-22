@@ -93,7 +93,7 @@ namespace largefile {
 	}
   
 	void *
-	FileDispatcher::run (void * null) {
+	FileDispatcher::run (void * data) {
 		this->Index();
 		
 		while (this->isRunning() == true) {
