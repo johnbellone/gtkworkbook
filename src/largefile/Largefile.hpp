@@ -49,9 +49,9 @@ namespace largefile {
 				
 		bool OpenFile (Sheet * sheet, const std::string & filename);
 		bool CloseFile (const std::string & filename);
-		bool ReadLine (Sheet * sheet, off64_t start, off64_t N);
-		bool ReadOffset (Sheet * sheet, off64_t start, off64_t N);
-		bool ReadPercentage (Sheet * sheet, guint percent, off64_t N);
+		bool Readline (Sheet * sheet, off64_t start, off64_t N);
+		bool Readoffset (Sheet * sheet, off64_t offset, off64_t N);
+		bool Readpercent (Sheet * sheet, guint percent, off64_t N);
 		
 		inline GtkWidget * statusbar (void) { return this->gtk_statusbar; }
 		inline void setGotoDialogRadioGroup (GSList * group) { this->gtk_togglegroup = group; }

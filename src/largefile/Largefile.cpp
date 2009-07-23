@@ -55,13 +55,15 @@ GotoDialogResponseCallback (GtkWidget * gtkdialog, gint response, gpointer data)
 			switch (dialog->active_index) {
 				// byte offset
 				case 0: {
-					std::cerr << "offset\n";
+					dialog->lf->Readoffset (dialog->lf->workbook()->focus_sheet,
+													atol (value),
+													1000);
 				}
 				break;
 
 				// absolute line
 				case 1: {
-					dialog->lf->ReadLine (dialog->lf->workbook()->focus_sheet,
+					dialog->lf->Readline (dialog->lf->workbook()->focus_sheet,
 												 atol (value) - 1,
 												 1000);
 				}
@@ -69,7 +71,9 @@ GotoDialogResponseCallback (GtkWidget * gtkdialog, gint response, gpointer data)
 
 				// relative percentage
 				case 2: {
-					std::cerr << "percentage\n";
+					dialog->lf->Readpercent (dialog->lf->workbook()->focus_sheet,
+													 atol (value),
+													 1000);
 				}
 				break;
 			}
@@ -97,7 +101,6 @@ GotoDialogRadioToggleCallback (GtkToggleButton * button, gpointer data) {
 			dialog->active_index = 2;
 		}
 	}
-	std::cout<<"toggled\n";
 }
 
 static void
@@ -214,7 +217,7 @@ GtkKeypressCallback (GtkWidget * window, GdkEventKey * event, gpointer data) {
 		break;
 		
 		case GDK_Page_Up: {
-			lf->ReadLine (sheet, cursor, 100);
+			lf->Readline (sheet, cursor, 100);
 			cursor += 100;
 		}
 		result = TRUE;
@@ -226,7 +229,7 @@ GtkKeypressCallback (GtkWidget * window, GdkEventKey * event, gpointer data) {
 			else
 				cursor -= 100;
 			
-			lf->ReadLine (sheet, cursor, 100);
+			lf->Readline (sheet, cursor, 100);
 		}
 		result = TRUE;
 		break;
@@ -311,7 +314,7 @@ Largefile::BuildLayout (void) {
 }
 
 bool
-Largefile::ReadLine (Sheet * sheet, off64_t start, off64_t N) {
+Largefile::Readline (Sheet * sheet, off64_t start, off64_t N) {
 	this->lock();
 	std::string key = sheet->name;
 	
@@ -322,9 +325,43 @@ Largefile::ReadLine (Sheet * sheet, off64_t start, off64_t N) {
 	}
 
 	FileDispatcher * fd = it->second;
-	fd->Readline (start, N);
+	bool result = fd->Readline (start, N);
 	this->unlock();
-	return true;
+	return result;
+}
+
+bool
+Largefile::Readoffset (Sheet * sheet, off64_t offset, off64_t N) {
+	this->lock();
+	std::string key = sheet->name;
+	
+	FilenameMap::iterator it = this->mapping.find (key);
+	if (it == this->mapping.end()) {
+		this->unlock();
+		return false;
+	}
+
+	FileDispatcher * fd = it->second;
+	bool result = fd->Readoffset (offset, N);
+	this->unlock();
+	return result;
+}
+
+bool
+Largefile::Readpercent (Sheet * sheet, guint percent, off64_t N) {
+	this->lock();
+	std::string key = sheet->name;
+	
+	FilenameMap::iterator it = this->mapping.find (key);
+	if (it == this->mapping.end()) {
+		this->unlock();
+		return false;
+	}
+
+	FileDispatcher * fd = it->second;
+	bool result = fd->Readpercent (percent, N);
+	this->unlock();
+	return result;
 }
 
 bool

@@ -49,15 +49,15 @@ namespace largefile {
 		bool Close (void);
 		void * run (void * null);
 
-		void Readline (off64_t start, off64_t N);
-		void Readoffset (off64_t start, off64_t N);
-		void Readpercent (guint percent, off64_t N);
+		bool Readline (off64_t start, off64_t N);
+		bool Readoffset (off64_t offset, off64_t N);
+		bool Readpercent (guint percent, off64_t N);
 		
 		void Index (void);
 
 		inline bool isIndexed(void) const { return (this->marks[LINE_INDEX_MAX-1].line != -1); }
 	};
-
+	
 	class LineIndexer : public proactor::Worker {
 	private:
 		LineIndex * marks;
@@ -71,6 +71,21 @@ namespace largefile {
 		void * run (void * null);
 	};
 
+	class OffsetReader : public proactor::Worker {
+	private:
+		FILE * fp;
+		off64_t numberOfLinesToRead;
+		off64_t startOffset;
+	public:
+		OffsetReader (proactor::InputDispatcher * d,
+						  FILE * fp,
+						  off64_t offset,
+						  off64_t N);
+		virtual ~OffsetReader (void);
+
+		void * run (void * null);
+	};
+	
 	class LineReader : public proactor::Worker {
 	private:
 		FILE * fp;

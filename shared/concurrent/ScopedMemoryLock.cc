@@ -19,100 +19,105 @@
 #include "ScopedMemoryLock.hpp"
 
 namespace concurrent {
-  ScopedMemoryLock::AddressToMutexMap ScopedMemoryLock::addressMutexMap;
+	ScopedMemoryLock::AddressToMutexMap ScopedMemoryLock::addressMutexMap;
 
-  ScopedMemoryLock::ScopedMemoryLock (unsigned long address, bool engage) {
-    this->hasLock = false;
-    this->address = address;
-    this->mutex = NULL;
+	ScopedMemoryLock::ScopedMemoryLock (unsigned long address, bool engage) {
+		this->hasLock = false;
+		this->address = address;
+		this->mutex = NULL;
 
-    ScopedMemoryLock::addressMutexMap.lock();
-    AddressToMutexMap::iterator it = addressMutexMap.find (this->address);
-    ScopedMemoryLock::addressMutexMap.unlock();
+		ScopedMemoryLock::addressMutexMap.lock();
+		AddressToMutexMap::iterator it = addressMutexMap.find (this->address);
+		ScopedMemoryLock::addressMutexMap.unlock();
 
-    /* Now the reason behind keeping this pointer to NULL is to force a coredump. Because
-       if someone is passing an address that has not been formally added via the static method
-       call then that means it is very unlikely that they are not removing it either. We do
-       not want a memory leak therefore this seems like the best method. */
-    if (it != ScopedMemoryLock::addressMutexMap.end()) 
-      this->mutex = it->second;
+		/* Now the reason behind keeping this pointer to NULL is to force a coredump. Because
+			if someone is passing an address that has not been formally added via the static method
+			call then that means it is very unlikely that they are not removing it either. We do
+			not want a memory leak therefore this seems like the best method. */
+		if (it != ScopedMemoryLock::addressMutexMap.end()) 
+			this->mutex = it->second;
 
-    if (engage == true)
-      this->lock();
-  }
+		if (engage == true)
+			this->lock();
+	}
 
-  ScopedMemoryLock::~ScopedMemoryLock (void) {
-    if (this->hasLock == true)
-      unlock();
-  }
+	ScopedMemoryLock::~ScopedMemoryLock (void) {
+		if (this->hasLock == true)
+			unlock();
+	}
 
-  void
-  ScopedMemoryLock::lock (void) {
-    this->mutex->lock();
-    this->hasLock = true;
-  }
+	void
+	ScopedMemoryLock::lock (void) {
+		this->mutex->lock();
+		this->hasLock = true;
+	}
 
-  void 
-  ScopedMemoryLock::unlock (void) {
-    this->mutex->unlock();
-    this->hasLock = false;
-  }
+	void 
+	ScopedMemoryLock::unlock (void) {
+		this->mutex->unlock();
+		this->hasLock = false;
+	}
 
-  bool
-  ScopedMemoryLock::trylock (void) {
-    this->hasLock = this->mutex->trylock();
-    return this->hasLock;
-  }
+	bool
+	ScopedMemoryLock::isLocked (void) const {
+		return this->hasLock;
+	}
+	
+	bool
+	ScopedMemoryLock::trylock (void) {
+		this->hasLock = (this->hasLock==true) ? true : this->mutex->trylock();
+		return this->hasLock;
+	}
 
-  bool
-  ScopedMemoryLock::remove (void) {
-    if (this->hasLock == false) {
-      return false;
-    }
+	bool
+	ScopedMemoryLock::remove (void) {
+		if (this->hasLock == false) {
+			return false;
+		}
 
-    addressMutexMap.lock();
+		addressMutexMap.lock();
 
-    bool result = false;
-    AddressToMutexMap::iterator it = addressMutexMap.find (this->address);
-    if (it != addressMutexMap.end()) {
-      delete it->second;
-      addressMutexMap.end();
-      result = true;
-    }
+		bool result = false;
+		AddressToMutexMap::iterator it = addressMutexMap.find (this->address);
+		if (it != addressMutexMap.end()) {
+			delete it->second;
+			addressMutexMap.end();
+			result = true;
+		}
     
-    addressMutexMap.unlock();
-    return result;
-  }
+		addressMutexMap.unlock();
+		return result;
+	}
 
-  bool 
-  ScopedMemoryLock::addMemoryLock (unsigned long address) {
-    addressMutexMap.lock();
+	bool 
+	ScopedMemoryLock::addMemoryLock (unsigned long address) {
+		addressMutexMap.lock();
 
-    bool result = false;
-    AddressToMutexMap::iterator it = addressMutexMap.find (address);
-    if (it == addressMutexMap.end()) {
-      addressMutexMap.insert (std::make_pair (address, new Mutex));
-      result = true;
-    }
+		bool result = false;
+		AddressToMutexMap::iterator it = addressMutexMap.find (address);
+		if (it == addressMutexMap.end()) {
+			addressMutexMap.insert (std::make_pair (address, new Mutex));
+			result = true;
+		}
 
-    addressMutexMap.unlock();
-    return result;
-  }
+		addressMutexMap.unlock();
+		return result;
+	}
 
-  bool 
-  ScopedMemoryLock::removeMemoryLock (unsigned long address) {
-    addressMutexMap.lock();
+	bool 
+	ScopedMemoryLock::removeMemoryLock (unsigned long address) {
+		addressMutexMap.lock();
 
-    bool result = false;
-    AddressToMutexMap::iterator it = addressMutexMap.find (address);
-    if (it != addressMutexMap.end()) {
-      delete it->second;
-      addressMutexMap.erase(it);
-      result = true;
-    }
+		bool result = false;
+		AddressToMutexMap::iterator it = addressMutexMap.find (address);
+		if (it != addressMutexMap.end()) {
+			delete it->second;
+			addressMutexMap.erase(it);
+			result = true;
+		}
 
-    addressMutexMap.unlock();
-    return result;
-  }
+		addressMutexMap.unlock();
+		return result;
+	}
 
 } // end of namespace

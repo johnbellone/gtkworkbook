@@ -37,10 +37,31 @@ namespace largefile {
 			this->Close ();
 	}
 
-	void
+	bool
 	FileDispatcher::Readline (off64_t start, off64_t N) {
+		if (start > this->marks[100].byte) return false;
+		
 		LineReader * reader = new LineReader (this, this->fp, this->marks, start, N);
 		this->addWorker (reader);
+		return true;
+	}
+
+	bool
+	FileDispatcher::Readoffset (off64_t offset, off64_t N) {
+		if (offset > this->marks[100].byte) return false;
+		
+		OffsetReader * reader = new OffsetReader (this, this->fp, offset, N);
+		this->addWorker (reader);
+		return true;
+	}
+
+	bool
+	FileDispatcher::Readpercent (guint percent, off64_t N) {
+		if (percent > 100) return false;
+
+		OffsetReader * reader = new OffsetReader (this, this->fp, this->marks[percent].byte, N);
+		this->addWorker (reader);
+		return true;
 	}
 
 	void
@@ -94,6 +115,7 @@ namespace largefile {
   
 	void *
 	FileDispatcher::run (void * data) {
+		this->Readline(0,1000);
 		this->Index();
 		
 		while (this->isRunning() == true) {
@@ -113,7 +135,53 @@ namespace largefile {
 
 		return NULL;
 	}
-  
+
+	OffsetReader::OffsetReader (proactor::InputDispatcher * d,
+										 FILE * fp,
+										 off64_t offset,
+										 off64_t N) {
+		this->fp = fp;
+		this->startOffset = offset;
+		this->numberOfLinesToRead = N;
+		this->dispatcher = d;
+	}
+
+	OffsetReader::~OffsetReader (void) {
+	}
+	
+	void *
+	OffsetReader::run (void * null) {
+		char buf[4096];
+		int ch;
+		
+		concurrent::ScopedMemoryLock mutex ((unsigned long int)this->fp, true);
+		off64_t start = ftello64 (this->fp);
+		off64_t offset = 0;
+		off64_t read_max = this->numberOfLinesToRead;
+
+		fseeko64 (this->fp, this->startOffset, SEEK_SET);
+		
+		// We need to go to the beginning of the (next) line.
+		while ((ch = fgetc (this->fp)) == EOF) {
+			if (ch == '\n') {
+				offset = ftello64 (this->fp);
+				break;
+			}
+		}
+			
+		for (off64_t ii = 0; ii < read_max; ii++) {
+			if (std::fgets (buf, 4096, this->fp) == NULL)		
+				break;
+      
+			this->dispatcher->onReadComplete (buf);
+		}
+
+		fseeko64 (this->fp, start, SEEK_SET);
+		
+		this->dispatcher->removeWorker (this);
+		return NULL;
+	}
+		
 	LineIndexer::LineIndexer (proactor::InputDispatcher * d,
 									  FILE * fp,
 									  LineIndex * marks) {
@@ -129,18 +197,19 @@ namespace largefile {
 	LineIndexer::run (void * null) {
 		int ch, index = 0;
 		off64_t cursor = 0, count = 0, byte_beg = 0;
-
-		struct timeval start, end;
 		
-		concurrent::ScopedMemoryLock mutex ((unsigned long int)this->fp, true);
-
-		gettimeofday(&start, NULL);
+		concurrent::ScopedMemoryLock mutex ((unsigned long int)this->fp, false);
 		
 		// We need to get a absoltue line number from the relative position. We're not
 		// going to get away from having to sequentially read this file in, but once we
 		// have line numbers we can jump throughout the file pretty quickly.
 		while ((ch = fgetc(this->fp)) != EOF) {
-			
+
+			// Crude implementation of a spinlock. Wait while another thread is doing
+			// some reading before we begin indexing again.
+			while (mutex.trylock() == false)
+				Thread::sleep(5);
+						
 			if (ch=='\n') count++;
 
   			if (this->marks[index].byte == cursor++) {
@@ -148,18 +217,20 @@ namespace largefile {
 				this->marks[index].byte = byte_beg;
 				
 				index++;
-				
+
 				if (index == LINE_INDEX_MAX)
 					break;
-				
+
+				// While the indexer is running we want to still allow for reads on the
+				// screen. This is an easy way to give them a "minor" priority. Once a
+				// percentage of the file has been index we're going to unlock and give
+				// a healthy amount of time for a thread switch to happen.
+				mutex.unlock();
+				Thread::sleep(10);
 			}
 
 			if (ch=='\n') byte_beg = cursor + 1;
 		}
-
-		gettimeofday(&end, NULL);
-
-		std::cout<<"ms: "<<((((end.tv_sec-start.tv_sec) * 1000) + ((end.tv_usec-start.tv_usec)/1000.0)) + 0.5)<<"\n";
 		
 		this->dispatcher->removeWorker (this);
 		return NULL;
