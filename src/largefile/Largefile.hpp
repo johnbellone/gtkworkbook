@@ -25,6 +25,7 @@
 #include "../Plugin.hpp"
 #include "../Application.hpp"
 #include "../config.h"
+#include "GotoDialog.hpp"
 
 namespace largefile {
 
@@ -32,6 +33,7 @@ namespace largefile {
 	private:
 		typedef std::map<std::string,FileDispatcher *> FilenameMap;
 
+		GotoDialog goto_dialog;
 		GtkWidget * gtk_statusbar;
 		FILE * pktlog;
 		FilenameMap mapping;
@@ -47,11 +49,13 @@ namespace largefile {
 				
 		bool OpenFile (Sheet * sheet, const std::string & filename);
 		bool CloseFile (const std::string & filename);
-		bool Read (Sheet * sheet, off64_t start, off64_t N);
-
+		bool ReadLine (Sheet * sheet, off64_t start, off64_t N);
+		bool ReadOffset (Sheet * sheet, off64_t start, off64_t N);
+		bool ReadPercentage (Sheet * sheet, guint percent, off64_t N);
+		
 		inline GtkWidget * statusbar (void) { return this->gtk_statusbar; }
 		inline void setGotoDialogRadioGroup (GSList * group) { this->gtk_togglegroup = group; }
-		inline GSList * togglegroup (void) { return this->gtk_togglegroup; }
+		inline GotoDialog * gotodialog() { return &this->goto_dialog; }
 	};
 
 }

@@ -25,6 +25,7 @@
 #include <iostream>
 #include <string>
 #include <sstream>
+#include "GotoDialog.hpp"
 #include "Largefile.hpp"
 #include "File.hpp"
 #include "CsvParser.hpp"
@@ -42,22 +43,61 @@ AppendProcessId (const gchar * pre) {
 }
 
 static void
-GotoDialogResponseCallback (GtkWidget * dialog, gint response, gpointer data) {
-	Largefile * lf = (Largefile *)data;
+GotoDialogResponseCallback (GtkWidget * gtkdialog, gint response, gpointer data) {
+	GotoDialog * dialog = (GotoDialog *)data;
 	
 	if (response == GTK_RESPONSE_OK) {
-		GList * children = gtk_container_get_children ( GTK_CONTAINER (GTK_DIALOG(dialog)->vbox) );
+		GList * children = gtk_container_get_children ( GTK_CONTAINER (GTK_DIALOG(gtkdialog)->vbox) );
 		GtkWidget * entry = (GtkWidget *)g_list_nth_data (children, 1);
 		const gchar * value = gtk_entry_get_text ( GTK_ENTRY (entry) );
 
 		if (value && *value != '\0') {
-			lf->Read (lf->workbook()->focus_sheet, atol (value) - 1, 1000);
+			switch (dialog->active_index) {
+				// byte offset
+				case 0: {
+					std::cerr << "offset\n";
+				}
+				break;
+
+				// absolute line
+				case 1: {
+					dialog->lf->ReadLine (dialog->lf->workbook()->focus_sheet,
+												 atol (value) - 1,
+												 1000);
+				}
+				break;
+
+				// relative percentage
+				case 2: {
+					std::cerr << "percentage\n";
+				}
+				break;
+			}
 		}
 
 		gtk_entry_set_text (GTK_ENTRY (entry), "");
 	}
 	
-	gtk_widget_hide_all (dialog);
+	gtk_widget_hide_all (gtkdialog);
+}
+
+static void
+GotoDialogRadioToggleCallback (GtkToggleButton * button, gpointer data) {
+	GtkWidget * widget = GTK_WIDGET (button);
+	GotoDialog * dialog = (GotoDialog *)data;
+
+	if (GTK_TOGGLE_BUTTON (button)->active) {
+		if (dialog->radio_byte.widget == widget) {
+			dialog->active_index = 0;
+		}
+		else if (dialog->radio_line.widget == widget) {
+			dialog->active_index = 1;
+		}
+		else if (dialog->radio_perc.widget == widget) {
+			dialog->active_index = 2;
+		}
+	}
+	std::cout<<"toggled\n";
 }
 
 static void
@@ -99,33 +139,37 @@ CsvOpenDialogCallback (GtkWidget * w, gpointer data) {
 static gint
 GtkKeypressCallback (GtkWidget * window, GdkEventKey * event, gpointer data) {
 	gint result = FALSE;
-	static GtkWidget * goto_dialog = NULL;
 	Largefile * lf = (Largefile *)data;
+	GotoDialog * dialog = lf->gotodialog();
 	Workbook * wb = lf->workbook();
 	Sheet * sheet = wb->focus_sheet;
 
 	// Only create the dialog the first time we run this method. 
-	if (goto_dialog == NULL) {
-		goto_dialog = gtk_dialog_new_with_buttons ("Goto position ", GTK_WINDOW (window),
-																 (GtkDialogFlags) (GTK_DIALOG_MODAL | GTK_DIALOG_NO_SEPARATOR),
-																 GTK_STOCK_OK,
-																 GTK_RESPONSE_OK,
-																 GTK_STOCK_CANCEL,
-																 GTK_RESPONSE_CANCEL,
-																 NULL);
+	if (dialog->widget == NULL) {
+		dialog->lf = lf;
+		
+		dialog->widget = gtk_dialog_new_with_buttons ("Goto position ", GTK_WINDOW (window),
+																	(GtkDialogFlags) (GTK_DIALOG_MODAL | GTK_DIALOG_NO_SEPARATOR),
+																	GTK_STOCK_OK,
+																	GTK_RESPONSE_OK,
+																	GTK_STOCK_CANCEL,
+																	GTK_RESPONSE_CANCEL,
+																	NULL);
 
 		GtkWidget * gtk_frame = gtk_frame_new ("Jump Options");
 		GtkWidget * gtk_hbox = gtk_hbox_new (FALSE, 0);
-		GtkWidget * gtk_radiobyte = gtk_radio_button_new_with_label (NULL,
-																						 "Offset");
+		GtkWidget * gtk_radiobyte = gtk_radio_button_new_with_label (NULL, "Offset");
 		GtkWidget * gtk_radioline = gtk_radio_button_new_with_label_from_widget (GTK_RADIO_BUTTON (gtk_radiobyte),
 																						  "Line");
 		GtkWidget * gtk_radioperc = gtk_radio_button_new_with_label_from_widget (GTK_RADIO_BUTTON (gtk_radiobyte),
 																						  "Percent");
-		GSList * group = gtk_radio_button_get_group (GTK_RADIO_BUTTON (gtk_radiobyte));
-		
-		GtkWidget * box = GTK_DIALOG (goto_dialog)->vbox;
+		GtkWidget * box = GTK_DIALOG (dialog->widget)->vbox;
 		GtkWidget * entry = gtk_entry_new_with_max_length (30);
+
+		// Set the GotoDialog RadioButton objects to the proper pointers.
+		dialog->radio_byte.widget = gtk_radiobyte;
+		dialog->radio_line.widget = gtk_radioline;
+		dialog->radio_perc.widget = gtk_radioperc;
 		
 		gtk_container_add (GTK_CONTAINER (gtk_hbox), gtk_radiobyte);
 		gtk_container_add (GTK_CONTAINER (gtk_hbox), gtk_radioline);
@@ -138,13 +182,23 @@ GtkKeypressCallback (GtkWidget * window, GdkEventKey * event, gpointer data) {
 		gtk_box_pack_end (GTK_BOX (box), entry, TRUE, TRUE, 0);
 								
 		gtk_widget_show_all (box);
-		
-		g_signal_connect (G_OBJECT (goto_dialog), "response", G_CALLBACK (GotoDialogResponseCallback), lf);
-		
-		g_signal_connect (G_OBJECT (goto_dialog), "delete-event",
-								G_CALLBACK (gtk_widget_hide_on_delete), NULL);
 
-		lf->setGotoDialogRadioGroup (group);
+		// Connect the signals to we can do fancy switching.
+		g_signal_connect (G_OBJECT (gtk_radiobyte), "toggled",
+								G_CALLBACK (GotoDialogRadioToggleCallback),
+								dialog);
+		g_signal_connect (G_OBJECT (gtk_radioline), "toggled",
+								G_CALLBACK (GotoDialogRadioToggleCallback),
+								dialog);
+		g_signal_connect (G_OBJECT (gtk_radioperc), "toggled",
+								G_CALLBACK (GotoDialogRadioToggleCallback),
+								dialog);
+		
+		g_signal_connect (G_OBJECT (dialog->widget), "response",
+								G_CALLBACK (GotoDialogResponseCallback), dialog);
+		
+		g_signal_connect (G_OBJECT (dialog->widget), "delete-event",
+								G_CALLBACK (gtk_widget_hide_on_delete), NULL);
 	}	
 	
 	//	int vposition = std::abs((int)gtksheet->vadjustment->value);
@@ -154,13 +208,13 @@ GtkKeypressCallback (GtkWidget * window, GdkEventKey * event, gpointer data) {
 	switch (event->keyval) {
 		case GDK_F1: {
 			if (sheet != NULL) {
-				gtk_widget_show_all (goto_dialog);
+				gtk_widget_show_all (dialog->widget);
 			}
 		}
 		break;
 		
 		case GDK_Page_Up: {
-			lf->Read (sheet, cursor, 100);
+			lf->ReadLine (sheet, cursor, 100);
 			cursor += 100;
 		}
 		result = TRUE;
@@ -172,7 +226,7 @@ GtkKeypressCallback (GtkWidget * window, GdkEventKey * event, gpointer data) {
 			else
 				cursor -= 100;
 			
-			lf->Read (sheet, cursor, 100);
+			lf->ReadLine (sheet, cursor, 100);
 		}
 		result = TRUE;
 		break;
@@ -257,7 +311,7 @@ Largefile::BuildLayout (void) {
 }
 
 bool
-Largefile::Read (Sheet * sheet, off64_t start, off64_t N) {
+Largefile::ReadLine (Sheet * sheet, off64_t start, off64_t N) {
 	this->lock();
 	std::string key = sheet->name;
 	
@@ -268,7 +322,7 @@ Largefile::Read (Sheet * sheet, off64_t start, off64_t N) {
 	}
 
 	FileDispatcher * fd = it->second;
-	fd->Read (start, N);
+	fd->Readline (start, N);
 	this->unlock();
 	return true;
 }

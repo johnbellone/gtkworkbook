@@ -38,7 +38,7 @@ namespace largefile {
 	}
 
 	void
-	FileDispatcher::Read (off64_t start, off64_t N) {
+	FileDispatcher::Readline (off64_t start, off64_t N) {
 		LineReader * reader = new LineReader (this, this->fp, this->marks, start, N);
 		this->addWorker (reader);
 	}

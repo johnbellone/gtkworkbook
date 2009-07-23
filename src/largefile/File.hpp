@@ -49,7 +49,10 @@ namespace largefile {
 		bool Close (void);
 		void * run (void * null);
 
-		void Read (off64_t start, off64_t N);
+		void Readline (off64_t start, off64_t N);
+		void Readoffset (off64_t start, off64_t N);
+		void Readpercent (guint percent, off64_t N);
+		
 		void Index (void);
 
 		inline bool isIndexed(void) const { return (this->marks[LINE_INDEX_MAX-1].line != -1); }
