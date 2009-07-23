@@ -10,18 +10,15 @@ TODO for GTKWorkbook
 		  which was yanked from GtkExtra distribution. This needs to be run inside
 		  of heap profiler for testing.
 	- Priorities (before merge)
-		o Absolute line goto dialog
 		o Index indicator
 		o Panning/Paging controls
 		o Move shared library into application folder
-		o Page up, page down for panning
 		o Control + G for GOTO line
 		o Control + O for percentage offset
 		o Control + I for index up to line
 	- Priorities (after merge)
 		o Framebuffering and Caching
 		o Statistics on writing to screen, reading, and panning/paging
-		o Staging for the indexer... N percentile increments
 	- Merge
 		o Largefile merge happens into an autotools branch
 		o Final merge back into the master branch
