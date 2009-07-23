@@ -162,7 +162,7 @@ namespace largefile {
 		fseeko64 (this->fp, this->startOffset, SEEK_SET);
 		
 		// We need to go to the beginning of the (next) line.
-		while ((ch = fgetc (this->fp)) == EOF) {
+		while ((ch = fgetc (this->fp)) != EOF) {
 			if (ch == '\n') {
 				offset = ftello64 (this->fp);
 				break;
