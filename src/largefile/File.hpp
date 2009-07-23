@@ -27,7 +27,7 @@
 #include <string>
 
 #define LINE_INDEX_MAX 1001
-#define LINE_PRECISION 10000
+#define LINE_PRECISION 1000
 
 namespace largefile {
 

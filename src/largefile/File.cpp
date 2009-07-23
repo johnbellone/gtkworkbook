@@ -39,7 +39,7 @@ namespace largefile {
 
 	bool
 	FileDispatcher::Readline (off64_t start, off64_t N) {
-		if (start > this->marks[100].byte) return false;
+		if (start > this->marks[LINE_INDEX_MAX-1].byte) return false;
 		
 		LineReader * reader = new LineReader (this, this->fp, this->marks, start, N);
 		this->addWorker (reader);
@@ -48,7 +48,7 @@ namespace largefile {
 
 	bool
 	FileDispatcher::Readoffset (off64_t offset, off64_t N) {
-		if (offset > this->marks[100].byte) return false;
+		if (offset > this->marks[LINE_INDEX_MAX-1].byte) return false;
 		
 		OffsetReader * reader = new OffsetReader (this, this->fp, offset, N);
 		this->addWorker (reader);
@@ -58,8 +58,9 @@ namespace largefile {
 	bool
 	FileDispatcher::Readpercent (guint percent, off64_t N) {
 		if (percent > 100) return false;
+		if (this->marks[percent * 10].byte == -1) return false;
 
-		OffsetReader * reader = new OffsetReader (this, this->fp, this->marks[percent].byte, N);
+		OffsetReader * reader = new OffsetReader (this, this->fp, this->marks[percent * 10].byte, N);
 		this->addWorker (reader);
 		return true;
 	}
