@@ -142,18 +142,18 @@ sheet_object_init (Workbook * book,
 	/* Create the sheet containers and GtkSheet object. */
 	sheet->gtk_box = gtk_vbox_new (FALSE, 1);
 
-	GtkWidget * scrolled_window = gtk_scrolled_window_new (NULL, NULL);
-	gtk_box_pack_start (GTK_BOX (sheet->gtk_box), scrolled_window, 1,1,1);
-	gtk_scrolled_window_set_policy (GTK_SCROLLED_WINDOW (scrolled_window),
+	sheet->gtk_scrolledwindow = gtk_scrolled_window_new (NULL, NULL);
+	gtk_box_pack_start (GTK_BOX (sheet->gtk_box), sheet->gtk_scrolledwindow, 1,1,1);
+	gtk_scrolled_window_set_policy (GTK_SCROLLED_WINDOW (sheet->gtk_scrolledwindow),
 											  GTK_POLICY_AUTOMATIC,
 											  GTK_POLICY_AUTOMATIC);
-	gtk_widget_show (scrolled_window);
+	gtk_widget_show (sheet->gtk_scrolledwindow);
 
 	sheet->gtk_label = gtk_label_new (label);
   
 	sheet->gtk_sheet = gtk_sheet_new (rows, columns, label);
 	gtk_sheet_set_autoresize (GTK_SHEET (sheet->gtk_sheet), TRUE);
-	gtk_container_add (GTK_CONTAINER (scrolled_window),
+	gtk_container_add (GTK_CONTAINER (sheet->gtk_scrolledwindow),
 							 GTK_WIDGET (sheet->gtk_sheet));
 
 	/* We should be able to use sheet->gtk_box now throughout all of our

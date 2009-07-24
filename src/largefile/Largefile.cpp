@@ -204,10 +204,6 @@ GtkKeypressCallback (GtkWidget * window, GdkEventKey * event, gpointer data) {
 								G_CALLBACK (gtk_widget_hide_on_delete), NULL);
 	}	
 	
-	//	int vposition = std::abs((int)gtksheet->vadjustment->value);
-	static off64_t cursor = 0;
-	//	float N = vposition, K = 24388, V = (N/K);
-	
 	switch (event->keyval) {
 		case GDK_F1: {
 			if (sheet != NULL) {
@@ -215,28 +211,9 @@ GtkKeypressCallback (GtkWidget * window, GdkEventKey * event, gpointer data) {
 			}
 		}
 		break;
-		
-		case GDK_Page_Up: {
-			lf->Readline (sheet, cursor, 100);
-			cursor += 100;
-		}
-		result = TRUE;
-		break;
-		
-		case GDK_Page_Down: {
-			if (cursor <= 100)
-				cursor = 0;
-			else
-				cursor -= 100;
-			
-			lf->Readline (sheet, cursor, 100);
-		}
-		result = TRUE;
-		break;
 	}
 	return result;
 }
-
 Largefile::Largefile (Application * appstate, Handle * platform)
 	: Plugin (appstate, platform) {
 
