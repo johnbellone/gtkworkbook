@@ -63,7 +63,7 @@ namespace largefile {
 		LineIndex * marks;
 		FILE * fp;
 	public:
-		LineIndexer (proactor::InputDispatcher * d, 
+		LineIndexer (proactor::InputDispatcher * d,
 						 FILE * fp,
 						 LineIndex * marks);
 		virtual ~LineIndexer (void);
@@ -93,7 +93,7 @@ namespace largefile {
 		off64_t startLine;
 		LineIndex * marks;
 	public:
-		LineReader (proactor::InputDispatcher * d, 
+		LineReader (proactor::InputDispatcher * d,
 						FILE * fp,
 						LineIndex * marks,
 						off64_t start,

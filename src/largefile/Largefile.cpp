@@ -49,14 +49,16 @@ GotoDialogResponseCallback (GtkWidget * gtkdialog, gint response, gpointer data)
 	if (response == GTK_RESPONSE_OK) {
 		GList * children = gtk_container_get_children ( GTK_CONTAINER (GTK_DIALOG(gtkdialog)->vbox) );
 		GtkWidget * entry = (GtkWidget *)g_list_nth_data (children, 1);
-		const gchar * value = gtk_entry_get_text ( GTK_ENTRY (entry) );
-
-		if (value && *value != '\0') {
+		const char * entry_value = gtk_entry_get_text ( GTK_ENTRY (entry) ); 
+				
+		if (entry_value && *entry_value != '\0') {
+			long long value = atoll (entry_value);
+						
 			switch (dialog->active_index) {
 				// byte offset
 				case 0: {
 					dialog->lf->Readoffset (dialog->lf->workbook()->focus_sheet,
-													atol (value),
+													value,
 													1000);
 				}
 				break;
@@ -64,15 +66,17 @@ GotoDialogResponseCallback (GtkWidget * gtkdialog, gint response, gpointer data)
 				// absolute line
 				case 1: {
 					dialog->lf->Readline (dialog->lf->workbook()->focus_sheet,
-												 atol (value) - 1,
+												 value - 1,
 												 1000);
 				}
 				break;
 
 				// relative percentage
 				case 2: {
+					long long perc_value = (long long) (atof ( entry_value ) * 10);
+					
 					dialog->lf->Readpercent (dialog->lf->workbook()->focus_sheet,
-													 atol (value),
+													 perc_value,
 													 1000);
 				}
 				break;
@@ -118,7 +122,6 @@ CsvOpenDialogCallback (GtkWidget * w, gpointer data) {
 				
 	if (gtk_dialog_run (GTK_DIALOG (open_dialog)) == GTK_RESPONSE_ACCEPT) {
 		gchar * filename = gtk_file_chooser_get_filename (GTK_FILE_CHOOSER (open_dialog));
-
 		Sheet * sheet = lf->workbook()->add_new_sheet (lf->workbook(), filename, 1000, 20);
 
 		if (sheet == NULL) {
@@ -196,7 +199,6 @@ GtkKeypressCallback (GtkWidget * window, GdkEventKey * event, gpointer data) {
 		g_signal_connect (G_OBJECT (gtk_radioperc), "toggled",
 								G_CALLBACK (GotoDialogRadioToggleCallback),
 								dialog);
-		
 		g_signal_connect (G_OBJECT (dialog->widget), "response",
 								G_CALLBACK (GotoDialogResponseCallback), dialog);
 		
@@ -218,7 +220,6 @@ Largefile::Largefile (Application * appstate, Handle * platform)
 	: Plugin (appstate, platform) {
 
 	this->wb = workbook_open (appstate->gtkwindow(), "largefile");
-	this->gtk_statusbar = NULL;
 	this->gtk_togglegroup = NULL;
 	
 	ConfigPair * logpath =
@@ -246,18 +247,6 @@ Largefile::~Largefile (void) {
 }
 
 GtkWidget *
-Largefile::CreateStatusBar (void) {
-	GtkWidget * statusbar = gtk_statusbar_new();
-	
-	gtk_statusbar_push (GTK_STATUSBAR (statusbar),
-							  gtk_statusbar_get_context_id(GTK_STATUSBAR (statusbar), "Ready"),
-							  "Ready");
-
-	gtk_widget_show (statusbar);
-	return statusbar;
-}
-
-GtkWidget *
 Largefile::CreateMainMenu (void) {
 	GtkWidget * lfmenu = gtk_menu_new();
 	GtkWidget * lfmenu_item = gtk_menu_item_new_with_label ("Largefile");
@@ -274,19 +263,16 @@ Largefile::CreateMainMenu (void) {
 GtkWidget *
 Largefile::BuildLayout (void) {
 	GtkWidget * gtk_menu = this->app()->gtkmenu();
-	//	GtkWidget * statusbar = this->CreateStatusBar();
 	GtkWidget * box = gtk_vbox_new (FALSE, 0);
 	GtkWidget * largefile_menu = this->CreateMainMenu();
+	
 	gtk_menu_shell_append (GTK_MENU_SHELL (gtk_menu), largefile_menu);
 
 	wb->signals[SIG_WORKBOOK_CHANGED] = this->app()->signals[Application::SHEET_CHANGED];
 	wb->gtk_box = box;
 
-	//	gtk_box_pack_end (GTK_BOX (box), statusbar, FALSE, FALSE, 0);
 	gtk_box_pack_start (GTK_BOX (box), wb->gtk_notebook, FALSE, FALSE, 0);
 	gtk_box_pack_start (GTK_BOX (this->app()->gtkvbox()), box, FALSE, FALSE, 0);
-
-	//	this->gtk_statusbar = statusbar;
 	return box;
 }
 

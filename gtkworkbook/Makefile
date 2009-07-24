@@ -16,7 +16,7 @@ install:
 libgtkworkbook: ${OBJS}
 	${MD} ${PROJDIR}/lib
 	${RM} ${PROJDIR}/lib/libgtkworkbook.so.1 ${PROJDIR}/lib/libgtkworkbook.so
-	${CC} -shared -Wl,-soname,libgtkworkbook.so.1 \
+	${CC} ${CCFLAGS} -shared -Wl,-soname,libgtkworkbook.so.1 \
 	-o ${PROJDIR}/lib/libgtkworkbook.so ${OBJS} ${LIBS} \
 	-lgtkextra-x11-2.0 -ldl -gthread-2.0
 	${LN} ${PROJDIR}/lib/libgtkworkbook.so ${PROJDIR}/lib/libgtkworkbook.so.1

@@ -34,7 +34,6 @@ namespace largefile {
 		typedef std::map<std::string,FileDispatcher *> FilenameMap;
 
 		GotoDialog goto_dialog;
-		GtkWidget * gtk_statusbar;
 		FILE * pktlog;
 		FilenameMap mapping;
 		GSList * gtk_togglegroup;
@@ -53,7 +52,6 @@ namespace largefile {
 		bool Readoffset (Sheet * sheet, off64_t offset, off64_t N);
 		bool Readpercent (Sheet * sheet, guint percent, off64_t N);
 		
-		inline GtkWidget * statusbar (void) { return this->gtk_statusbar; }
 		inline void setGotoDialogRadioGroup (GSList * group) { this->gtk_togglegroup = group; }
 		inline GotoDialog * gotodialog() { return &this->goto_dialog; }
 	};

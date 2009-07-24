@@ -11,7 +11,7 @@ all: 	gtkworkbook
 	make -C largefile/ all
 
 gtkworkbook: ${OBJS}
-	${CX} -rdynamic -o ${PROJDIR}/bin/gtkworkbook ${OBJS} ${LIBS} ${LFLAGS}
+	${CX} ${CXFLAGS} -rdynamic -o ${PROJDIR}/bin/gtkworkbook ${OBJS} ${LIBS} ${LFLAGS}
 
 clean:		
 	${MD} ${OBJDIR}	

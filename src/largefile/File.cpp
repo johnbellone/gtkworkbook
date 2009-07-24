@@ -198,8 +198,13 @@ namespace largefile {
 	LineIndexer::run (void * null) {
 		int ch, index = 0;
 		off64_t cursor = 0, count = 0, byte_beg = 0;
+		struct timeval start, end;
 		
 		concurrent::ScopedMemoryLock mutex ((unsigned long int)this->fp, false);
+
+		std::cout<<"index start...";
+		
+		gettimeofday (&start, NULL);
 		
 		// We need to get a absoltue line number from the relative position. We're not
 		// going to get away from having to sequentially read this file in, but once we
@@ -211,9 +216,13 @@ namespace largefile {
 			while (mutex.trylock() == false)
 				Thread::sleep(5);
 						
-			if (ch=='\n') count++;
+			if (ch=='\n') {
+				byte_beg = cursor;
+				count++;
+			}
 
   			if (this->marks[index].byte == cursor++) {
+						
 				this->marks[index].line = count;
 				this->marks[index].byte = byte_beg;
 				
@@ -229,10 +238,12 @@ namespace largefile {
 				mutex.unlock();
 				Thread::sleep(10);
 			}
-
-			if (ch=='\n') byte_beg = cursor + 1;
 		}
-		
+
+		gettimeofday (&end, NULL);
+
+		double ms = ((((end.tv_sec-start.tv_sec) * 1000) + ((end.tv_usec-start.tv_usec)/1000.0)) + 0.5);
+		std::cout<<"index done (ms:"<<ms<<")!\n";
 		this->dispatcher->removeWorker (this);
 		return NULL;
 	}
@@ -259,16 +270,16 @@ namespace largefile {
 		concurrent::ScopedMemoryLock mutex ((unsigned long int)this->fp, true);
 		off64_t start = ftello64 (this->fp);
 		off64_t offset = 0, delta = 0;
-		off64_t read_max = this->numberOfLinesToRead;
-		
-		for (int index = 1; index < LINE_INDEX_MAX; index++) {
-			if ((this->startLine + read_max) < this->marks[index].line) {
-				delta = std::abs(this->marks[index-1].line - this->startLine);
+		off64_t read_max = this->numberOfLinesToRead, line_max = this->startLine + read_max;
+
+		for (off64_t index = 1; index < LINE_INDEX_MAX; index++) {
+			if (line_max < this->marks[index].line) {
+				delta = this->startLine - this->marks[index-1].line;
 				offset = this->marks[index-1].byte;
 				break;
 			}
 		}
-		
+						
 		fseeko64 (this->fp, offset, SEEK_SET);
 
 		// Munch lines to get to our starting point.

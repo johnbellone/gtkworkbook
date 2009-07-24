@@ -7,7 +7,7 @@ OBJS=$(patsubst %.cc,${OBJDIR}/libgtkworkbookshared/%.o,${SRCS})
 all: 	gtkworkbookshared
 
 gtkworkbookshared: ${OBJS}
-	${CX} -shared -Wl -o ${PROJDIR}/lib/libgtkworkbookshared.so ${OBJS} ${LIBS} \
+	${CX} ${CXFLAGS} -shared -Wl -o ${PROJDIR}/lib/libgtkworkbookshared.so ${OBJS} ${LIBS} \
 	-lpthread
 	${CP} ${PROJDIR}/lib/libgtkworkbookshared.so ${PROJDIR}/lib/libgtkworkbookshared.so.1
 

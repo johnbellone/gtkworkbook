@@ -9,7 +9,7 @@ _CXFLAGS= -D_LARGEFILE_SOURCE -D_LARGEFILE64_SOURCE -D_FILE_OFFSET_BITS=64
 all: 	largefile
 
 largefile: ${OBJS}
-	${CX} ${_CXFLAGS} -shared -Wl -o ${PROJDIR}/bin/largefile.so ${OBJS} ${LIBS} \
+	${CX} ${CXFLAGS} ${_CXFLAGS} -shared -Wl -o ${PROJDIR}/bin/largefile.so ${OBJS} ${LIBS} \
 	-lgthread-2.0 -lpthread -lcsv
 
 clean:		
