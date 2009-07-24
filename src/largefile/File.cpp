@@ -27,30 +27,27 @@
 namespace largefile {
 	
 	FileDispatcher::FileDispatcher (int e, proactor::Proactor * pro) {
-		this->fp = NULL;
 		this->pro = pro;
 		setEventId(e);
 	}
 
 	FileDispatcher::~FileDispatcher (void) {
-		if (this->fp != NULL)
-			this->Close ();
 	}
 
 	bool
 	FileDispatcher::Readline (off64_t start, off64_t N) {
-		if (start > this->marks[LINE_INDEX_MAX-1].byte) return false;
+		if (start > this->marks.get(LINE_INDEX_MAX-1).byte) return false;
 		
-		LineReader * reader = new LineReader (this, this->fp, this->marks, start, N);
+		LineReader * reader = new LineReader (this, this->filename, &this->marks, start, N);
 		this->addWorker (reader);
 		return true;
 	}
 
 	bool
 	FileDispatcher::Readoffset (off64_t offset, off64_t N) {
-		if (offset > this->marks[LINE_INDEX_MAX-1].byte) return false;
+		if (offset > this->marks.get(LINE_INDEX_MAX-1).byte) return false;
 		
-		OffsetReader * reader = new OffsetReader (this, this->fp, offset, N);
+		OffsetReader * reader = new OffsetReader (this, this->filename, offset, N);
 		this->addWorker (reader);
 		return true;
 	}
@@ -58,59 +55,52 @@ namespace largefile {
 	bool
 	FileDispatcher::Readpercent (guint percent, off64_t N) {
 		if (percent > 100) return false;
-		if (this->marks[percent * 10].byte == -1) return false;
+		if (this->marks.get(percent * 10).byte == -1) return false;
 
-		OffsetReader * reader = new OffsetReader (this, this->fp, this->marks[percent * 10].byte, N);
+		OffsetReader * reader = new OffsetReader (this, this->filename,
+																this->marks.get(percent * 10).byte,
+																N);
 		this->addWorker (reader);
 		return true;
 	}
 
 	void
 	FileDispatcher::Index (void) {
-		LineIndexer * indexer = new LineIndexer (this, this->fp, this->marks);
+		LineIndexer * indexer = new LineIndexer (this, this->filename, &this->marks);
 		this->addWorker (indexer);
 	}
 
 	bool
-	FileDispatcher::OpenFile (const std::string & filename) {
+	FileDispatcher::Openfile (const std::string & filename) {
 		if (filename.length() == 0)
 			return false;
-
-		if ((this->fp = fopen64 (filename.c_str(), "r")) == NULL) {
+		
+		FILE * fp = NULL;
+		if ((fp = fopen64 (filename.c_str(), "r")) == NULL) {
 			// stub: throw an error somewhere
 			return false;
 		}
 
 		// Take the relative byte position, e.g. .75 * byte_end, and we now have the a relative
 		// line at that byte position for indexing at a later point in time.
-		fseeko64 (this->fp, 0L, SEEK_END);
-		off64_t byte_end = ftello64 (this->fp);
+		fseeko64 (fp, 0L, SEEK_END);
+		off64_t byte_end = ftello64 (fp);
 
-		this->marks[0].byte = 0;
-		this->marks[0].line = 0;
+		this->marks.get(0).byte = 0;
+		this->marks.get(0).line = 0;
 		
 		// Compute fuzzy relative position, and set line to -1 for indexing.
 		for (int ii = 1; ii < LINE_INDEX_MAX; ii++) {
 			double N = ii, K = LINE_PRECISION;
-			this->marks[ii].byte = (off64_t)((N/K) * byte_end);
-			this->marks[ii].line = -1;
+			this->marks.get(ii).byte = (off64_t)((N/K) * byte_end);
+			this->marks.get(ii).line = -1;
 		}
 
-		fseeko64 (this->fp, 0L, SEEK_SET);
+		fseeko64 (fp, 0L, SEEK_SET);
+
+		fclose(fp);
 		
-		concurrent::ScopedMemoryLock::addMemoryLock ((unsigned long int)this->fp);
 		this->filename = filename;
-		return true;
-	}
-
-	bool 
-	FileDispatcher::Close (void) {
-		concurrent::ScopedMemoryLock mutex ((unsigned long int)this->fp);
-		if (this->fp == NULL)
-			return false;
-
-		fclose (this->fp); this->fp = NULL;
-		mutex.remove();
 		return true;
 	}
   
@@ -137,11 +127,45 @@ namespace largefile {
 		return NULL;
 	}
 
+	FileIndex::FileIndex (void) {
+	}
+
+	FileIndex::~FileIndex (void) {
+	}
+	
+	FileWorker::FileWorker (const std::string & filename, FileIndex * marks)
+		: marks (marks), filename (filename) {
+		this->fp = NULL;
+	}
+
+	FileWorker::~FileWorker (void) {
+		this->Closefile();
+	}
+	
+	bool
+	FileWorker::Openfile (void) {
+		if (this->fp != NULL) return false;
+
+		if ((this->fp = fopen64 (this->filename.c_str(), "r")) == NULL) {
+			// stub: throw an error somewhere
+			return false;
+		}
+		return true;
+	}
+
+	bool
+	FileWorker::Closefile (void) {
+		if (this->fp == NULL) return false;
+
+		fclose (this->fp); this->fp = NULL;
+		return true;
+	}
+	
 	OffsetReader::OffsetReader (proactor::InputDispatcher * d,
-										 FILE * fp,
+										 const std::string & filename,
 										 off64_t offset,
-										 off64_t N) {
-		this->fp = fp;
+										 off64_t N)
+		: FileWorker (filename, NULL) {
 		this->startOffset = offset;
 		this->numberOfLinesToRead = N;
 		this->dispatcher = d;
@@ -154,8 +178,13 @@ namespace largefile {
 	OffsetReader::run (void * null) {
 		char buf[4096];
 		int ch;
+
+		if (FileWorker::Openfile () == false) {
+			// STUB: throw some kind of error here; we failed opening the file.
+			g_critical ("Failed opening file descriptor inside of OffsetReader.");
+			return NULL;
+		}
 		
-		concurrent::ScopedMemoryLock mutex ((unsigned long int)this->fp, true);
 		off64_t start = ftello64 (this->fp);
 		off64_t offset = 0;
 		off64_t read_max = this->numberOfLinesToRead;
@@ -180,15 +209,15 @@ namespace largefile {
 		fseeko64 (this->fp, start, SEEK_SET);
 		
 		this->dispatcher->removeWorker (this);
+		this->Closefile();
 		return NULL;
 	}
 		
 	LineIndexer::LineIndexer (proactor::InputDispatcher * d,
-									  FILE * fp,
-									  LineIndex * marks) {
-		this->fp = fp;
+									  const std::string & filename,
+									  FileIndex * marks)
+		: FileWorker (filename, marks) {
 		this->dispatcher = d;
-		this->marks = marks;
 	}
 
 	LineIndexer::~LineIndexer (void) {
@@ -199,10 +228,14 @@ namespace largefile {
 		int ch, index = 0;
 		off64_t cursor = 0, count = 0, byte_beg = 0;
 		struct timeval start, end;
-		
-		concurrent::ScopedMemoryLock mutex ((unsigned long int)this->fp, false);
 
-		std::cout<<"index start...";
+		if (FileWorker::Openfile() == false) {
+			// STUB: throw some kind of error here; we failed opening the file.
+			g_critical ("Failed opening file descriptor in line indexer");
+			return NULL;
+		}
+		
+		std::cout<<"index start..."<<std::flush;
 		
 		gettimeofday (&start, NULL);
 		
@@ -210,54 +243,48 @@ namespace largefile {
 		// going to get away from having to sequentially read this file in, but once we
 		// have line numbers we can jump throughout the file pretty quickly.
 		while ((ch = fgetc(this->fp)) != EOF) {
-
-			// Crude implementation of a spinlock. Wait while another thread is doing
-			// some reading before we begin indexing again.
-			while (mutex.trylock() == false)
-				Thread::sleep(5);
 						
 			if (ch=='\n') {
 				byte_beg = cursor;
 				count++;
 			}
 
-  			if (this->marks[index].byte == cursor++) {
+			// Crude implementation of a spinlock. Wait while another thread is doing
+			// some reading before we begin indexing again.
+			while (this->marks->trylock() == false)
+				Thread::sleep(5);
 						
-				this->marks[index].line = count;
-				this->marks[index].byte = byte_beg;
-				
+  			if (this->marks->get(index).byte == cursor++) {
+				this->marks->get(index).line = count;
+				this->marks->get(index).byte = byte_beg;
+			
 				index++;
 
-				if (index == LINE_INDEX_MAX)
+				if (index == LINE_INDEX_MAX) {
+					this->marks->unlock();
 					break;
-
-				// While the indexer is running we want to still allow for reads on the
-				// screen. This is an easy way to give them a "minor" priority. Once a
-				// percentage of the file has been index we're going to unlock and give
-				// a healthy amount of time for a thread switch to happen.
-				mutex.unlock();
-				Thread::sleep(10);
+				}
 			}
 		}
 
 		gettimeofday (&end, NULL);
 
 		double ms = ((((end.tv_sec-start.tv_sec) * 1000) + ((end.tv_usec-start.tv_usec)/1000.0)) + 0.5);
-		std::cout<<"index done (ms:"<<ms<<")!\n";
+		std::cout<<"index done (ms:"<<ms<<")!\n"<<std::flush;
 		this->dispatcher->removeWorker (this);
+		this->Closefile();
 		return NULL;
 	}
 
 	LineReader::LineReader (proactor::InputDispatcher * d,
-									FILE * fp,
-									LineIndex * marks,
+									const std::string & filename,
+									FileIndex * marks,
 									off64_t start,
-									off64_t N) {
-		this->fp = fp;
+									off64_t N)
+		: FileWorker (filename, marks) {
 		this->dispatcher = d;
 		this->startLine = start;
 		this->numberOfLinesToRead = N;
-		this->marks = marks;
 	}
 
 	LineReader::~LineReader (void) {
@@ -267,19 +294,31 @@ namespace largefile {
 	LineReader::run (void * null) {
 		char buf[4096];
 
-		concurrent::ScopedMemoryLock mutex ((unsigned long int)this->fp, true);
+		if (FileWorker::Openfile () == false) {
+			// STUB: throw some kind of error here; we failed opening the file.
+			g_critical ("Failed opening file descriptor in LineReader");
+			return NULL;
+		}
+		
 		off64_t start = ftello64 (this->fp);
 		off64_t offset = 0, delta = 0;
 		off64_t read_max = this->numberOfLinesToRead, line_max = this->startLine + read_max;
 
 		for (off64_t index = 1; index < LINE_INDEX_MAX; index++) {
-			if (line_max < this->marks[index].line) {
-				delta = this->startLine - this->marks[index-1].line;
-				offset = this->marks[index-1].byte;
+			// Crude implementation of a spinlock. Wait while another thread is doing
+			// some reading before we begin indexing again.
+			while (this->marks->trylock() == false)
+				Thread::sleep(5);
+			
+			if (line_max < this->marks->get(index).line) {
+				delta = this->startLine - this->marks->get(index-1).line;
+				offset = this->marks->get(index-1).byte;
+				this->marks->unlock();
 				break;
 			}
+			this->marks->unlock();
 		}
-						
+		
 		fseeko64 (this->fp, offset, SEEK_SET);
 
 		// Munch lines to get to our starting point.
@@ -299,6 +338,7 @@ namespace largefile {
 		fseeko64 (this->fp, start, SEEK_SET);
 		
 		this->dispatcher->removeWorker (this);
+		this->Closefile();
 		return NULL;
 	}
 

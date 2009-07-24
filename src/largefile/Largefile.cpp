@@ -341,7 +341,7 @@ Largefile::OpenFile (Sheet * sheet, const std::string & filename) {
 		return false;
 	}
 
-	if (fd->OpenFile (filename) == false) {
+	if (fd->Openfile (filename) == false) {
 		g_critical ("Failed opening %s", filename.c_str());
 		this->unlock();
 		return false;

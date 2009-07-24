@@ -19,6 +19,7 @@
 #ifndef FILE_HPP
 #define FILE_HPP
 
+#include <concurrent/Mutex.hpp>
 #include <proactor/InputDispatcher.hpp>
 #include <proactor/Proactor.hpp>
 #include <proactor/Worker.hpp>
@@ -35,17 +36,26 @@ namespace largefile {
 		off64_t byte;
 		off64_t line;
 	};
-	
-	class FileDispatcher : public proactor::InputDispatcher {
+
+	class FileIndex : public concurrent::RecursiveMutex {
 	private:
 		LineIndex marks[LINE_INDEX_MAX];
-		FILE * fp;
+	public:
+		FileIndex (void);
+		virtual ~FileIndex (void);
+
+		inline LineIndex & get (int index) { return this->marks[index]; }
+	};	
+
+	class FileDispatcher : public proactor::InputDispatcher {
+	private:
+		FileIndex marks;
 		std::string filename;
 	public:
 		FileDispatcher (int e, proactor::Proactor * pro);
 		virtual ~FileDispatcher (void);
 
-		bool OpenFile (const std::string & filename);
+		bool Openfile (const std::string & filename);
 		bool Close (void);
 		void * run (void * null);
 
@@ -54,31 +64,38 @@ namespace largefile {
 		bool Readpercent (guint percent, off64_t N);
 		
 		void Index (void);
+	};
 
-		inline bool isIndexed(void) const { return (this->marks[LINE_INDEX_MAX-1].line != -1); }
+	class FileWorker : public proactor::Worker {
+	protected:
+		FileIndex * marks;
+		FILE * fp;
+		std::string filename;
+	public:
+		FileWorker (const std::string & filename, FileIndex * marks);
+		virtual ~FileWorker (void);
+
+		bool Openfile (void);
+		bool Closefile (void);
 	};
 	
-	class LineIndexer : public proactor::Worker {
-	private:
-		LineIndex * marks;
-		FILE * fp;
+	class LineIndexer : public FileWorker {
 	public:
 		LineIndexer (proactor::InputDispatcher * d,
-						 FILE * fp,
-						 LineIndex * marks);
+						 const std::string & filename,
+						 FileIndex * marks);
 		virtual ~LineIndexer (void);
 
 		void * run (void * null);
 	};
 
-	class OffsetReader : public proactor::Worker {
+	class OffsetReader : public FileWorker {
 	private:
-		FILE * fp;
 		off64_t numberOfLinesToRead;
 		off64_t startOffset;
 	public:
 		OffsetReader (proactor::InputDispatcher * d,
-						  FILE * fp,
+						  const std::string & filename,
 						  off64_t offset,
 						  off64_t N);
 		virtual ~OffsetReader (void);
@@ -86,16 +103,14 @@ namespace largefile {
 		void * run (void * null);
 	};
 	
-	class LineReader : public proactor::Worker {
+	class LineReader : public FileWorker {
 	private:
-		FILE * fp;
 		off64_t numberOfLinesToRead;
 		off64_t startLine;
-		LineIndex * marks;
 	public:
 		LineReader (proactor::InputDispatcher * d,
-						FILE * fp,
-						LineIndex * marks,
+						const std::string & filename,
+						FileIndex * marks,
 						off64_t start,
 						off64_t N);
 		virtual ~LineReader (void);
