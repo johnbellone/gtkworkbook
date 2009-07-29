@@ -248,11 +248,6 @@ namespace largefile {
 				byte_beg = cursor;
 				count++;
 			}
-
-			// Crude implementation of a spinlock. Wait while another thread is doing
-			// some reading before we begin indexing again.
-			while (this->marks->trylock() == false)
-				Thread::sleep(5);
 						
   			if (this->marks->get(index).byte == cursor++) {
 				this->marks->get(index).line = count;
@@ -260,17 +255,26 @@ namespace largefile {
 			
 				index++;
 
+				this->marks->unlock();
+				
 				if (index == LINE_INDEX_MAX) {
-					this->marks->unlock();
 					break;
 				}
+				else {
+					Thread::sleep(5);								  
+				}
+				
+				// Crude implementation of a spinlock. Wait while another thread is doing
+				// some reading before we begin indexing again.
+				while (this->marks->trylock() == false)
+					Thread::sleep(5);
 			}
 		}
 
 		gettimeofday (&end, NULL);
 
 		double ms = ((((end.tv_sec-start.tv_sec) * 1000) + ((end.tv_usec-start.tv_usec)/1000.0)) + 0.5);
-		std::cout<<"index done (ms:"<<ms<<")!\n"<<std::flush;
+		std::cout<<"ready (ms:"<<ms<<")!\n"<<std::flush;
 		this->dispatcher->removeWorker (this);
 		this->Closefile();
 		return NULL;
