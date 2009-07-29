@@ -66,7 +66,7 @@ GotoDialogResponseCallback (GtkWidget * gtkdialog, gint response, gpointer data)
 				// absolute line
 				case 1: {
 					dialog->lf->Readline (dialog->lf->workbook()->focus_sheet,
-												 value - 1,
+												 value,
 												 1000);
 				}
 				break;
@@ -76,7 +76,7 @@ GotoDialogResponseCallback (GtkWidget * gtkdialog, gint response, gpointer data)
 					long long perc_value = (long long) (atof ( entry_value ) * 10);
 					
 					dialog->lf->Readpercent (dialog->lf->workbook()->focus_sheet,
-													 perc_value,
+													 perc_value * 100,
 													 1000);
 				}
 				break;
