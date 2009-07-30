@@ -28,48 +28,47 @@
 
 namespace realtime {
 
-  class NetworkCsvReceiver : public proactor::InputDispatcher {
-  public:
-    NetworkCsvReceiver (int e, proactor::Proactor * pro) {
-      this->pro = pro;
-      setEventId(e);
-    }
+	class NetworkCsvReceiver : public proactor::InputDispatcher {
+	public:
+		NetworkCsvReceiver (int e, proactor::Proactor * pro) {
+			this->pro = pro;
+			setEventId(e);
+		}
+		virtual ~NetworkCsvReceiver (void) { }
+	};
 
-    virtual ~NetworkCsvReceiver (void) { }
-  };
+	class NetworkPktReceiver : public proactor::InputDispatcher {
+	public:
+		NetworkPktReceiver (int e, proactor::Proactor * pro) {
+			this->pro = pro;
+			setEventId(e);
+		}
 
-  class NetworkPktReceiver : public proactor::InputDispatcher {
-  public:
-    NetworkPktReceiver (int e, proactor::Proactor * pro) {
-      this->pro = pro;
-      setEventId(e);
-    }
+		virtual ~NetworkPktReceiver (void) { }
+	};
 
-    virtual ~NetworkPktReceiver (void) { }
-  };
-
-  class ConnectionThread : public proactor::Worker {
-  private:
-    bool purge_socket;
-    network::TcpSocket * socket;
-  public:
-    ConnectionThread (proactor::InputDispatcher * d, int newfd);
-    ConnectionThread (proactor::InputDispatcher * d, network::TcpSocket * s);
-    virtual ~ConnectionThread (void);
+	class ConnectionThread : public proactor::Worker {
+	private:
+		bool purge_socket;
+		network::TcpSocket * socket;
+	public:
+		ConnectionThread (proactor::InputDispatcher * d, int newfd);
+		ConnectionThread (proactor::InputDispatcher * d, network::TcpSocket * s);
+		virtual ~ConnectionThread (void);
   
-    void * run (void * null);
-  };
+		void * run (void * null);
+	};
 
-  class AcceptThread : public proactor::Worker {
-  private:
-    network::TcpServerSocket::Acceptor * acceptor;
-  public:
-    AcceptThread (network::TcpServerSocket::Acceptor * acceptor,
-		  proactor::InputDispatcher * dispatcher);
-    virtual ~AcceptThread (void);
+	class AcceptThread : public proactor::Worker {
+	private:
+		network::TcpServerSocket::Acceptor * acceptor;
+	public:
+		AcceptThread (network::TcpServerSocket::Acceptor * acceptor,
+						  proactor::InputDispatcher * dispatcher);
+		virtual ~AcceptThread (void);
 
-    void * run (void * null);
-  };
+		void * run (void * null);
+	};
 
 } // end of namespace
 

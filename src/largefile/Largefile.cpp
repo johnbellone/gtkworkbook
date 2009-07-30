@@ -216,6 +216,7 @@ GtkKeypressCallback (GtkWidget * window, GdkEventKey * event, gpointer data) {
 	}
 	return result;
 }
+
 Largefile::Largefile (Application * appstate, Handle * platform)
 	: Plugin (appstate, platform) {
 
@@ -234,9 +235,7 @@ Largefile::Largefile (Application * appstate, Handle * platform)
 	logname.append (AppendProcessId("largefile.").append(".log"));
 	
 	if ((pktlog = fopen (logname.c_str(), "w")) == NULL) {
-		g_critical ("Failed opening file '%s' for packet logging; exiting"
-					" thread", logname.c_str());
-		return;
+		g_critical ("Failed opening file '%s' for packet logging", logname.c_str());
     }
 	
 	gtk_signal_connect (GTK_OBJECT (this->wb->gtk_window), "key_press_event",
@@ -244,6 +243,7 @@ Largefile::Largefile (Application * appstate, Handle * platform)
 }
 
 Largefile::~Largefile (void) {
+	FCLOSE (pktlog);
 }
 
 GtkWidget *

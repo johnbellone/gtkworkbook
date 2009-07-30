@@ -110,7 +110,7 @@ thread_main (ThreadArgs * args) {
   AcceptThread acceptor (socket.newAcceptor(), &pktDispatcher);
   ConnectionThread creader (&csvDispatcher, client);
   PacketParser pkt_worker (wb, pktlog, atoi(verbosity->value));
-  CsvParser csv_worker (wb, pktlog, atoi(verbosity->value));
+  CsvParser csv_worker (wb->sheet_first, pktlog, atoi(verbosity->value));
 
   if (proactor.start() == false) {
       g_critical ("Failed starting Proactor; exiting thread.");

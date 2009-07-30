@@ -16,38 +16,23 @@
    License along with the library; if not, write to the Free Software
    Foundation, Inc., 51 Franklin Street, Fifth Floor Boston, MA 02110-1301 USA
 */
-#ifndef HPP_PROACTOR_INPUTDISPATCHER
-#define HPP_PROACTOR_INPUTDISPATCHER
+#include <iostream>
+#include <gtkworkbook/workbook.h>
+#include <concurrent/ThreadArgs.hpp>
+#include <gtk/gtk.h>
+#include "Realtime.hpp"
+#include "../config.h"
+#include "../Application.hpp"
 
-#include "../concurrent/Queue.hpp"
-#include "Event.hpp"
+extern "C" {
+  Plugin *
+  PluginFactoryCreate (Application * appstate, Handle * platform) {
+    ASSERT (appstate != NULL);
+    ASSERT (platform != NULL);
+	 realtime::Realtime * lf = new realtime::Realtime (appstate, platform);
+	 GtkWidget * box = lf->BuildLayout();
 
-namespace proactor {
-
-	class Proactor;
-
-	class InputDispatcher : public EventDispatcher {
-	protected:
-		typedef concurrent::Queue<Event> InputQueueType;
-
-		Proactor * pro;
-		InputQueueType inputQueue;
-	public:
-		virtual ~InputDispatcher (void);
-
-		void * stop (void);
-    
-		inline void onReadComplete (const char * buf) {
-			this->inputQueue.push ( Event (getEventId(), std::string(buf)) );
-		}
-
-		inline void onReadComplete (const std::string & buf) {
-			this->inputQueue.push ( Event (getEventId(), std::string (buf) ) );
-		}
-
-		void * run (void * null);
-	};
-
-} // end of namespace
-
-#endif
+	 gtk_widget_show (box);
+    return lf;
+  }
+} 
