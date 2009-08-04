@@ -61,9 +61,7 @@ namespace realtime {
 	}
 
 	void *
-	NetworkCsvReceiver::run (void * null) {
-		
-		
+	NetworkPktReceiver::run (void * null) {
 		while (this->isRunning() == true) {
 			this->inputQueue.lock();
       

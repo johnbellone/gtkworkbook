@@ -17,9 +17,58 @@ AppendProcessId (const gchar * pre) {
   return s.str();
 }
 
+static void
+StreamOpenDialogCallback (GtkWidget * w, gpointer data) {
+	Realtime * rt = (Realtime *)data;
+	OpenStreamDialog * dialog = rt->streamdialog();
+	//Workbook * wb = rt->workbook();
+	//Sheet * sheet = wb->focus_sheet;
+
+	if (dialog->widget == NULL) {
+		dialog->rt = rt;
+
+		dialog->widget = gtk_dialog_new_with_buttons ("Open stream ", GTK_WINDOW (rt->app()->gtkwindow()),
+																	 (GtkDialogFlags) (GTK_DIALOG_MODAL|GTK_DIALOG_NO_SEPARATOR),
+																	 GTK_STOCK_OK,
+																	 GTK_RESPONSE_OK,
+																	 GTK_STOCK_CANCEL,
+																	 GTK_RESPONSE_CANCEL,
+																	 NULL);
+		GtkWidget * gtk_frame = gtk_frame_new ("Stream Options");
+		GtkWidget * box = GTK_DIALOG (dialog->widget)->vbox;
+		dialog->address_entry = gtk_entry_new_with_max_length (15);
+
+		gtk_container_add (GTK_CONTAINER (gtk_frame), dialog->address_entry);
+		gtk_box_pack_start (GTK_BOX (box), gtk_frame, TRUE, TRUE, 0);
+		
+		g_signal_connect (G_OBJECT (dialog->widget), "delete-event",
+								G_CALLBACK (gtk_widget_hide_on_delete), NULL);
+	}
+
+	gtk_widget_show_all ( dialog->widget );
+	
+	if (gtk_dialog_run (GTK_DIALOG (dialog->widget)) == GTK_RESPONSE_OK) {
+		const char * entry_value = gtk_entry_get_text (GTK_ENTRY (dialog->address_entry));
+		Sheet * sheet = rt->workbook()->add_new_sheet (rt->workbook(), entry_value, 100, 20);
+		
+		if (sheet == NULL) {
+			g_warning ("Failed adding a new sheet to [realtime] workbook");
+		}
+		else {
+			if (rt->Openstream (sheet, "", 2000) == false) {
+				
+			}
+			else {
+
+			}
+		}
+	}
+
+	gtk_widget_hide_all ( dialog->widget );
+}
+
 Realtime::Realtime (Application * appstate, Handle * platform)
 	: Plugin (appstate, platform) {
-
 	this->ncd = NULL;
 	this->wb = workbook_open (appstate->gtkwindow(), "realtime");
 
@@ -46,6 +95,7 @@ Realtime::~Realtime (void) {
 	FCLOSE (pktlog);
 }
 
+/*
 bool
 Realtime::Openserver (Sheet * sheet, int port) {
 	this->lock();
@@ -65,11 +115,17 @@ Realtime::Openserver (Sheet * sheet, int port) {
 		eventId = this->npd->getEventId();
 	}
 
-	
+	int port = atoi (servport->value);
+	this->server = new network::TcpServerSocket (port);
+	if (socket->start (5) == false) {
+		g_critical ("Failed starting server socket on port %d", port);
+		return false;
+	}
 	
 	this->unlock();
 	return true;
 }
+*/
 
 bool
 Realtime::Openstream (Sheet * sheet, const std::string & address, int port) {
@@ -79,7 +135,7 @@ Realtime::Openstream (Sheet * sheet, const std::string & address, int port) {
 	if (this->ncd == NULL) {
 		eventId = proactor::Event::uniqueEventId();
 		
-		this->ncd = new network::NetworkCsvReceiver (eventId, appstate->proactor());
+		this->ncd = new NetworkCsvReceiver (eventId, appstate->proactor());
 		if (this->ncd->start() == false) {
 			g_critical ("Failed starting network csv receiver");
 			this->unlock();
@@ -98,12 +154,11 @@ Realtime::Openstream (Sheet * sheet, const std::string & address, int port) {
 		return false;
 	}
 	
-	ConnectionThread * reader = new network::ConnectionThread (this->ncd, client);
-	if (nd->addWorker (reader) == false) {
+	ConnectionThread * reader = new ConnectionThread (this->ncd, client);
+	if (this->ncd->addWorker (reader) == false) {
 		g_critical ("Failed starting the client reader");
 		delete reader;
 		delete client;
-		delete csv;
 		this->unlock();
 		return false;
 	}
@@ -114,39 +169,38 @@ Realtime::Openstream (Sheet * sheet, const std::string & address, int port) {
 
 bool
 Realtime::Start() {
-	Config * cfg = this->app()->cfg;
-	
+	Config * cfg = this->app()->config();
 	ConfigPair * servport = cfg->get_pair (cfg, "realtime", "tcp", "port");
 	ConfigPair * verbosity = cfg->get_pair (cfg, "realtime", "debug", "verbosity");
 
 	if (IS_NULL (servport)) {
       g_critical ("Failed loading tcp->port from configuration file; "
 						"exiting thread");
-      return;
+      return false;
 	}
 
 	if (IS_NULL (verbosity))
 		g_warning ("Failed loading debug->verbosity from configuration file.");
 
 	this->client = new network::TcpClientSocket;
-	if (client->connect ("localhost", 50000) == false) {
+	if (this->client->connect ("localhost", 50000) == false) {
 		g_critical ("Failed connecting to %s:%d", "localhost", 50000);
 		return false;
 	}
 
-	int port = atoi (servport->value);
-	this->server = new network::TcpServerSocket (port);
-	if (socket->start (5) == false) {
-		g_critical ("Failed starting server socket on port %d", port);
-		return false;
-	}
+	return true;
 }
 
 GtkWidget *
 Realtime::CreateMainMenu (void) {
 	GtkWidget * rtmenu = gtk_menu_new();
 	GtkWidget * rtmenu_item = gtk_menu_item_new_with_label ("Realtime");
+	GtkWidget * rtmenu_open = gtk_menu_item_new_with_label ("Open Csv stream...");
+	gtk_menu_shell_append (GTK_MENU_SHELL (rtmenu), rtmenu_open);
 
+	g_signal_connect (G_OBJECT (rtmenu_open), "activate",
+							G_CALLBACK (StreamOpenDialogCallback), this);
+		
 	gtk_menu_item_set_submenu (GTK_MENU_ITEM (rtmenu_item), rtmenu);
 	return rtmenu_item;
 }

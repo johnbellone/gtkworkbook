@@ -30,21 +30,18 @@ namespace realtime {
 
 	class NetworkCsvReceiver : public proactor::InputDispatcher {
 	public:
-		NetworkCsvReceiver (int e, proactor::Proactor * pro) {
-			this->pro = pro;
-			setEventId(e);
-		}
-		virtual ~NetworkCsvReceiver (void) { }
+		NetworkCsvReceiver (int e, proactor::Proactor * pro);
+		virtual ~NetworkCsvReceiver (void);
+
+		void * run (void * null);
 	};
 
 	class NetworkPktReceiver : public proactor::InputDispatcher {
 	public:
-		NetworkPktReceiver (int e, proactor::Proactor * pro) {
-			this->pro = pro;
-			setEventId(e);
-		}
+		NetworkPktReceiver (int e, proactor::Proactor * pro);
+		virtual ~NetworkPktReceiver (void);
 
-		virtual ~NetworkPktReceiver (void) { }
+		void * run (void * null);
 	};
 
 	class ConnectionThread : public proactor::Worker {
