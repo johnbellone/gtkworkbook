@@ -11,12 +11,14 @@ namespace realtime {
 		OpenStreamDialog (void) {
 			rt = NULL;
 			widget = NULL;
-			address_entry = NULL;
+			host_entry = NULL;
+			port_entry = NULL;
 		}
 
 		Realtime * rt;
 		GtkWidget * widget;
-		GtkWidget * address_entry;
+		GtkWidget * host_entry;
+		GtkWidget * port_entry;
 	};
 }
 

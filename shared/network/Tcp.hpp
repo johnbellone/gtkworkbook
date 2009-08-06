@@ -29,51 +29,52 @@
 
 namespace network {
 
-  class TcpSocket : public ISocket {
-  protected:
-    struct sockaddr_in sockaddr;
-  public:
-    TcpSocket (void);
-    virtual ~TcpSocket (void);
+	class TcpSocket : public ISocket {
+	protected:
+		struct sockaddr_in sockaddr;
+	public:
+		TcpSocket (void);
+		virtual ~TcpSocket (void);
 
-    void close (void);
-    int send (const char * bytes, size_t length);
-    int receive (char * bytes, size_t size);
-  };
+		void close (void);
+		int send (const char * bytes, size_t length);
+		int receive (char * bytes, size_t size);
+	};
 
-  class TcpServerSocket : public TcpSocket {
-  private:
-    int port;
-  public:
-    class Acceptor {
-    private:
-      TcpServerSocket * socket;
-      int sockfd;
-    public:
-      Acceptor (TcpServerSocket * server, int sockfd);
+	class TcpServerSocket : public TcpSocket {
+	private:
+		int port;
+	public:
+		class Acceptor {
+		private:
+			TcpServerSocket * socket;
+			int sockfd;
+		public:
+			Acceptor (TcpServerSocket * server, int sockfd);
 
-      int acceptIncoming (void);
-    };
+			int acceptIncoming (void);
+		};
 
-    TcpServerSocket (int port);
-    virtual ~TcpServerSocket (void);
+		TcpServerSocket (int port);
+		virtual ~TcpServerSocket (void);
     
-    bool start (int backlog);
-    void close (void);
-    Acceptor * newAcceptor (void);
-  };
+		bool start (int backlog);
+		void close (void);
+		Acceptor * newAcceptor (void);
+		int getPort(void) const;
+	};
   
-  class TcpClientSocket : public TcpSocket {
-  private:
-    struct hostent * hp;
-  public:
-    TcpClientSocket (void);
-    TcpClientSocket (int newfd);
-    virtual ~TcpClientSocket (void);
+	class TcpClientSocket : public TcpSocket {
+	private:
+		struct hostent * hp;
+	public:
+		TcpClientSocket (void);
+		TcpClientSocket (int newfd);
+		virtual ~TcpClientSocket (void);
 
-    bool connect (const char * host, int port);
-    void close (void);
-  };
+		bool connect (const char * host, int port);
+		void close (void);
+	};
 
 } // end of namespace
 

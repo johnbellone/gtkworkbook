@@ -27,45 +27,45 @@
 
 namespace concurrent {
 
-  class ThreadGroup;
+	class ThreadGroup;
 
-  class Thread : public IRunnable {
-  private:
-    friend class ThreadGroup;
+	class Thread : public IRunnable {
+	private:
+		friend class ThreadGroup;
 
-    ThreadGroup * group;
-    std::string name;
-    IRunnable * runner;
-    pthread_t thread;
-    bool joinable;
-    int priority;
-  public:
-    Thread (ThreadGroup * group, 
-	    IRunnable * runner, 
-	    const std::string & name);
-    Thread (IRunnable * runner,
-	    const std::string & name);
-    Thread (const std::string & name);
-    Thread (void);
-    virtual ~Thread (void);
+		ThreadGroup * group;
+		std::string name;
+		IRunnable * runner;
+		pthread_t thread;
+		bool joinable;
+		int priority;
+	public:
+		Thread (ThreadGroup * group, 
+				  IRunnable * runner, 
+				  const std::string & name);
+		Thread (IRunnable * runner,
+				  const std::string & name);
+		Thread (const std::string & name);
+		Thread (void);
+		virtual ~Thread (void);
 
-    bool start (void);
-    void * stop (void);
-    void * join (void);
-    void interrupt (void);
-    void yield (void);
+		bool start (void);
+		void * stop (void);
+		void * join (void);
+		void interrupt (void);
+		void yield (void);
   
-    virtual void * run (void *);
+		virtual void * run (void *);
 
-    inline const std::string & getName (void) const { return this->name; }
-    inline int getPriority (void) const { return this->priority; }
-    inline void setPriority (int priority) { this->priority = priority; }
-    inline const ThreadGroup * getThreadGroup (void) const { 
-      return this->group; 
-    }
+		inline const std::string & getName (void) const { return this->name; }
+		inline int getPriority (void) const { return this->priority; }
+		inline void setPriority (int priority) { this->priority = priority; }
+		inline const ThreadGroup * getThreadGroup (void) const { 
+			return this->group; 
+		}
 
-    static int sleep (unsigned long ms);
-  };  
+		static int sleep (unsigned long ms);
+	};  
 
 }
 

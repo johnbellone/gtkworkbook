@@ -23,27 +23,22 @@
 #include <proactor/Worker.hpp>
 #include <proactor/Proactor.hpp>
 #include <iostream>
+#include <memory>
 
 #define MAX_INPUT_SIZE 1024
 
 namespace realtime {
 
-	class NetworkCsvReceiver : public proactor::InputDispatcher {
+	class NetworkDispatcher : public proactor::InputDispatcher {
 	public:
-		NetworkCsvReceiver (int e, proactor::Proactor * pro);
-		virtual ~NetworkCsvReceiver (void);
+		typedef std::auto_ptr <NetworkDispatcher> AutoPtr;
+	public:
+		NetworkDispatcher (int e, proactor::Proactor * pro);
+		virtual ~NetworkDispatcher (void);
 
 		void * run (void * null);
 	};
-
-	class NetworkPktReceiver : public proactor::InputDispatcher {
-	public:
-		NetworkPktReceiver (int e, proactor::Proactor * pro);
-		virtual ~NetworkPktReceiver (void);
-
-		void * run (void * null);
-	};
-
+	
 	class ConnectionThread : public proactor::Worker {
 	private:
 		bool purge_socket;
@@ -57,6 +52,8 @@ namespace realtime {
 	};
 
 	class AcceptThread : public proactor::Worker {
+	public:
+		typedef std::auto_ptr <AcceptThread> AutoPtr;
 	private:
 		network::TcpServerSocket::Acceptor * acceptor;
 	public:
@@ -66,7 +63,6 @@ namespace realtime {
 
 		void * run (void * null);
 	};
-
 } // end of namespace
 
 #endif

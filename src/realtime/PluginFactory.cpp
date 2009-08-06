@@ -32,6 +32,8 @@ extern "C" {
 	 realtime::Realtime * lf = new realtime::Realtime (appstate, platform);
 	 GtkWidget * box = lf->BuildLayout();
 
+	 lf->Start();
+	 
 	 gtk_widget_show (box);
     return lf;
   }

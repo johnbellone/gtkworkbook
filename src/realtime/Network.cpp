@@ -22,46 +22,17 @@
 #define IS_TERMINAL(c) ((*c == '\n') || (*c == '\r'))
 
 namespace realtime {
-
-	NetworkCsvReceiver::NetworkCsvReceiver (int e, proactor::Proactor * pro) {
-		this->pro = pro;
-		setEventId (e);
-	}
-
-	NetworkCsvReceiver::~NetworkCsvReceiver (void) {
-	}
-
-	void *
-	NetworkCsvReceiver::run (void * null) {
-		
-		while (this->isRunning() == true) {
-			this->inputQueue.lock();
-      
-			while (this->inputQueue.size() > 0) {
-				if (this->isRunning() == false)
-					break;
-
-				this->pro->onReadComplete (this->inputQueue.pop());
-			}
-
-			this->inputQueue.unlock();
-
-			concurrent::Thread::sleep (5);
-		}
-
-		return NULL;
-	}
 	
-	NetworkPktReceiver::NetworkPktReceiver (int e, proactor::Proactor * pro) {
+	NetworkDispatcher::NetworkDispatcher (int e, proactor::Proactor * pro) {
 		this->pro = pro;
 		setEventId (e);
 	}
 
-	NetworkPktReceiver::~NetworkPktReceiver (void) {
+	NetworkDispatcher::~NetworkDispatcher (void) {
 	}
 
 	void *
-	NetworkPktReceiver::run (void * null) {
+	NetworkDispatcher::run (void * null) {
 		while (this->isRunning() == true) {
 			this->inputQueue.lock();
       

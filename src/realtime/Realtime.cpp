@@ -3,6 +3,7 @@
 #include <gtkworkbook/workbook.h>
 #include <proactor/Proactor.hpp>
 #include <proactor/Event.hpp>
+#include <network/Tcp.hpp>
 #include "Realtime.hpp"
 
 using namespace realtime;
@@ -21,8 +22,6 @@ static void
 StreamOpenDialogCallback (GtkWidget * w, gpointer data) {
 	Realtime * rt = (Realtime *)data;
 	OpenStreamDialog * dialog = rt->streamdialog();
-	//Workbook * wb = rt->workbook();
-	//Sheet * sheet = wb->focus_sheet;
 
 	if (dialog->widget == NULL) {
 		dialog->rt = rt;
@@ -34,12 +33,22 @@ StreamOpenDialogCallback (GtkWidget * w, gpointer data) {
 																	 GTK_STOCK_CANCEL,
 																	 GTK_RESPONSE_CANCEL,
 																	 NULL);
-		GtkWidget * gtk_frame = gtk_frame_new ("Stream Options");
+		
+		GtkWidget * gtk_frame = gtk_frame_new ("Connection Options");
+		GtkWidget * hbox = gtk_hbox_new(FALSE, 0);
 		GtkWidget * box = GTK_DIALOG (dialog->widget)->vbox;
-		dialog->address_entry = gtk_entry_new_with_max_length (15);
+		dialog->host_entry = gtk_entry_new();
+		dialog->port_entry = gtk_entry_new();
 
-		gtk_container_add (GTK_CONTAINER (gtk_frame), dialog->address_entry);
-		gtk_box_pack_start (GTK_BOX (box), gtk_frame, TRUE, TRUE, 0);
+		gtk_entry_set_max_length (GTK_ENTRY (dialog->host_entry), 15);
+		gtk_entry_set_max_length (GTK_ENTRY (dialog->port_entry), 5);
+		gtk_entry_set_width_chars (GTK_ENTRY (dialog->host_entry), 15);
+		gtk_entry_set_width_chars (GTK_ENTRY (dialog->port_entry), 5);
+		
+		gtk_box_pack_start (GTK_BOX (hbox), dialog->host_entry, FALSE, FALSE, 0);
+		gtk_box_pack_end (GTK_BOX (hbox), dialog->port_entry, FALSE, FALSE, 0);
+		gtk_container_add (GTK_CONTAINER (gtk_frame), hbox);
+		gtk_box_pack_start (GTK_BOX (box), gtk_frame, FALSE, FALSE, 0);
 		
 		g_signal_connect (G_OBJECT (dialog->widget), "delete-event",
 								G_CALLBACK (gtk_widget_hide_on_delete), NULL);
@@ -48,19 +57,23 @@ StreamOpenDialogCallback (GtkWidget * w, gpointer data) {
 	gtk_widget_show_all ( dialog->widget );
 	
 	if (gtk_dialog_run (GTK_DIALOG (dialog->widget)) == GTK_RESPONSE_OK) {
-		const char * entry_value = gtk_entry_get_text (GTK_ENTRY (dialog->address_entry));
-		Sheet * sheet = rt->workbook()->add_new_sheet (rt->workbook(), entry_value, 100, 20);
-		
-		if (sheet == NULL) {
-			g_warning ("Failed adding a new sheet to [realtime] workbook");
+		const char * host_value = gtk_entry_get_text (GTK_ENTRY (dialog->host_entry));
+		const char * port_value = gtk_entry_get_text (GTK_ENTRY (dialog->port_entry));
+		Sheet * sheet = rt->workbook()->add_new_sheet (rt->workbook(), host_value, 100, 20);
+
+		if (IS_NULLSTR (host_value) || IS_NULLSTR (port_value)) {
+			g_warning ("One of requird values are empty");
+		}
+		else if (sheet == NULL) {
+			g_warning ("Cannot open connection to %s:%s because of failure to add sheet",
+						  host_value, port_value);
+		}
+		else if (rt->OpenTcpClient (sheet, host_value, atoi (port_value)) == false) {
+			// STUB: Popup an alertbox about failing to connect?
 		}
 		else {
-			if (rt->Openstream (sheet, "", 2000) == false) {
-				
-			}
-			else {
-
-			}
+			// STUB: Success. Do we want to do anything else here?
+			g_message ("Client connection opened on %s:%s on sheet %s", host_value, port_value, sheet->name);
 		}
 	}
 
@@ -69,9 +82,6 @@ StreamOpenDialogCallback (GtkWidget * w, gpointer data) {
 
 Realtime::Realtime (Application * appstate, Handle * platform)
 	: Plugin (appstate, platform) {
-	this->ncd = NULL;
-	this->wb = workbook_open (appstate->gtkwindow(), "realtime");
-
 	ConfigPair * logpath =
 		appstate->config()->get_pair (appstate->config(), "realtime", "log", "path");
 
@@ -86,109 +96,165 @@ Realtime::Realtime (Application * appstate, Handle * platform)
 	if ((pktlog = fopen (logname.c_str(), "w")) == NULL) {
 		g_critical ("Failed opening file '%s' for packet logging", logname.c_str());
     }
+
+	this->wb = workbook_open (appstate->gtkwindow(), "realtime");
+	this->packet_parser = NULL;
+	this->tcp_server = NULL;
 }
 
 Realtime::~Realtime (void) {
-	if (this->ncd != NULL)
-		delete this->ncd;
-	
-	FCLOSE (pktlog);
-}
+	// Iterate through the list of active connections, and begin closing them. This should also
+	// include deleting the pointers to all of the accepting threads. Eventually there should be
+	// a boost::shared_ptr here so that we don't have to do the dirty work.
+	ActiveThreads::iterator it = this->threads.begin();
+	while (it != this->threads.end()) {
+		network::TcpSocket * socket = ((*it).first);
+		concurrent::Thread * thread = ((*it).second);
 
-/*
-bool
-Realtime::Openserver (Sheet * sheet, int port) {
-	this->lock();
-	
-	int eventId = -1;
-	if (this->npd == NULL) {
-		evenetId = proactor::Event::uniqueEventId();
-
-		this->npd = new network::NetworkPktReceiver (eventId, appstate->proactor());
-		if (this->npd->start() == false) {
-			g_critical ("Failed starting network packet receiver");
-			this->unlock();
-			return false;
+		it = this->threads.erase (it);
+				
+		if (socket) delete socket;
+		if (thread) {
+			thread->stop();
+			delete thread;
 		}
 	}
-	else {
-		eventId = this->npd->getEventId();
+
+	if (this->packet_parser) {
+		this->packet_parser->stop();
+		delete this->packet_parser;
 	}
 
-	int port = atoi (servport->value);
-	this->server = new network::TcpServerSocket (port);
-	if (socket->start (5) == false) {
-		g_critical ("Failed starting server socket on port %d", port);
-		return false;
+	if (this->tcp_server) {
+		this->tcp_server->stop();
+		delete this->tcp_server;
 	}
 	
-	this->unlock();
+	FCLOSE (this->pktlog);
+}
+
+bool
+Realtime::CreateNewServerConnection (network::TcpServerSocket * socket, AcceptThread * accept_thread) {
+	this->threads.push_back ( ActiveThread (socket, accept_thread) );
+
+	if (this->tcp_server->addWorker (accept_thread) == false) {
+		g_critical ("Failed starting accepting thread on socket %d", socket->getPort() );
+		return false;
+	}
+
 	return true;
 }
-*/
 
 bool
-Realtime::Openstream (Sheet * sheet, const std::string & address, int port) {
-	this->lock();
+Realtime::CreateNewClientConnection (network::TcpClientSocket * socket, CsvParser * csv, NetworkDispatcher * nd) {
+	this->threads.push_back ( ActiveThread (socket, csv) );
+	this->threads.push_back ( ActiveThread (NULL, nd) );  // this is a hack
 
-	int eventId = -1;
-	if (this->ncd == NULL) {
-		eventId = proactor::Event::uniqueEventId();
-		
-		this->ncd = new NetworkCsvReceiver (eventId, appstate->proactor());
-		if (this->ncd->start() == false) {
-			g_critical ("Failed starting network csv receiver");
-			this->unlock();
-			return false;
-		}
-	}
-	else {
-		eventId = this->ncd->getEventId();
-	}
-
-	network::TcpClientSocket * client = new network::TcpClientSocket;
-	if (client->connect (address.c_str(), port) == false) {
-		g_critical ("Failed connecting to client socket %s:%d", address.c_str(), port);
-		delete client;
-		this->unlock();
-		return false;
-	}
-	
-	ConnectionThread * reader = new ConnectionThread (this->ncd, client);
-	if (this->ncd->addWorker (reader) == false) {
+	ConnectionThread * reader = new ConnectionThread (nd, socket);
+	if (nd->addWorker (reader) == false) {
 		g_critical ("Failed starting the client reader");
 		delete reader;
-		delete client;
-		this->unlock();
 		return false;
 	}
-	
-	this->unlock();
+
+	this->threads.push_back ( ActiveThread (NULL, reader) ); // this is a hack
 	return true;
 }
 
 bool
-Realtime::Start() {
-	Config * cfg = this->app()->config();
-	ConfigPair * servport = cfg->get_pair (cfg, "realtime", "tcp", "port");
-	ConfigPair * verbosity = cfg->get_pair (cfg, "realtime", "debug", "verbosity");
-
-	if (IS_NULL (servport)) {
-      g_critical ("Failed loading tcp->port from configuration file; "
-						"exiting thread");
-      return false;
-	}
-
-	if (IS_NULL (verbosity))
-		g_warning ("Failed loading debug->verbosity from configuration file.");
-
-	this->client = new network::TcpClientSocket;
-	if (this->client->connect ("localhost", 50000) == false) {
-		g_critical ("Failed connecting to %s:%d", "localhost", 50000);
+Realtime::OpenTcpServer (int port) {
+	// Has to be above the service ports.
+	if (port < 1000) {
+		g_warning ("Failed starting Tcp server: port (%d) must be above 1000", port);
 		return false;
 	}
 
-	return true;
+	// The first time we attempt to create a port to receive input on we need to create a dispatcher, and
+	// specify an event identifier so that we can communicate with it from workers. At this point the
+	// Packet Parser is created as well. 
+	if (this->tcp_server == NULL) {
+		int eventId = proactor::Event::uniqueEventId();
+		NetworkDispatcher * nd = new NetworkDispatcher (eventId, this->app()->proactor());
+		PacketParser * pp = new PacketParser (this->workbook(), this->pktlog, 0);
+		
+		if (nd->start() == false) {
+			g_critical ("Failed starting network dispatcher for tcp server");
+			return false;
+		}
+
+		if (this->app()->proactor()->addWorker (eventId, pp) == false) {
+			g_critical ("Failed starting packet parser for tcp server");
+			return false;
+		}
+		
+		this->tcp_server = nd;
+		this->packet_parser = pp;
+	}
+
+	network::TcpServerSocket * socket = new network::TcpServerSocket (port);
+	if (socket->start(5) == false) {
+		g_critical ("Failed starting network socket for tcp server on port %d", port);
+		return false;
+	}
+
+	AcceptThread * accept_thread = new AcceptThread (socket->newAcceptor(), this->tcp_server);
+	return this->CreateNewServerConnection (socket, accept_thread);
+}
+
+bool
+Realtime::OpenTcpClient (Sheet * sheet, const std::string & address, int port) {
+	// Has to be above the service ports.
+	if (port < 1000) {
+		g_warning ("Failed starting Tcp client: port (%d) must be above 1000", port);
+		return false;
+	}
+
+	// We need to create a network dispatcher for each one of these connections because of
+	// the current limitation of the Proactor design. It really needs to be rewritten, but
+	// that is a separate project in and of itself. For now a list of dispatchers must be
+	// kept so that we do not lose track.
+	int eventId = proactor::Event::uniqueEventId();
+	NetworkDispatcher * dispatcher = new NetworkDispatcher (eventId, this->app()->proactor());
+	if (dispatcher->start() == false) {
+		g_critical ("Failed starting network dispatcher for %s:%d", address.c_str(), port);
+		delete dispatcher;
+		return false;
+	}
+
+	// Keeping this simple is the reason why we need multiple dispatchers. If I could come
+	// up with a simple way to strap on the ability to have multiple sheets without the need
+	// for an additioanl dispatcher/csv combo I would. It totally destroys the principle of
+	// the proactor design.
+	CsvParser * csv = new CsvParser (sheet, this->pktlog, 0, 20);
+	if (this->app()->proactor()->addWorker (eventId, csv) == false) {
+		g_critical ("Failed starting csv parser and adding to proactor for %s:%d",
+						address.c_str(), port);
+		delete csv;
+		delete dispatcher;
+		return false;
+	}
+
+	network::TcpClientSocket * socket = new network::TcpClientSocket;
+	if (socket->connect (address.c_str(), port) == false) {
+		g_critical ("Failed making Tcp connection to %s:%d", address.c_str(), port);
+		delete socket;
+		delete csv;
+		delete dispatcher;
+		return false;
+	}
+	
+	return this->CreateNewClientConnection (socket, csv, dispatcher);
+}
+
+void
+Realtime::Start(void) {
+	Config * cfg = this->app()->config();
+	ConfigPair * servport = cfg->get_pair (cfg, "realtime", "tcp", "port");
+	int port = atoi (servport->value);
+
+	if (this->OpenTcpServer (port) == true) {
+		g_message ("Opened Tcp server on port %d", port);
+	}
 }
 
 GtkWidget *

@@ -81,6 +81,11 @@ namespace network {
 		return true;
 	}
 
+	int
+	TcpServerSocket::getPort (void) const {
+		return this->port;
+	}
+	
 	void
 	TcpServerSocket::close (void) {
 		TcpSocket::close();

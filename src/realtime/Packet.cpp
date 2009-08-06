@@ -32,64 +32,64 @@
 
 namespace realtime {
 
-  Packet::Packet (void) {
-    this->delimiter = '\0';
-    this->type = -1;
-  }
+	Packet::Packet (void) {
+		this->delimiter = '\0';
+		this->type = -1;
+	}
 
-  Packet::~Packet (void) {
-    this->time.clear();
-    this->fields.clear();
-  }
+	Packet::~Packet (void) {
+		this->time.clear();
+		this->fields.clear();
+	}
 
-  gboolean
-  Packet::parse (const gchar * buf) {
-    this->fields.clear();
+	gboolean
+	Packet::parse (const gchar * buf) {
+		this->fields.clear();
 
-    if (IS_NULLSTR (buf)) 
-      return FALSE;
+		if (IS_NULLSTR (buf)) 
+			return FALSE;
   
-    this->delimiter = buf[0];
+		this->delimiter = buf[0];
 
-    String line(&buf[1]), value;
+		String line(&buf[1]), value;
 
-    WORD (this->delimiter, line, this->time);
-    WORD (this->delimiter, line, this->type);
+		WORD (this->delimiter, line, this->time);
+		WORD (this->delimiter, line, this->type);
 
-    while (line.length() > 0) {
-      WORD (this->delimiter, line, value);
-      this->fields.push_back (value);
-    }
+		while (line.length() > 0) {
+			WORD (this->delimiter, line, value);
+			this->fields.push_back (value);
+		}
 
-    return TRUE;
-  }
+		return TRUE;
+	}
 
-  Map<String,String>
-  Packet::parseFormatString (const gchar * buf) {
-    String fmt(buf);
-    Map<String,String> pairs; pairs.clear();
+	Map<String,String>
+	Packet::parseFormatString (const gchar * buf) {
+		String fmt(buf);
+		Map<String,String> pairs; pairs.clear();
 
-    size_t pos = 0, length = fmt.length(), comma = 0, equal = 0;
-    String key, val;
+		size_t pos = 0, length = fmt.length(), comma = 0, equal = 0;
+		String key, val;
 
-    while (pos < length) {
-      if ((comma = fmt.find_first_of (',')) == String::npos)
-	comma = length;
+		while (pos < length) {
+			if ((comma = fmt.find_first_of (',')) == String::npos)
+				comma = length;
       
-      if ((equal = fmt.find_first_of ('=')) == String::npos)
-	break;
+			if ((equal = fmt.find_first_of ('=')) == String::npos)
+				break;
 
-      key = fmt.substr (0, equal);
-      val = fmt.substr (equal+1, comma-equal-1);
+			key = fmt.substr (0, equal);
+			val = fmt.substr (equal+1, comma-equal-1);
 
-      pairs[key] = val;
+			pairs[key] = val;
 
-      if (comma == length)
-	break;
+			if (comma == length)
+				break;
 
-      fmt = fmt.substr (comma+1, length);
-      length = fmt.length();
-    }
-    return pairs;
-  }
+			fmt = fmt.substr (comma+1, length);
+			length = fmt.length();
+		}
+		return pairs;
+	}
 }
