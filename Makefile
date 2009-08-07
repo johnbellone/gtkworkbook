@@ -2,7 +2,7 @@ MD=mkdir -p
 MAKE=-make -C
 PWD=`pwd`
 
-all:	libgtkworkbookshared libgtkworkbook gtkworkbook
+all:	libgtkworkbook libgtkworkbookshared gtkworkbookapp
 
 libgtkworkbook:
 	${MD} OBJS/libgtkworkbook
@@ -12,16 +12,14 @@ libgtkworkbookshared:
 	${MD} OBJS/libgtkworkbookshared
 	${MAKE} shared/ all
 
-gtkworkbook:
-	${MD} OBJS/realtime ${MD}/largefile
+gtkworkbookapp:
+	${MD} OBJS/realtime OBJS/largefile
 	$(MAKE) src/ all
-	$(MAKE) src/largefile all
 
 clean:
 	${MAKE} shared/ clean
 	${MAKE} gtkworkbook/ clean
 	$(MAKE) src/ clean
-	$(MAKE) src/largefile clean
 
 install: all
 	${MAKE} shared/ install

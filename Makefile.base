@@ -25,6 +25,7 @@ export LD_LIBRARY_PATH
 INCS = -I${INCDIR}/gtkextra-2.0
 INCS += -I${PROJDIR}/include
 INCS += -I/usr/local/include/gtkextra-2.0
+INCS += -I${HOME}/include
 INCS += `pkg-config gtk+-2.0 glib-2.0 --cflags`
 
 LIBS = -lpixman-1
