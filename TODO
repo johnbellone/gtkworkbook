@@ -1,9 +1,5 @@
 TODO for GTKWorkbook
 
-* Application
-	- Bugs
-		o Possible issue with new plugin architecture unloading library inside
-		  the object's destructor. 
 * largefile
 	- Bugs	
 		o Likely heap corruption inside of commented out GtkSheet management code
