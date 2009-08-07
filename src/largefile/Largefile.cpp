@@ -191,14 +191,11 @@ GtkKeypressCallback (GtkWidget * window, GdkEventKey * event, gpointer data) {
 
 		// Connect the signals to we can do fancy switching.
 		g_signal_connect (G_OBJECT (gtk_radiobyte), "toggled",
-								G_CALLBACK (GotoDialogRadioToggleCallback),
-								dialog);
+								G_CALLBACK (GotoDialogRadioToggleCallback), dialog);
 		g_signal_connect (G_OBJECT (gtk_radioline), "toggled",
-								G_CALLBACK (GotoDialogRadioToggleCallback),
-								dialog);
+								G_CALLBACK (GotoDialogRadioToggleCallback), dialog);
 		g_signal_connect (G_OBJECT (gtk_radioperc), "toggled",
-								G_CALLBACK (GotoDialogRadioToggleCallback),
-								dialog);
+								G_CALLBACK (GotoDialogRadioToggleCallback), dialog);
 		g_signal_connect (G_OBJECT (dialog->widget), "response",
 								G_CALLBACK (GotoDialogResponseCallback), dialog);
 		

@@ -18,12 +18,10 @@
 */
 #include "Application.hpp"
 #include "Plugin.hpp"
+#include "RecordView.hpp"
 #include <cstring>
 #include <iostream>
 
-/* @description: This method takes the argument and clears the string of
-   everything except for the directories. Therefore the return value would
-   be a string sans anything before the last directory delimiter '/'. */
 static gchar *
 munchpath (gchar * path_) {
 	gchar * path = g_strdup(path_);
@@ -203,6 +201,11 @@ void
 Application::shutdown(void) {
 	// STUB: shutdown the proactor threads here.
 	gtk_main_quit ();
+}
+
+RecordView *
+Application::OpenRecordView (Sheet * sheet, int row, int col) {
+	return NULL;
 }
 
 void

@@ -28,6 +28,8 @@
 #include "proactor/Proactor.hpp"
 
 class Plugin;
+class RecordView;
+
 class Application {
 public:
 	enum sigs {
@@ -66,6 +68,8 @@ public:
 	Plugin * load_plugin (const std::string filename);
 	void open_extension (const gchar * filename, gboolean absolute_path);
 
+	RecordView * OpenRecordView (Sheet * sheet, int row, int col);
+	
 	inline GtkWidget * gtkwindow() { return this->gtk_window; }
 	inline GtkWidget * gtkvbox() { return this->gtk_window_vbox; }
 	inline GtkWidget * gtkmenu() { return this->gtk_menu; }
