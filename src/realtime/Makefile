@@ -1,6 +1,6 @@
 include ../../Makefile.base
 
-INCS += -I${PROJDIR}/shared -I../
+INCS += -I$../shared -I../shared
 SRCS = $(wildcard *.cpp) 
 OBJS = $(patsubst %.cpp,${OBJDIR}/realtime/%.o,${SRCS}) 
 
