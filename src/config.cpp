@@ -612,14 +612,15 @@ configrow_method_get_vector (ConfigRow * row, const gchar * key)
 
       ConfigVector * vec = configvector_new (row, pair->key);
       gchar buf[1024];
-      gchar * p = parse (pair->value, &buf[0], 1024, ','); 
-      gchar * q = pair->value + strlen (pair->value);
-    
-      do
-		{
-			vec->add (vec, trim (&buf[0]));
-		} while ((p = parse (p+1, &buf[0], 1024, ',')) < q);
+      gchar * p = NULL;
+		gchar * q = pair->value;
+		gchar * r = pair->value + strlen (pair->value);
 
+		do {
+			p = parse (q,&buf[0],1024,',');
+			vec->add (vec, trim (&buf[0]));
+			q = p + 1;
+		} while (q < r);
       return vec;
 	}
 	return NULL;
@@ -733,7 +734,7 @@ configvector_method_get (ConfigVector * vec, guint index)
 
 	if (index >= vec->array->len) return NULL;
 
-	gchar * rvalue = (gchar *)g_ptr_array_index (vec->array, index);
+	gchar * rvalue = (gchar *) g_ptr_array_index (vec->array, index);
 	return rvalue;
 }
 

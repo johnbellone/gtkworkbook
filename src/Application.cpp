@@ -19,6 +19,7 @@
 #include "Application.hpp"
 #include "Plugin.hpp"
 #include <cstring>
+#include <iostream>
 
 /* @description: This method takes the argument and clears the string of
    everything except for the directories. Therefore the return value would
@@ -328,11 +329,11 @@ Application::init (int argc, char *** argv) {
       
 			while ((block = ext->get(ext, ii)) != NULL) {
 				ConfigPair * run = cfg->get_pair (cfg, block, "onLoad", "run");
-	      
+				
 				if (run && (strcmp (run->value, "1") == 0)) {
 					ConfigPair * filename 
 						= cfg->get_pair (cfg, block, "linux", "filename");
-
+					
 					if (!IS_NULL (filename) && !IS_NULLSTR (filename->value)) {
 						gboolean RelativePath 
 							= (filename->value[0] == '/') ? FALSE : TRUE;
