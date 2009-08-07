@@ -1,10 +1,11 @@
 include ../Makefile.base
 
 INCS += -I./shared
-SRCS=$(wildcard *.cpp) 
+SRCS=$(wildcard *.cpp) $(wildcard shared/proactor/*.cpp) $(wildcard shared/concurrent/*.cpp) \
+$(wildcard shared/network/*.cpp)
 OBJS=$(patsubst %.cpp,${OBJDIR}/%.o,${SRCS})
 
-LFLAGS=-lgtkworkbook -lgtkextra-x11-2.0 -lgthread-2.0 -lgtkworkbookshared
+LFLAGS=-lgtkworkbook -lgtkextra-x11-2.0 -lgthread-2.0
 
 all: 	gtkworkbook
 	make -C realtime/ all
@@ -29,8 +30,4 @@ ${OBJDIR}/%.o: %.cpp
 	${CX} -rdynamic ${INCS} -c ${CXFLAGS} $< -o $@
 
 .cpp.o:
-	${CX} -rdynamic ${INCS} -c ${CXFLAGS} $<
-
-
-.cc.o:
 	${CX} -rdynamic ${INCS} -c ${CXFLAGS} $<
