@@ -1,9 +1,9 @@
 #                                               -*- Autoconf -*-
 # Process this file with autoconf to produce a configure script.
-
 AC_PREREQ([2.59])
 AC_INIT([gtkworkbook], [0.20], [jvb4@njit.edu])
 AC_CONFIG_SRCDIR([gtkworkbook/cell.c])
+AM_INIT_AUTOMAKE([gtkworkbook],[0.20])
 
 # Checks for programs.
 AC_PROG_CXX
@@ -14,6 +14,7 @@ AC_PROG_INSTALL
 AC_PROG_LN_S
 AC_PROG_MAKE_SET
 AC_PROG_RANLIB
+AC_PROG_LIBTOOL
 
 # Checks for libraries.
 # FIXME: Replace `main' with a function in `-ldl':
@@ -30,9 +31,7 @@ AC_TYPE_SIZE_T
 # Checks for library functions.
 AC_CHECK_FUNCS([gethostbyname gettimeofday memset socket])
 
-AC_CONFIG_FILES([Makefile
-                 gtkworkbook/OBJS/Makefile
-                 src/OBJS/Makefile
-                 src/largefile/OBJS/Makefile
-                 src/realtime/OBJS/Makefile])
-AC_OUTPUT
+AC_OUTPUT([Makefile
+	   cfg/Makefile
+	   gtkworkbook/OBJS/Makefile
+           src/OBJS/Makefile])
