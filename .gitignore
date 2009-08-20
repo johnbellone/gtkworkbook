@@ -1,3 +1,6 @@
+*.o
+*.la
+*.lo
 libtool
 ChangeLog
 autoregen.sh
