@@ -23,7 +23,7 @@
 #include <list>
 #include <cstdio>
 #include <cstdlib>
-#include <gtkworkbook/workbook.h>
+#include <libgtkworkbook/workbook.h>
 #include "config.h"
 #include "proactor/Proactor.hpp"
 

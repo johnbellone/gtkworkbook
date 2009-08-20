@@ -19,6 +19,7 @@
 #ifndef HPP_LARGEFILE
 #define HPP_LARGEFILE
 
+#include <libgtkworkbook/workbook.h>
 #include <map>
 #include <string>
 #include "File.hpp"

@@ -21,7 +21,7 @@
 
 #include "Application.hpp"
 #include <dlfcn.h>
-#include <gtkworkbook/workbook.h>
+#include <libgtkworkbook/workbook.h>
 #include <concurrent/Mutex.hpp>
 #include <string>
 
