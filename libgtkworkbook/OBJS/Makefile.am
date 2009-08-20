@@ -5,7 +5,7 @@ L_FLAGS= -L/usr/local/lib -L/usr/lib `pkg-confg gtk+-2.0 glib-2.0 --libs` -lgtke
 
 SOURCE= ..
 
-noinst_LTLIBRARIES= libgtkworkbook.la
+lib_LTLIBRARIES= libgtkworkbook.la
 libgtkworkbook_la_SOURCES= $(SOURCE)/cell.c $(SOURCE)/workbook.c $(SOURCE)/sheet.c
 libgtkworkbook_la_CFLAGS= -fPIC -Wall -Wno-write-strings -std=c99 $(C_FLAGS)
 libgtkworkbook_la_LFLAGS= $(L_FLAGS) -module -export-dynamic

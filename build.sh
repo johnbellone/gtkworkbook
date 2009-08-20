@@ -15,7 +15,7 @@ make $@ || {
     exit 1
 }
 
-cp src/OBJS/gtkworkbook bin/gtkworkbook
+cp src/OBJS/.libs/gtkworkbook bin/gtkworkbook
 cp src/OBJS/.libs/realtime.so bin/realtime.so
 cp src/OBJS/.libs/largefile.so bin/largefile.so
 cp cfg/application.cfg bin/application.cfg
