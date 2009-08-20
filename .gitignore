@@ -1,11 +1,13 @@
+autom4te.cache/
+config.guess
+config.status
+config.sub
 src/OBJS/gtkworkbook
 .libs
 .deps
 .DS_Store
 *~
 bin/
-lib/
-csv/libcsv.*
 massif*
 *.log
 \#*\#
