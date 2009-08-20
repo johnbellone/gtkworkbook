@@ -29,6 +29,6 @@ AC_CHECK_FUNCS([gethostbyname gettimeofday memset socket])
 
 AC_OUTPUT([Makefile
 	   cfg/Makefile
-	   gtkworkbook/OBJS/Makefile
+	   libgtkworkbook/OBJS/Makefile
            src/OBJS/Makefile])
 

@@ -1,2 +1,2 @@
 AUTOMAKE_OPTIONS= foreign
-SUBDIRS=cfg gtkworkbook/OBJS src/OBJS
+SUBDIRS=cfg libgtkworkbook/OBJS src/OBJS
