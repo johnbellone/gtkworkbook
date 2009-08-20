@@ -17,7 +17,7 @@ $(PROACTOR)/InputDispatcher.cpp $(PROACTOR)/Proactor.cpp $(PROACTOR)/Worker.cpp
 gtkworkbook_CPPFLAGS= -Wall $(C_FLAGS)
 gtkworkbook_LFLAGS= -ldl $(L_FLAGS) -rdynamic -lgtkworkbook -lcsv
 gtkworkbook_LDFLAGS= $(L_FLAGS) -rdynamic
-gtkworkbook_LDADD= ../../gtkworkbook/OBJS/libgtkworkbook.la
+gtkworkbook_LDADD= ../../libgtkworkbook/OBJS/libgtkworkbook.la
 
 lib_LTLIBRARIES= realtime.la largefile.la
 
@@ -26,11 +26,11 @@ $(SOURCE)/realtime/PacketParser.cpp $(SOURCE)/realtime/PluginFactory.cpp $(SOURC
 realtime_la_CPPFLAGS= -fPIC -Wall -Wno-write-strings $(C_FLAGS)
 realtime_la_LFLAGS= $(L_FLAGS) -lgtkworkbook -lcsv
 realtime_la_LDFLAGS= -module -export-dynamic 
-realtime_la_LIBADD= ../../gtkworkbook/OBJS/libgtkworkbook.la
+realtime_la_LIBADD= ../../libgtkworkbook/OBJS/libgtkworkbook.la
 
 largefile_la_SOURCES= $(SOURCE)/largefile/CsvParser.cpp $(SOURCE)/largefile/File.cpp \
 $(SOURCE)/largefile/PluginFactory.cpp $(SOURCE)/largefile/Largefile.cpp
 largefile_la_CPPFLAGS= -fPIC -Wall -Wno-write-strings $(C_FLAGS)
 largefile_la_LFLAGS= $(L_FLAGS) -lgtkworkbook -lcsv
 largefile_la_LDFLAGS= -module -export-dynamic
-largefile_la_LIBADD= ../../gtkworkbook/OBJS/libgtkworkbook.la
+largefile_la_LIBADD= ../../libgtkworkbook/OBJS/libgtkworkbook.la

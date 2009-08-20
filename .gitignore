@@ -1,7 +1,3 @@
-libtool
-aclocal.m4
-Makefile.in
-ChangeLog
 src/OBJS/gtkworkbook
 .libs
 .deps
