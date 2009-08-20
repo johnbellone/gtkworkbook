@@ -1,110 +1,157 @@
 /*
-   CsvParser.cpp - CSV Parser Object Source File
+  The GTKWorkbook Project <http://gtkworkbook.sourceforge.net/>
+  Copyright (C) 2009 John Bellone, Jr. <jvb4@njit.edu>
 
-   The GTKWorkbook Project <http://gtkworkbook.sourceforge.net/>
-   Copyright (C) 2008, 2009 John Bellone, Jr. <jvb4@njit.edu>
+  This library is free software; you can redistribute it and/or
+  modify it under the terms of the GNU Lesser General Public
+  License as published by the Free Software Foundation; either
+  version 2.1 of the License, or (at your option) any later version.
 
-   This library is free software; you can redistribute it and/or
-   modify it under the terms of the GNU Lesser General Public
-   License as published by the Free Software Foundation; either
-   version 2.1 of the License, or (at your option) any later version.
+  This library is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PRACTICAL PURPOSE. See the GNU
+  Lesser General Public License for more details.
 
-   This library is distributed in the hope that it will be useful,
-   but WITHOUT ANY WARRANTY; without even the implied warranty of
-   MERCHANTABILITY or FITNESS FOR A PRACTICAL PURPOSE. See the GNU
-   Lesser General Public License for more details.
-
-   You should have received a copy of the GNU Lesser General Public
-   License along with the library; if not, write to the Free Software
-   Foundation, Inc., 51 Franklin Street, Fifth Floor Boston, MA 02110-1301 USA
+  You should have received a copy of the GNU Lesser General Public
+  License along with the library; if not, write to the Free Software
+  Foundation, Inc., 51 Franklin Street, Fifth Floor Boston, MA 02110-1301 USA
 */
 #include "CsvParser.hpp"
 #include <gtkworkbook/sheet.h>
-#include <gtkworkbook/cell.h>
+#include <queue>
+#include <string>
 #include <iostream>
 
 namespace realtime {
 
-  struct csv_column {
-    Sheet * sheet;
-    Cell ** array;
-    int row;
-    int field;
-    char * value;
-  };
+	struct csv_column {
+		Sheet * sheet;
+		Cell ** array;
+		int & array_max;
+		int & array_size;
+		int row;
+		int field;
+		char * value;
+	};
 
-  /* This structure is due to the libcsv parser; it uses function pointers to
-     do any work inside of an actual tuple. So the cb1 is called after a field
-     is parsed and cb2 is called after a tuple/row is parsed. */
-  static void 
-  cb1 (void * s, size_t length, void * data) {
-    struct csv_column * column = (struct csv_column *)data;
-    Cell * cell = column->array[column->field];
+	/* This structure is due to the libcsv parser; it uses function pointers to
+		do any work inside of an actual tuple. So the cb1 is called after a field
+		is parsed and cb2 is called after a tuple/row is parsed. */
+	static void 
+	cb1 (void * s, size_t length, void * data) {
+		struct csv_column * column = (struct csv_column *) data;
+		int & array_max = column->array_max;
 
-    cell->set_row (cell, column->row);
-    cell->set_column (cell, column->field++);
-    cell->set_value_length (cell, s, length);
-  }
+		// Resize the cell array here.
+		if (column->field >= array_max) {
+			int max = (2 * array_max);
+			(column->array) = (Cell **) g_realloc ((column->array),max*sizeof (Cell*));
 
-  static void
-  cb2 (int c, void * data) {
-    struct csv_column * column = (struct csv_column *)data;
-    column->row++;
-    column->field = 0;
-  }
+			for (int ii = array_max; ii < max; ii++)
+				(column->array)[ii] = NULL;
+		}
+	
+		if ((column->array)[column->field] == NULL)
+			(column->array)[column->field] = cell_new();
 
-  void *
-  CsvParser::run (void * null) {
-    this->running = true;
-    struct csv_parser csv;
-    struct csv_column column = {this->wb->sheet_first,
-				this->cell, 
-				0, 
-				0, 
-				new char[1024]};
+		Cell * cell = (column->array)[column->field];
+		cell->set_row (cell, column->row);
+		cell->set_column (cell, column->field++);
+		cell->set_value_length (cell, s, length);
+	}
+  
+	static void
+	cb2 (int c, void * data) {
+		struct csv_column * column = (struct csv_column *)data;
+		column->row++;
+		column->array_size = column->field - 1;
+		column->field = 0;
+	}
+
+	CsvParser::CsvParser (Sheet * sheet,
+								 FILE * log,
+								 int verbosity,
+								 int maxOfFields)
+		: sheet(sheet), log (log), maxOfFields (maxOfFields) {
+		this->wb = sheet->workbook;
+		this->sizeOfFields = 0;
+		this->fields = (Cell **) g_malloc (maxOfFields*sizeof (Cell*));
+
+		for (int ii = 0; ii < this->maxOfFields; ii++)
+			this->fields[ii] = NULL;
+	}
+
+	CsvParser::~CsvParser (void) {
+		for (int ii = 0; ii < this->maxOfFields; ii++) {
+			if (this->fields[ii])
+				(this->fields[ii])->destroy (this->fields[ii]);
+		}
     
-    if (csv_init (&csv, CSV_STRICT) != 0) {
-      std::cerr << "Failed initializing libcsv parser\n";
-      return NULL;
-    }
+		g_free (this->fields);
+	}
 
-    while (this->running == true) {
-		 while (this->inputQueue.size() > 0) {
+	void *
+	CsvParser::run (void * null) {
+		std::queue<std::string> queue;
+		struct csv_parser csv;
+		struct csv_column column = {sheet,
+											 this->fields,
+											 this->maxOfFields,
+											 this->sizeOfFields,
+											 0,
+											 0,
+											 new char [1024]};
+    
+		if (csv_init (&csv, CSV_STRICT) != 0) {
+			std::cerr << "Failed initializing libcsv parser library\n";
+			return NULL;
+		}
 
-			 if (this->running == false)
-				 break;
+		while (this->isRunning() == true) {
+			if (this->inputQueue.size() > 0) {
+	
+				// Lock, copy, clear, unlock. - Free this up.
+				this->inputQueue.lock();
+				this->inputQueue.copy (queue);
+				this->inputQueue.clear();
+				this->inputQueue.unlock();
 
-			 std::string buf = this->inputQueue.pop();
-			 size_t bytes = buf.length();
- 
-			 // Parse the CSV input
-			 if ((bytes = csv_parse(&csv, 
-											buf.c_str(), 
-											bytes, 
-											cb1,
-											cb2,
-											&column)) == bytes) {
-				 if (csv_error (&csv) == CSV_EPARSE)
-					 std::cerr << "Parsing error on input: " << buf << "\n";
-			 }
+				while (queue.size() > 0) {
+					std::string buf = queue.front(); queue.pop();
+					size_t bytes = buf.length();
 
-			 csv_fini (&csv, cb1, cb2, &column);
+					if (this->isRunning() == false)
+						break;
 
-			 this->wb->sheet_first->apply_array (this->wb->sheet_first,
-															 this->cell,
-															 10);
+					if ((bytes = csv_parse (&csv, buf.c_str(), bytes, cb1, cb2, &column)) == bytes) {
+						if (csv_error (&csv) == CSV_EPARSE) {
+							std::cerr << "Parsing error on input: "<<"\n";
+							continue;
+						}
+					}
 
-			 if (column.row >= (column.sheet)->max_rows)
-				 column.row = 0;
-		 }
+					csv_fini (&csv, cb1, cb2, &column);
 
-		 Thread::sleep(100);
+					gdk_threads_enter ();
+					
+					sheet->apply_row (sheet,
+											this->fields,
+											column.row - 1,
+											this->sizeOfFields);
 
-    }
+					gdk_threads_leave ();
 
-    csv_free (&csv);
-    delete column.value;
-    return NULL;
-  }
+					if (column.row >= (column.sheet)->max_rows)
+						column.row = 0;
+
+					concurrent::Thread::sleep(5);
+				}
+				
+			}	
+			concurrent::Thread::sleep(5);
+		}
+
+		return NULL;
+	}
 
 } // end of namespace

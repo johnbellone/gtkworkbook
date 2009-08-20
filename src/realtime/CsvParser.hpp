@@ -1,58 +1,46 @@
 /*
-   CsvParser.cpp - CSV Parser Object Header File
+  The GTKWorkbook Project <http://gtkworkbook.sourceforge.net/>
+  Copyright (C) 2008, 2009 John Bellone, Jr. <jvb4@njit.edu>
 
-   The GTKWorkbook Project <http://gtkworkbook.sourceforge.net/>
-   Copyright (C) 2008, 2009 John Bellone, Jr. <jvb4@njit.edu>
+  This library is free software; you can redistribute it and/or
+  modify it under the terms of the GNU Lesser General Public
+  License as published by the Free Software Foundation; either
+  version 2.1 of the License, or (at your option) any later version.
 
-   This library is free software; you can redistribute it and/or
-   modify it under the terms of the GNU Lesser General Public
-   License as published by the Free Software Foundation; either
-   version 2.1 of the License, or (at your option) any later version.
+  This library is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PRACTICAL PURPOSE. See the GNU
+  Lesser General Public License for more details.
 
-   This library is distributed in the hope that it will be useful,
-   but WITHOUT ANY WARRANTY; without even the implied warranty of
-   MERCHANTABILITY or FITNESS FOR A PRACTICAL PURPOSE. See the GNU
-   Lesser General Public License for more details.
-
-   You should have received a copy of the GNU Lesser General Public
-   License along with the library; if not, write to the Free Software
-   Foundation, Inc., 51 Franklin Street, Fifth Floor Boston, MA 02110-1301 USA
+  You should have received a copy of the GNU Lesser General Public
+  License along with the library; if not, write to the Free Software
+  Foundation, Inc., 51 Franklin Street, Fifth Floor Boston, MA 02110-1301 USA
 */
-#ifndef HPP_CSVPARSER
-#define HPP_CSVPARSER
+#ifndef HPP_RT_CSVPARSER
+#define HPP_RT_CSVPARSER
 
-#include "proactor/Worker.hpp"
+#include <proactor/Worker.hpp>
 #include <gtkworkbook/workbook.h>
-#include <gtkworkbook/sheet.h>
-#include <gtkworkbook/cell.h>
+#include <concurrent/Thread.hpp>
 #include <libcsv/csv.h>
-#include <iostream>
 
 namespace realtime {
 
-  class CsvParser : public proactor::Worker {
-  private:
-    Workbook * wb;
-    FILE * pktlog;
-    Cell * cell[10];
-    int verbosity;
-  public:
-    CsvParser (Workbook * wb, FILE * pktlog, int verbosity) {
-      this->wb = wb;
-      this->pktlog = pktlog;
-      this->verbosity = verbosity;
+	class CsvParser : public proactor::Worker {
+	private:
+		Sheet * sheet;
+		Workbook * wb;
+		Cell ** fields;
+		FILE * log;
+		int verbosity;
+		int maxOfFields;
+		int sizeOfFields;
+	public:
+		CsvParser (Sheet * sheet, FILE * log, int verbosity, int maxOfFields = 10);
+		virtual ~CsvParser (void);
 
-      for (unsigned int ii = 0; ii < 10; ii++)
-	this->cell[ii] = cell_new();
-    }
-
-    virtual ~CsvParser (void) {
-      for (unsigned int ii = 0; ii < 10; ii++)
-	this->cell[ii]->destroy (this->cell[ii]);
-    }
-
-    void * run (void * null);
-  };
+		void * run (void * null);
+	};
 
 } // end of namespace
 

@@ -24,10 +24,11 @@ AC_C_INLINE
 AC_TYPE_SIZE_T
 
 # Checks for library functions.
-AC_CHECK_FUNCS([gethostbyname memset socket])
+
+AC_CHECK_FUNCS([gethostbyname gettimeofday memset socket])
 
 AC_OUTPUT([Makefile
+	   cfg/Makefile
 	   gtkworkbook/OBJS/Makefile
-	   src/OBJS/Makefile
-	   src/realtime/OBJS/Makefile
-	   cfg/Makefile])
+           src/OBJS/Makefile])
+

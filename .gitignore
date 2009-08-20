@@ -1,9 +1,5 @@
-ChangeLog
-*Makefile
-autoregen.sh
 .DS_Store
 *~
-OBJS/
 bin/
 lib/
 autom4te.cache/
@@ -25,3 +21,9 @@ ltmain.sh
 *.so
 .libs
 .deps
+csv/libcsv.*
+massif*
+*.log
+\#*\#
+.\#*
+

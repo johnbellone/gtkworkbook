@@ -1,8 +1,0 @@
-TODO for master branch
-
-* Master
-  x Before stable merge
-    o Create autogen.sh script for building autotools purposes.
-    o Fix segemnation fault on exit.
- 
-	

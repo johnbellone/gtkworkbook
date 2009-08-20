@@ -1,6 +1,4 @@
 /* 
-   Connection.hpp - Connection Object Header File
-
    The GTKWorkbook Project <http://gtkworkbook.sourceforge.net/>
    Copyright (C) 2008, 2009 John Bellone, Jr. <jvb4@njit.edu>
 
@@ -21,58 +19,50 @@
 #ifndef HPP_NETWORK
 #define HPP_NETWORK
 
-#include "network/Tcp.hpp"
-#include "proactor/Worker.hpp"
-#include "proactor/Proactor.hpp"
+#include <network/Tcp.hpp>
+#include <proactor/Worker.hpp>
+#include <proactor/Proactor.hpp>
 #include <iostream>
+#include <memory>
 
 #define MAX_INPUT_SIZE 1024
 
 namespace realtime {
 
-  class NetworkCsvReceiver : public proactor::InputDispatcher {
-  public:
-    NetworkCsvReceiver (int e, proactor::Proactor * pro) {
-      this->pro = pro;
-      setEventId(e);
-    }
+	class NetworkDispatcher : public proactor::InputDispatcher {
+	public:
+		typedef std::auto_ptr <NetworkDispatcher> AutoPtr;
+	public:
+		NetworkDispatcher (int e, proactor::Proactor * pro);
+		virtual ~NetworkDispatcher (void);
 
-    virtual ~NetworkCsvReceiver (void) { }
-  };
-
-  class NetworkPktReceiver : public proactor::InputDispatcher {
-  public:
-    NetworkPktReceiver (int e, proactor::Proactor * pro) {
-      this->pro = pro;
-      setEventId(e);
-    }
-
-    virtual ~NetworkPktReceiver (void) { }
-  };
-
-  class ConnectionThread : public proactor::Worker {
-  private:
-    bool purge_socket;
-    network::TcpSocket * socket;
-  public:
-    ConnectionThread (proactor::InputDispatcher * d, int newfd);
-    ConnectionThread (proactor::InputDispatcher * d, network::TcpSocket * s);
-    virtual ~ConnectionThread (void);
+		void * run (void * null);
+	};
+	
+	class ConnectionThread : public proactor::Worker {
+	private:
+		bool purge_socket;
+		network::TcpSocket * socket;
+	public:
+		ConnectionThread (proactor::InputDispatcher * d, int newfd);
+		ConnectionThread (proactor::InputDispatcher * d, network::TcpSocket * s);
+		virtual ~ConnectionThread (void);
   
-    void * run (void * null);
-  };
+		void * run (void * null);
+	};
 
-  class AcceptThread : public proactor::Worker {
-  private:
-    network::TcpServerSocket::Acceptor * acceptor;
-  public:
-    AcceptThread (network::TcpServerSocket::Acceptor * acceptor,
-		  proactor::InputDispatcher * dispatcher);
-    virtual ~AcceptThread (void);
+	class AcceptThread : public proactor::Worker {
+	public:
+		typedef std::auto_ptr <AcceptThread> AutoPtr;
+	private:
+		network::TcpServerSocket::Acceptor * acceptor;
+	public:
+		AcceptThread (network::TcpServerSocket::Acceptor * acceptor,
+						  proactor::InputDispatcher * dispatcher);
+		virtual ~AcceptThread (void);
 
-    void * run (void * null);
-  };
-
+		void * run (void * null);
+	};
 } // end of namespace
 
 #endif

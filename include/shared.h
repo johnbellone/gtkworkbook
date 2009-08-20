@@ -1,6 +1,4 @@
 /* 
-   shared.h - Shared Macro Header File
-
    The GTKWorkbook Project <http://gtkworkbook.sourceforge.net/>
    Copyright (C) 2008, 2009 John Bellone, Jr. <jvb4@njit.edu>
 
@@ -26,7 +24,7 @@
 
 #define ASSERT(c) g_assert(c)
 #define FREE(p) { if (p) { g_free (p); p = NULL; } }
-#define NEW(T) g_malloc (sizeof (T))
+#define NEW(T) (T*)g_malloc (sizeof (T))
 #define NEW_ARRAY(T,n) g_malloc (sizeof(T)*n))
 
 #define IS_NULLSTR(s) (!s || (*s == '\0'))
