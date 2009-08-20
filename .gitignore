@@ -1,3 +1,7 @@
+ChangeLog
+autoregen.sh
+aclocal.m4
+cfg/Makefile.in
 autom4te.cache/
 config.guess
 config.status
