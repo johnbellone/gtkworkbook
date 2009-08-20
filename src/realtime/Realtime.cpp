@@ -18,7 +18,7 @@
 */
 #include <sstream>
 #include <gdk/gdkkeysyms.h>
-#include <gtkworkbook/workbook.h>
+#include <libgtkworkbook/workbook.h>
 #include <proactor/Proactor.hpp>
 #include <proactor/Event.hpp>
 #include <network/Tcp.hpp>

@@ -20,7 +20,8 @@
 #define HPP_LF_CSVPARSER
 
 #include <proactor/Worker.hpp>
-#include <gtkworkbook/workbook.h>
+#include <libgtkworkbook/sheet.h>
+#include <libgtkworkbook/workbook.h>
 #include <concurrent/Thread.hpp>
 #include <libcsv/csv.h>
 

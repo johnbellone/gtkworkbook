@@ -2,7 +2,7 @@
 #define HPP_RECORDVIEW
 
 #include <gtk/gtk.h>
-#include <gtkworkbook/workbook.h>
+#include <libgtkworkbook/workbook.h>
 #include "Application.hpp"
 
 class RecordView {

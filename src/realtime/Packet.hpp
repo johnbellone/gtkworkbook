@@ -19,7 +19,7 @@
 #ifndef HPP_PACKET
 #define HPP_PACKET
 
-#include <gtkworkbook/cell.h>
+#include <libgtkworkbook/cell.h>
 #include <glib.h>
 #include <string>
 #include <cstdlib>
