@@ -1,6 +1,8 @@
+src/OBJS/gtkworkbook
+.libs
+.deps
 .DS_Store
 *~
-OBJS/
 bin/
 lib/
 csv/libcsv.*

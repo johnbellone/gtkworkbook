@@ -17,7 +17,6 @@
    Foundation, Inc., 51 Franklin Street, Fifth Floor Boston, MA 02110-1301 USA
 */
 #include <gdk/gdkkeysyms.h>
-#include <gtkworkbook/workbook.h>
 #include <proactor/Proactor.hpp>
 #include <proactor/Event.hpp>
 #include <vector>
