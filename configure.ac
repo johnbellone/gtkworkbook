@@ -2,9 +2,9 @@
 # Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.59)
-AC_INIT(gtkworkbook, 0.12, jvb4@njit.edu)
-AC_CONFIG_SRCDIR(gtkworkbook/cell.c)
-AM_INIT_AUTOMAKE(gtkworkbook, 0.12)
+AC_INIT([gtkworkbook], 0.20, [jvb4@njit.edu])
+AC_CONFIG_SRCDIR([libgtkworkbook/cell.c])
+AM_INIT_AUTOMAKE([gtkworkbook], 0.20)
 
 # Checks for programs.
 AC_PROG_CXX
