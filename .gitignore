@@ -1,3 +1,10 @@
+Makefile
+Makefile.in
+depcomp
+install-sh
+ltmain.sh
+missing
+compile
 *.o
 *.la
 *.lo
