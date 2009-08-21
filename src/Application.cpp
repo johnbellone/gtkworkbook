@@ -19,6 +19,7 @@
 #include "Application.hpp"
 #include "Plugin.hpp"
 #include "RecordView.hpp"
+#include <gdk/gdkkeysyms.h>
 #include <cstring>
 #include <iostream>
 
@@ -37,19 +38,28 @@ munchpath (gchar * path_) {
 }
 
 static guint
-signal_gtknotebook_removed (GtkNotebook * notebook,
-									 GtkNotebookPage * page,
-									 gint page_num,
-									 Workbook * wb) {
+ApplicationKeypressCallback (GtkWidget * window, GdkEventKey * event, gpointer data) {
+	Application * app = (Application *)data;
+	gint result = FALSE;
+
+	switch (event->keyval) {
+		case GDK_F3: {
+			std::cout << "application\n"<<std::flush;
+		}
+		break;
+	}
+	
+	return result;
+}
+
+static guint
+GtkNotebookRemovedCallback (GtkNotebook * notebook, GtkNotebookPage * page, gint page_num, Workbook * wb) {
 	ASSERT (wb != NULL);
 	return TRUE;
 }
 
 static guint
-signal_gtknotebook_reordered (GtkNotebook * notebook,
-										GtkNotebookPage * page,
-										gint page_num,
-										Workbook * wb) {
+GtkNotebookReorderedCallback (GtkNotebook * notebook, GtkNotebookPage * page, gint page_num, Workbook * wb) {
 	ASSERT (wb != NULL);
 	return TRUE;
 }
@@ -66,10 +76,7 @@ signal_gtknotebook_reordered (GtkNotebook * notebook,
    @page_num: The number of the *new* page.
    @book: The Workbook object associated with the GtkNotebook.*/
 static guint
-signal_gtknotebook_switchpage (GtkNotebook * notebook,
-										 GtkNotebookPage * page,
-										 gint page_num,
-										 Workbook * book) {
+GtkNotebookSwitchPageCallback (GtkNotebook * notebook, GtkNotebookPage * page, gint page_num, Workbook * book) {
 	ASSERT (book != NULL);
 
 	/* Perform the "unfocus" on the old notebook tab. */
@@ -101,9 +108,7 @@ signal_gtknotebook_switchpage (GtkNotebook * notebook,
 }
 
 static guint
-signal_gtksheet_changed (GtkWidget * gtksheet,
-								 gint row, gint column,
-								 Sheet * sheet) {
+GtkSheetChangedCallback (GtkWidget * gtksheet, gint row, gint column, Sheet * sheet) {
 	ASSERT (sheet != NULL);
 	ASSERT (sheet->workbook != NULL);
 
@@ -126,9 +131,7 @@ signal_gtksheet_changed (GtkWidget * gtksheet,
    @event: A pointer to the associated GdkEvent information.
    @p: NULL */
 static guint
-signal_delete_event (GtkWindow * window, 
-							GdkEvent * event,
-							gpointer p) {
+DeleteEventCallback (GtkWindow * window, GdkEvent * event, gpointer p) {
 	GtkWidget * dialog 
 		= gtk_message_dialog_new (window, GTK_DIALOG_MODAL,
 										  GTK_MESSAGE_QUESTION,
@@ -148,8 +151,7 @@ signal_delete_event (GtkWindow * window,
    @window: A pointer to the GtkWindow object.
    @data: NULL */
 static guint
-signal_destroy_event (GtkWidget *window, gpointer data)
-{
+DestroyEventCallback (GtkWidget * window, gpointer data) {
 	Application * app = (Application *)data;
 	app->shutdown();
 	return FALSE;
@@ -164,17 +166,17 @@ Application::Application (int argc, char *** argv) {
 	
 	/* Set up the signals. */
 	this->signals[NOTEBOOK_SWITCHED]
-		= (GSourceFunc)signal_gtknotebook_switchpage;
+		= (GSourceFunc)GtkNotebookSwitchPageCallback;
 	this->signals[NOTEBOOK_REORDERED]
-		= (GSourceFunc)signal_gtknotebook_reordered;
+		= (GSourceFunc)GtkNotebookReorderedCallback;
 	this->signals[NOTEBOOK_REMOVED]
-		= (GSourceFunc)signal_gtknotebook_removed;
+		= (GSourceFunc)GtkNotebookRemovedCallback;
 	this->signals[DESTROY_EVENT]
-		= (GSourceFunc)signal_destroy_event;
+		= (GSourceFunc)DestroyEventCallback;
 	this->signals[DELETE_EVENT]
-		= (GSourceFunc)signal_delete_event;
+		= (GSourceFunc)DeleteEventCallback;
 	this->signals[SHEET_CHANGED]
-		= (GSourceFunc)signal_gtksheet_changed;
+		= (GSourceFunc)GtkSheetChangedCallback;
 }
 
 Application::~Application (void) {
@@ -231,7 +233,7 @@ Application::open_extension (const gchar * filename, gboolean absolute_path) {
 		/* Attach all of the signals for the Workbook object. */
 		gtk_signal_connect (GTK_OBJECT (plugin->workbook()->gtk_notebook),
 								  "switch-page",
-								  (GtkSignalFunc)signal_gtknotebook_switchpage, 
+								  (GtkSignalFunc)GtkNotebookSwitchPageCallback,
 								  plugin->workbook());
 	
 		gtk_widget_show_all (this->gtk_menu);
@@ -287,15 +289,15 @@ Application::init (int argc, char *** argv) {
 	this->gtk_window = gtk_window_new (GTK_WINDOW_TOPLEVEL);
 	this->gtk_menu = gtk_menu_bar_new();
 	
-	gtk_signal_connect (GTK_OBJECT (this->gtk_window),
-							  "destroy",
-							  G_CALLBACK (signal_destroy_event),
-							  this);
-	gtk_signal_connect (GTK_OBJECT (this->gtk_window),
-							  "delete_event",
-							  G_CALLBACK (signal_delete_event),
-							  NULL);
-  
+	gtk_signal_connect (GTK_OBJECT (this->gtk_window), "destroy",
+							  G_CALLBACK (DestroyEventCallback), this);
+	
+	gtk_signal_connect (GTK_OBJECT (this->gtk_window), "delete_event",
+							  G_CALLBACK (DeleteEventCallback), NULL);
+	
+	gtk_signal_connect (GTK_OBJECT (this->gtk_window), "key_press_event",
+							  GTK_SIGNAL_FUNC (ApplicationKeypressCallback), this);
+	
 	/* Set the initial size of the application; we could load this
 		from a configuration file eventually. */
 	gtk_widget_set_usize (this->gtk_window, 1024, 820);

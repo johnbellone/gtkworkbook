@@ -233,7 +233,7 @@ Largefile::Largefile (Application * appstate, Handle * platform)
 	if ((pktlog = fopen (logname.c_str(), "w")) == NULL) {
 		g_critical ("Failed opening file '%s' for packet logging", logname.c_str());
     }
-	
+
 	gtk_signal_connect (GTK_OBJECT (this->wb->gtk_window), "key_press_event",
 							  GTK_SIGNAL_FUNC (GtkKeypressCallback), this);
 }
