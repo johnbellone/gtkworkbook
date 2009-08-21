@@ -1,6 +1,6 @@
 AUTOMAKE_OPTIONS= foreign
 
-C_FLAGS= -I/usr/local/include -I/usr/include -I/usr/local/include/gtkextra-2.0 -I$(top_srcdir)/include `pkg-config gtk+-2.0 glib-2.0 --cflags` -I../../include
+C_FLAGS= -I/usr/local/include -I/usr/include -I/usr/local/include/gtkextra-2.0 -I$(top_srcdir)/include `pkg-config gtk+-2.0 glib-2.0 --cflags` -I../../include -I$(HOME)/include/gtkextra-2.0
 L_FLAGS= -L/usr/local/lib -L/usr/lib `pkg-confg gtk+-2.0 glib-2.0 --libs` -lgtkextra-x11-2.0
 
 SOURCE= ..

@@ -45,26 +45,26 @@ cell_new (void)
 static Cell *
 cell_object_init (void)
 {
-	Cell * cell = NEW (Cell);
+	Cell * obj = (Cell*)g_malloc(sizeof (Cell));
 
-	cell->value = g_string_new_len ("", 4096);
-	cell->attributes.bgcolor = g_string_new_len ("", 1024);
-	cell->attributes.fgcolor = g_string_new_len ("", 1024);
+	obj->value = g_string_new_len ("", 4096);
+	obj->attributes.bgcolor = g_string_new_len ("", 1024);
+	obj->attributes.fgcolor = g_string_new_len ("", 1024);
 
 	/* Methods */
-	cell->set_fgcolor = cell_method_set_fgcolor;
-	cell->set_bgcolor = cell_method_set_bgcolor;
-	cell->set_attributes = cell_method_set_attributes;
-	cell->set_range = cell_method_set_range;
-	cell->set_value = cell_method_set_value;
-	cell->set_value_length = cell_method_set_value_length;
-	cell->set_column = cell_method_set_column;
-	cell->set_row = cell_method_set_row;
-	cell->set = cell_method_set_all;
-	cell->set_justification = cell_method_set_justification;
-	cell->destroy = cell_method_destroy;
+	obj->set_fgcolor = cell_method_set_fgcolor;
+	obj->set_bgcolor = cell_method_set_bgcolor;
+	obj->set_attributes = cell_method_set_attributes;
+	obj->set_range = cell_method_set_range;
+	obj->set_value = cell_method_set_value;
+	obj->set_value_length = cell_method_set_value_length;
+	obj->set_column = cell_method_set_column;
+	obj->set_row = cell_method_set_row;
+	obj->set = cell_method_set_all;
+	obj->set_justification = cell_method_set_justification;
+	obj->destroy = cell_method_destroy;
 
-	return cell;
+	return obj;
 }
 
 /* @description: This object frees the memory created by the Cell object.
