@@ -50,26 +50,36 @@ DEPENDENCIES
 
 	   http://sourceforge.net/projects/libcsv/
 
+        E. GNU Autotools
+
+           This is the build tool-chain used which must be available. I have not come
+           across a version of Linux that does not have this installed. The code has been
+           tested and successfully built on the latest version of Ubuntu (9.04) and the
+           current version of CentOS 5.2 and RHEL as of this writing (September 2009). 
+
 BASIC INSTALLATION
 
-      The build system has begun to move to a GNU autotools design. There are still
-      a few quirks about how the system works, but all in all it is much like any other
-      open source project that uses the GNU tool chain. There is a configure script that
-      can be run independently to build the set of Makefiles, but a custom autogen.sh
-      script is included for ease of use.
+      The build system has moved to using GNU autotools. Most of the quirks have been worked
+      out and a simple script has been introduced to streamline the build process for testing.
+      Because of the structure of the autotools builds without this script the files will not
+      be copied over into the bin/ directory.
 
-      One limitiation to the build system is that it is designed with the purpose of
-      installing the application. Right now there is no easy way to build the code into	
-      a sensible directory structure (bin/, lib/, etc) without severe modification. In
-      the future the code will most likely be restructured further to ease the transition
-      to newer versions, but for now it is compilable.
+      1. Run ./autogen.sh
 
-      Please make sure all the dependencies are installed before building.
+      2. ./build.sh all
+
+      3. ./bin/gtkworkbook -c ./bin/application.cfg
+
+ADVANCED INSTALLATION
+      
+      You can specify an installation directory by re-running autogen.sh, but when you build
+      without using the custom build.sh script remember that the bin/ binary (and extensions)
+      will not be copied over.
 
       1. Run ./autogen.sh --prefix=[install_directory]
-
+ 
       2. make install
 
       3. cd [install_directory]
-      
-      4. ./bin/gtkworkbook -c ./cfg/application.cfg
+
+      4. gtkworkbook -c application.cfg
