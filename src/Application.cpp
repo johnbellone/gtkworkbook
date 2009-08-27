@@ -41,13 +41,6 @@ static guint
 ApplicationKeypressCallback (GtkWidget * window, GdkEventKey * event, gpointer data) {
 	Application * app = (Application *)data;
 	gint result = FALSE;
-
-	switch (event->keyval) {
-		case GDK_F3: {
-			std::cout << "application\n"<<std::flush;
-		}
-		break;
-	}
 	
 	return result;
 }
