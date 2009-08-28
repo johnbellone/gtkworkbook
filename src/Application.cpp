@@ -40,15 +40,28 @@ munchpath (gchar * path_) {
 static guint
 ApplicationKeypressCallback (GtkWidget * window, GdkEventKey * event, gpointer data) {
 	Application * app = (Application *)data;
+	Workbook * wb = app->wb();
 	gint result = FALSE;
 
-	switch (event->keyval) {
-		case GDK_F3: {
-			std::cout << "application\n"<<std::flush;
+	if (wb != NULL) {
+		Sheet * sheet = wb->focus_sheet;
+		
+		switch (event->keyval) {
+
+			case GDK_F2: {
+				// There should be an existing sheet being focused on; this pointer cannot be null because
+				// we rely on inforamtion available from the widgets to make the Record View Sheet widget.
+				if (sheet) {
+					RecordView * view = new RecordView (app);
+				
+					view->AddSheetRecord (sheet);
+					gtk_widget_show_all ( view->window() );
+				}
+			}
+			break;
+
 		}
-		break;
 	}
-	
 	return result;
 }
 
@@ -125,11 +138,6 @@ GtkSheetChangedCallback (GtkWidget * gtksheet, gint row, gint column, Sheet * sh
 	return FALSE;
 }
 
-/* @description: This is the callback to GtkMain's "delete" event. This is
-   called when we attempt to close the application safely. 
-   @window: A pointer to the GtkWindow object.
-   @event: A pointer to the associated GdkEvent information.
-   @p: NULL */
 static guint
 DeleteEventCallback (GtkWindow * window, GdkEvent * event, gpointer p) {
 	GtkWidget * dialog 
@@ -146,10 +154,6 @@ DeleteEventCallback (GtkWindow * window, GdkEvent * event, gpointer p) {
 	return (result == GTK_RESPONSE_YES) ? FALSE : TRUE;
 }
 
-/* @description: This is the callback to the "destroy" signal that is
-   emitted from GtkMain. Any cleanup should be done here.
-   @window: A pointer to the GtkWindow object.
-   @data: NULL */
 static guint
 DestroyEventCallback (GtkWidget * window, gpointer data) {
 	Application * app = (Application *)data;
@@ -158,11 +162,13 @@ DestroyEventCallback (GtkWidget * window, gpointer data) {
 }
 
 Application::Application (int argc, char *** argv) {
-	this->init (argc, argv);
 	this->cfg = NULL;
 	this->gtk_window = NULL;
 	this->gtk_menu = NULL;
 	this->gtk_window_vbox = NULL;
+	this->active_workbook = NULL;
+
+	this->init (argc, argv);
 	
 	/* Set up the signals. */
 	this->signals[NOTEBOOK_SWITCHED]
@@ -189,6 +195,36 @@ Application::~Application (void) {
 	FREE (this->absolute_path);
 }
 
+GtkWidget *
+Application::gtkwindow (void) {
+	return this->gtk_window;
+}
+
+GtkWidget *
+Application::gtkvbox (void) {
+	return this->gtk_window_vbox;
+}
+
+GtkWidget *
+Application::gtkmenu (void) {
+	return this->gtk_menu;
+}
+
+Config *
+Application::config (void) {
+	return this->cfg;
+}
+
+proactor::Proactor *
+Application::proactor (void) {
+	return &this->pro;
+}
+
+Workbook *
+Application::wb (void) {
+	return this->active_workbook;
+}
+
 Plugin *
 Application::load_plugin (const std::string filename) {
 	Plugin * plugin = Plugin::open_plugin (this, filename);
@@ -201,7 +237,7 @@ Application::load_plugin (const std::string filename) {
 
 void
 Application::shutdown(void) {
-	// STUB: shutdown the proactor threads here.
+	//	this->proactor()->stop();
 	gtk_main_quit ();
 }
 
@@ -223,21 +259,21 @@ Application::open_extension (const gchar * filename, gboolean absolute_path) {
 
 	Plugin * plugin = NULL;
 	if ((plugin = this->load_plugin (fname)) != NULL) {
+		Workbook * wb = plugin->workbook();
 		
-		if (plugin->workbook() == NULL) {
+		if (wb == NULL) {
 			g_critical ("Plugin returned a NULL pointer instead of allocated"
 							" workbook.");
 			exit (1);
 		}
-		
+				
 		/* Attach all of the signals for the Workbook object. */
-		gtk_signal_connect (GTK_OBJECT (plugin->workbook()->gtk_notebook),
-								  "switch-page",
-								  (GtkSignalFunc)GtkNotebookSwitchPageCallback,
-								  plugin->workbook());
+		gtk_signal_connect (GTK_OBJECT (plugin->workbook()->gtk_notebook), "switch-page",
+								  GTK_SIGNAL_FUNC (GtkNotebookSwitchPageCallback), plugin->workbook());
 	
 		gtk_widget_show_all (this->gtk_menu);
-		this->workbooks.push_back (plugin->workbook());
+		this->active_workbook = wb;
+		this->workbooks.push_back (wb);
 	}
 
 	FREE (fname);
@@ -282,21 +318,11 @@ Application::init (int argc, char *** argv) {
 		}
 	}
 
-	gdk_threads_enter ();
 	gtk_init (&argc, argv);
 
 	/* Create the window and connect two callback to the signals. */
 	this->gtk_window = gtk_window_new (GTK_WINDOW_TOPLEVEL);
 	this->gtk_menu = gtk_menu_bar_new();
-	
-	gtk_signal_connect (GTK_OBJECT (this->gtk_window), "destroy",
-							  G_CALLBACK (DestroyEventCallback), this);
-	
-	gtk_signal_connect (GTK_OBJECT (this->gtk_window), "delete_event",
-							  G_CALLBACK (DeleteEventCallback), NULL);
-	
-	gtk_signal_connect (GTK_OBJECT (this->gtk_window), "key_press_event",
-							  GTK_SIGNAL_FUNC (ApplicationKeypressCallback), this);
 	
 	/* Set the initial size of the application; we could load this
 		from a configuration file eventually. */
@@ -309,8 +335,6 @@ Application::init (int argc, char *** argv) {
 	this->gtk_window_vbox = window_box;
   
 	gtk_widget_show_all (this->gtk_window);
- 
-	gdk_threads_leave ();
 	
 	if (this->cfg) {
 		Config * cfg = this->cfg;
@@ -350,6 +374,16 @@ Application::init (int argc, char *** argv) {
 			}
 		}
 	}
+
+	
+	gtk_signal_connect (GTK_OBJECT (this->gtk_window), "destroy",
+							  G_CALLBACK (DestroyEventCallback), this);
+	
+	gtk_signal_connect (GTK_OBJECT (this->gtk_window), "delete_event",
+							  G_CALLBACK (DeleteEventCallback), NULL);
+	
+	gtk_signal_connect (GTK_OBJECT (this->gtk_window), "key_press_event",
+							  GTK_SIGNAL_FUNC (ApplicationKeypressCallback), this);
 }
 
 int

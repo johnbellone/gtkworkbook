@@ -371,10 +371,7 @@ sheet_method_apply_cellrange (Sheet * sheet,
 }
 
 static void
-sheet_method_apply_cellrow (Sheet * sheet,
-									 Cell ** array,
-									 gint row,
-									 gint size) {
+sheet_method_apply_cellrow (Sheet * sheet, Cell ** array, gint row, gint size) {
 	ASSERT (sheet != NULL);
 	g_return_if_fail (array != NULL);
 	

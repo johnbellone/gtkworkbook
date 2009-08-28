@@ -20,7 +20,6 @@
 
 Plugin::Plugin (Application * appstate, Handle * platform)
 	: appstate(appstate), platform(platform) {
-	this->wb = NULL;
 }
 
 Plugin::~Plugin (void) {

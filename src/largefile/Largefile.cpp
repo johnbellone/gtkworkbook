@@ -128,7 +128,10 @@ CsvOpenDialogCallback (GtkWidget * w, gpointer data) {
 		}
 		else {
 			if (lf->OpenFile (sheet, filename) == true) {
-				// STUB: Do something magical.
+				/*
+				g_signal_connect (lf->app()->window(), "switch-page",
+										G_CALLBACK (lf->app()->signal ("switch-page")), lf->workbook());
+				*/
 			}
 			else {
 				// STUB: The opening of the file failed. Do something meaningful here.
@@ -198,7 +201,7 @@ GtkKeypressCallback (GtkWidget * window, GdkEventKey * event, gpointer data) {
 		g_signal_connect (G_OBJECT (dialog->widget), "response",
 								G_CALLBACK (GotoDialogResponseCallback), dialog);
 		
-		g_signal_connect (G_OBJECT (dialog->widget), "delete-event",
+		g_signal_connect (G_OBJECT (dialog->widget), "delete_event",
 								G_CALLBACK (gtk_widget_hide_on_delete), NULL);
 	}	
 	
@@ -266,7 +269,7 @@ Largefile::BuildLayout (void) {
 
 	wb->signals[SIG_WORKBOOK_CHANGED] = this->app()->signals[Application::SHEET_CHANGED];
 	wb->gtk_box = box;
-
+	
 	gtk_box_pack_start (GTK_BOX (box), wb->gtk_notebook, FALSE, FALSE, 0);
 	gtk_box_pack_start (GTK_BOX (this->app()->gtkvbox()), box, FALSE, FALSE, 0);
 	return box;

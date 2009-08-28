@@ -209,7 +209,7 @@ workbook_object_init (GtkWidget * window, const gchar * filename)
 
 	/* Set up the signals. */
 	book->signals[SIG_WORKBOOK_CHANGED] = NULL;
-
+	
 	/* Set up the notebook */
 
 	book->gtk_notebook = gtk_notebook_new ();
