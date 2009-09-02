@@ -19,7 +19,6 @@
 #ifndef HPP_CONCURRENT_THREAD
 #define HPP_CONCURRENT_THREAD
 
-#include <shared.h>
 #include <string>
 #include <pthread.h>
 #include <map>

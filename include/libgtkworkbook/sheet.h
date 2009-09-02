@@ -16,10 +16,10 @@
    License along with the library; if not, write to the Free Software
    Foundation, Inc., 51 Franklin Street, Fifth Floor Boston, MA 02110-1301 USA
 */
-#ifndef H_SHEET
-#define H_SHEET
+#ifndef LIBGTKWORKBOOK_SHEET
+#define LIBGTKWORKBOOK_SHEET
 
-#include <shared.h>
+#include "header.h"
 #include <gtk/gtk.h>
 #include <gtkextra/gtksheet.h>
 
@@ -83,6 +83,7 @@ extern "C" {
 												const gchar *);
 		gboolean (*save) (Sheet *, const gchar *);
 		gboolean (*load) (Sheet *, const gchar *);
+		void (*get_row) (Sheet * sheet, gint row, Cell ** array, gint size);
 	};
 
 	/* sheet.c */

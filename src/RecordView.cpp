@@ -17,6 +17,7 @@
   Foundation, Inc., 51 Franklin Street, Fifth Floor Boston, MA 02110-1301 USA
 */
 #include "RecordView.hpp"
+#include <libgtkworkbook/row.h>
 #include <gtkextra/gtksheet.h>
 
 static guint
@@ -57,11 +58,23 @@ void
 RecordView::AddSheetRecord (Sheet * sheet) {
 	ASSERT (sheet != NULL);
 	GtkSheet * gtksheet = GTK_SHEET (sheet->gtk_sheet);
-
-	this->wb->add_new_sheet (this->wb,sheet->name,gtksheet->maxcol,1);
-
-	// Populate the record's column with the selected row of the sheet.
+	gint row = gtksheet->active_cell.row;
 	
+	Sheet * record_sheet = this->wb->add_new_sheet (this->wb,sheet->name,gtksheet->maxcol,1);
+
+	Row * tuple = row_new (gtksheet->maxcol);
+		
+	sheet->get_row (sheet, row, tuple->cells, tuple->size);
+
+	for (int ii = 0; ii < tuple->size; ii++) {
+		
+		record_sheet->set_cell (record_sheet,
+										ii,
+										0,
+										tuple->cells[ii]->value->str);
+	}
+
+	tuple->destroy (tuple);
 }
 
 GtkWidget *

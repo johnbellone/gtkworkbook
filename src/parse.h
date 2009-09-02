@@ -19,8 +19,7 @@
 #ifndef H_PARSE
 #define H_PARSE
 
-#include <glib.h>
-#include <shared.h>
+#include "header.h"
 
 #define EXPECT(p,q,d) (*(q = munch (p)) == d)
 
