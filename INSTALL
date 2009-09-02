@@ -1,75 +1,117 @@
-GTKWorkbook Installation Guide
-Copyright (C) 2008, 2009 John Bellone, Jr.
- See etc/TERMS for license information.
+GTKWorkbook Installation Information
 
-This file contains general information on the installation of GTKWorkbook.
-Right now there are not any build tools used other than GNU Make so
-dependency checking must be done manually. In the future this will change
-but I do not have the time to get acquantied with automake yet.
+SUMMARY
+
+	GTKWorkbook currently uses GNU Autotools for the build tool-chain. The
+	version of Autotools that ships with CentOS 5.2 (Redhat Enterprise
+	Linux 5.4) is 2.59 and that is our minimum requirement. There should be
+	absolutely no problem building the project with a newer version. If
+	such a problem exists please do not hesitate to report it so we can
+	fix it.
 
 DEPENDENCIES
 
-	A. GTK	
+	This project has some dependencies which it needs in order to be
+	built properly. They are listed below, along with the versions and
+	locations of the project's website for downloadables. 
 
-	   This is obvious but I figured I should state it anyway. 
-	   	
-	B. GtkExtra
+	GTK 2.12
 
-	   The libworkbook library wraps GTK+ calls to the GtkSheet widget
-	   which is included inside of the GtkExtra library available on
-	   the FEDORA REPOSITORY, and the SOURCEFORGE.NET project website.
-	   
-	   I have been performing development on gtkextra3 and gtkextra2
-	   which both work with GTKWorkbook; but I would suggest downloading
-	   the latest version of either depending on which version of GTK+
-	   you have installed. You can use their CVS repository on their
-	   project's website:
+		This toolkit is required for the build to even start. If you
+		do not have this installed you'll most likely have a much
+		larger issue than building this project. Depending on your
+		distribution of Linux there are different ways to go about
+		installing the GTK windowing environment. 
 
-	   http://gtkextra.cvs.sourceforge.net/viewvc/gtkextra
+	GLIB 2
 
-	C. Pixman
+		This comes with GTK 2.12, but it listed as a separate 
+		requirement to enforce the fact that you need these two before
+		you can even think about installing this project.
 
-	   The GtkExtra library requires this to be installed with the version	
-	   of GTK+ that ships with CentOS 5.2; but later versions of Fedora 
-	   seem to include this in their distribution. If you are using either
-	   CentOS 5.2 (or the equivalient RedHat distribution) you'll need to
-	   grab this release and go through the motions.
+	GTKEXTRA 2
 
-	   http://cairographics.org/releases/
+		This custom widget library is used for the GtkSheet widget
+		that is wrapped in libgtkworkbook. The best place to grab this
+		is the CVS source tree on the project's sourceforge.net
+		website.
 
-	   The newest version should suffice as long as it compiles and installs.
+		http://gtkextra.cvs.sourceforge.net/viewvc/gtkextra
 
-	D. libcsv
+		NOTE: If you have a newer version of GTK that includes the
+		support for Pixman and Cairo you can use the GTKEXTRA 3 branch
+		and GTKWorkbook will work perfectly fine. Currently the trunk
+		of CentOS (and RHEL) are running GTK/GLIB 2.12 which does not
+		have this support natively.
 
-	   This C library is used for the parsing of comma-separated files that are
-	   used for all of the major modes of this application. It is a very solid
-	   library, and the most recent version is more than suitable for the demo
-	   code.
+	PIXMAN
 
-	   It is available off sourceforge.net at the following address:
+		This library is included with newer versions of GTK, but if 
+		you are running GTK 2.12 (Cent OS 5.2 or RHEL 5.4) then you
+		must download and install this separately before the project
+		can compile cleanly.
 
-	   http://sourceforge.net/projects/libcsv/
+		http://cairographics.org/releases/
+
+		The newest version should suffice as long as it compiles and
+		installs properly.
+
+	LIBCSV
+
+		This third-party library is required for comma-separated files
+		to be parsed, read, and written. It is available on the website
+		below and the newest version possible will work fine.
+
+		http://sourceforge.net/projects/libcsv/
+
+BUILD PROCESS
+
+	We use a custom build script to copy the compiled binaries (and 
+	libraries) into an intermediate staging directory for testing. That 
+	directly is <bin> inside of the project's root directory. Therefore, 
+	if you are compiling from /home/john/work/gtkworkbook the staging 
+	directory will be in /home/john/work/gtkworkbook/bin. This directory 
+	is automatically created if it does not exist.
+	
+	A staging version of this project can be built using the included 
+	"build" script by merely running it like the following:
+
+		sh build all
+
+	If you wish you do a clean build you can pass the parameter like so:
+
+		sh build clean all
+
+	If the build process completes successfully a copy of the executables 
+	and libraries will be copied into the project's <bin> directory for 
+	testing purposes. Note that currently if the build process files the 
+	previous build's files will not be removed. 
 
 BASIC INSTALLATION
 
-      The build system has begun to move to a GNU autotools design. There are still
-      a few quirks about how the system works, but all in all it is much like any other
-      open source project that uses the GNU tool chain. There is a configure script that
-      can be run independently to build the set of Makefiles, but a custom autogen.sh
-      script is included for ease of use.
+	Installing the project is easy as building it. Performing the following
+	command will cleanly build and install the files into the system's 
+	directory, </usr/local>, and files will be copied into their 
+	appropriate locations.
 
-      One limitiation to the build system is that it is designed with the purpose of
-      installing the application. Right now there is no easy way to build the code into	
-      a sensible directory structure (bin/, lib/, etc) without severe modification. In
-      the future the code will most likely be restructured further to ease the transition
-      to newer versions, but for now it is compilable.
+		sh build clean install
 
-      Please make sure all the dependencies are installed before building.
+ADVANCED INSTALLATION
 
-      1. Run ./autogen.sh --prefix=[install_directory]
+	If you are targeting a specific location for the build files then
+	you can manually run <autogen.sh> with the prefix option.
 
-      2. make install
+		sh autogen.sh --prefix=[target-location]
 
-      3. cd [install_directory]
-      
-      4. ./bin/gtkworkbook -c ./cfg/application.cfg
+	So, for example, if we wanted to install the project in a specific
+	directory that exists inside our home.
+
+		sh autogen.sh --prefix=/home/john/gtkworkbook
+
+	Now, the configure script will be recreated as will all of the
+	Makefile scripts. You can now perform the BUILD PROCESS and then the
+	following command will perform the installation to your target.
+
+		sh build clean install
+
+	 
