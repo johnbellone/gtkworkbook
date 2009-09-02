@@ -39,8 +39,9 @@ RecordView::RecordView (Application * appstate) {
 	
 	gtk_window_set_title (GTK_WINDOW (this->gtk_window), "Record View");
 	gtk_window_set_destroy_with_parent (GTK_WINDOW (this->gtk_window), TRUE);
-
-	gtk_box_pack_start (GTK_BOX (this->gtk_vbox), this->wb->gtk_notebook, FALSE, FALSE, 0);
+	gtk_window_set_default_size (GTK_WINDOW (this->gtk_window), 400, 600);
+	
+	gtk_box_pack_start (GTK_BOX (this->gtk_vbox), this->wb->gtk_notebook, TRUE, TRUE, 0);
 
 	gtk_container_add (GTK_CONTAINER (this->gtk_window), this->gtk_vbox);
 	

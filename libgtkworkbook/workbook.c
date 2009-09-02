@@ -220,7 +220,7 @@ workbook_object_init (GtkWidget * window, const gchar * filename)
 	gtk_notebook_popup_enable (notebook);
 	gtk_notebook_set_show_tabs (notebook, TRUE);
 	gtk_notebook_set_show_border (notebook, TRUE);
-	gtk_widget_set_usize (book->gtk_notebook, 1024, 768);
+	/*gtk_widget_set_usize (book->gtk_notebook, 1024, 768);*/
 
 	gtk_widget_show_all (book->gtk_notebook);
 

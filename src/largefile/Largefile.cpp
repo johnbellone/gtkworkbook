@@ -270,8 +270,8 @@ Largefile::BuildLayout (void) {
 	wb->signals[SIG_WORKBOOK_CHANGED] = this->app()->signals[Application::SHEET_CHANGED];
 	wb->gtk_box = box;
 	
-	gtk_box_pack_start (GTK_BOX (box), wb->gtk_notebook, FALSE, FALSE, 0);
-	gtk_box_pack_start (GTK_BOX (this->app()->gtkvbox()), box, FALSE, FALSE, 0);
+	gtk_box_pack_start (GTK_BOX (box), wb->gtk_notebook, TRUE, TRUE, 0);
+	gtk_box_pack_start (GTK_BOX (this->app()->gtkvbox()), box, TRUE, TRUE, 0);
 	return box;
 }
 
