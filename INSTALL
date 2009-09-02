@@ -59,7 +59,8 @@ DEPENDENCIES
 	LIBCSV
 
 		This third-party library is required for comma-separated files
-		to be parsed, read, and written. It is available on the website
+		to be parsed, read, and written. It is available on the 
+		website
 		below and the newest version possible will work fine.
 
 		http://sourceforge.net/projects/libcsv/

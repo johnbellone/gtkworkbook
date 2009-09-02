@@ -43,6 +43,15 @@ fi
 # Clean up old files which could hurt otherwise
 rm -f config.cache config.log config.status
 
+# generate changes from git 
+if ( git --version ) </dev/null > /dev/null 2>&1; then
+    echo -n "Writing git branch change history to CHANGES..."
+    git log > CHANGES
+    echo "done."
+else
+    echo "git not found -- cannot write branch change history"
+fi
+
 # generate config.guess config.sub ltconfig ltmain.sh
 if ( libtoolize --version ) </dev/null > /dev/null 2>&1; then
 	rm -f config.guess config.sub ltconfig ltmain.sh
