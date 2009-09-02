@@ -21,16 +21,21 @@
 
 #include <gtk/gtk.h>
 #include <libgtkworkbook/workbook.h>
+#include <libgtkworkbook/sheet.h>
 #include "Application.hpp"
 
 class RecordView {
 private:
 	GtkWidget * gtk_window;
+	GtkWidget * gtk_vbox;
 	Application * appstate;
+	Workbook * wb;
 public:
 	RecordView (Application * app);
 	~RecordView (void);
 
+	void AddSheetRecord (Sheet * sheet);
+	
 	Application * app (void) const;
 	GtkWidget * window (void) const;
 };

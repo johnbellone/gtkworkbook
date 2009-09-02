@@ -23,6 +23,7 @@
 #include <cstdio>
 #include <sys/time.h>
 #include <unistd.h>
+#include <glib.h>
 
 namespace largefile {
 	
@@ -53,7 +54,7 @@ namespace largefile {
 	}
 
 	bool
-	FileDispatcher::Readpercent (guint percent, off64_t N) {
+	FileDispatcher::Readpercent (unsigned int percent, off64_t N) {
 		if (percent > 100) return false;
 		if (this->marks.get(percent * 10).byte == -1) return false;
 

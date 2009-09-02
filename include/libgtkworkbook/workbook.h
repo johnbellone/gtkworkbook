@@ -16,10 +16,10 @@
    License along with the library; if not, write to the Free Software
    Foundation, Inc., 51 Franklin Street, Fifth Floor Boston, MA 02110-1301 USA
 */
-#ifndef H_WORKBOOK
-#define H_WORKBOOK
+#ifndef LIBGTKWORKBOOK_WORKBOOK
+#define LIBGTKWORKBOOK_WORKBOOK
 
-#include <shared.h>
+#include "header.h"
 #include <gtk/gtk.h>
 
 #ifdef __cplusplus

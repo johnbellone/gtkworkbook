@@ -29,6 +29,7 @@ extern "C" {
   PluginFactoryCreate (Application * appstate, Handle * platform) {
     ASSERT (appstate != NULL);
     ASSERT (platform != NULL);
+	 
 	 largefile::Largefile * lf = new largefile::Largefile (appstate, platform);
 	 GtkWidget * box = lf->BuildLayout();
 

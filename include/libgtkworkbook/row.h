@@ -16,8 +16,8 @@
    License along with the library; if not, write to the Free Software
    Foundation, Inc., 51 Franklin Street, Fifth Floor Boston, MA 02110-1301 USA
 */
-#ifndef LIBGTKWORKBOOK_CELL
-#define LIBGTKWORKBOOK_CELL
+#ifndef LIBGTKWORKBOOK_ROW
+#define LIBGTKWORKBOOK_ROW
 
 #include "header.h"
 #include <gtkextra/gtkextra.h>
@@ -26,17 +26,16 @@
 extern "C" {
 #endif
 
-	typedef struct _Cell Cell;
-	typedef struct _CellAttributes CellAttributes;
+	typedef struct _Row Row;
 
-#include "sheet.h"
+#include "cell.h"
 
 	/*
-	  @description: These objects will evolve as more uses are found for it. 
-	  Right now it provides as an intermediate abstraction for the cell 
-	  information of a GtkSheetEntry. It works in conjunction with the Sheet 
-	  object (the Sheet object performs all the gtk_sheet_* functions). 
-
+	  @description: This object as a container for N cell objects. It makes it much easier
+	  than having to allocate blocks of cells manually in code. So, for the occasionally time
+	  this code gets used its actually very helpful. If you have large row transformations
+	  this may be the place to add additional methods.
+	  
 	  If you decide to manually set any of the members be sure:
 	  a. For single cell changes row and column ranges must equal each other
 	  because GtkSheet does not provide interfaces for all operations to
@@ -51,43 +50,22 @@ extern "C" {
 	  a. Do not add them to any methods inside of this object. This object does
 	  not (and should not) contain any locking procedures. All the locking for
 	  threading should be done in the Sheet object (where all gtk+ calls 
-	  should be performed). 
+	  should be performed).
 	*/
-	struct _CellAttributes
-	{
-		GString * bgcolor;
-		GString * fgcolor;
-		GtkJustification justification;
-	};
-
-	struct _Cell
-	{
+	struct _Row {
 		/* Members */
-		Sheet * sheet;
-		Cell * next;
-		GString * value;
-		CellAttributes attributes;
-		GtkSheetRange range;
-		gint row, column;
-    
+		Cell ** cells;
+		gint size;
+
 		/* Methods */
-		void (*set) (Cell * cell, gint row, gint column, const gchar * value);
-		void (*set_value) (Cell * cell, const gchar * value);  
-		void (*set_value_length) (Cell * cell, void * s, size_t length);
-		void (*set_column) (Cell * cell, gint column);
-		void (*set_row) (Cell * cell, gint row);
-		void (*set_range) (Cell * cell, const GtkSheetRange * range);
-		void (*set_justification) (Cell * cell, GtkJustification justification);
-		void (*set_fgcolor) (Cell * cell, const gchar * color);
-		void (*set_bgcolor) (Cell * cell, const gchar * color);
-		void (*set_attributes) (Cell * cell, const CellAttributes * attrib);
-		void (*destroy) (Cell * cell);
+		void (*destroy) (Row * row);
+		Cell * (*get_cell) (Row * row, gint column);
 	};
 
-	/* cell.c */
-	Cell *cell_new (void);
-
+	/* row.c */
+	Row * row_new (gint columns);
+	
 #ifdef __cplusplus
 }
 #endif
-#endif /*H_CELL*/
+#endif /* H_ROW */

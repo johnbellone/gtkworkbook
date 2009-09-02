@@ -40,6 +40,7 @@ static void sheet_method_set_attention (Sheet *, gint);
 static gboolean sheet_method_load (Sheet *, const gchar *);
 static gboolean sheet_method_save (Sheet *, const gchar *);
 static void sheet_method_apply_cellrow (Sheet *, Cell **, gint, gint);
+static void sheet_method_get_cellrow (Sheet *, gint, Cell **, gint);
 
 struct geometryFileHeader {
 	gint fileVersion;
@@ -186,6 +187,7 @@ sheet_object_init (Workbook * book,
 	sheet->set_attention = sheet_method_set_attention;
 	sheet->save = sheet_method_save;
 	sheet->load = sheet_method_load;
+	sheet->get_row = sheet_method_get_cellrow;
 
 	/* Connect any signals that we need to. */
 	if (!IS_NULL (sheet->workbook->signals[SIG_WORKBOOK_CHANGED]))
@@ -371,10 +373,7 @@ sheet_method_apply_cellrange (Sheet * sheet,
 }
 
 static void
-sheet_method_apply_cellrow (Sheet * sheet,
-									 Cell ** array,
-									 gint row,
-									 gint size) {
+sheet_method_apply_cellrow (Sheet * sheet, Cell ** array, gint row, gint size) {
 	ASSERT (sheet != NULL);
 	g_return_if_fail (array != NULL);
 	
@@ -408,6 +407,30 @@ sheet_method_apply_cellrow (Sheet * sheet,
 		*/
 
 		item->value->str[0] = item->attributes.bgcolor->str[0] = item->attributes.fgcolor->str[0] = 0;
+	}
+}
+
+static void
+sheet_method_get_cellrow (Sheet * sheet,
+								  gint row,
+								  Cell ** array,
+								  gint size) {
+	ASSERT (sheet != NULL);
+	ASSERT (array != NULL);
+
+	GtkSheet * gtksheet = GTK_SHEET (sheet->gtk_sheet);
+	
+	if (size > gtksheet->maxcol)
+		size = gtksheet->maxcol;
+
+	for (int ii = 0; ii < size; ii++) {
+		Cell * p = array[ii];
+		const char * label = gtk_sheet_cell_get_text (gtksheet, row, ii);
+
+		if (label == NULL)
+			p->set (p, row, ii, "");
+		else
+			p->set (p, row, ii, label);
 	}
 }
 
@@ -546,6 +569,7 @@ sheet_method_set_cell (Sheet * sheet,
 
 	if (sheet->has_focus == FALSE)
 		sheet->notices++;
+	
 	gtk_sheet_set_cell (GTK_SHEET (sheet->gtk_sheet), 
 							  row, 
 							  col, 

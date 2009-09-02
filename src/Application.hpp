@@ -69,13 +69,13 @@ public:
 	void open_extension (const gchar * filename, gboolean absolute_path);
 
 	RecordView * OpenRecordView (Sheet * sheet, int row, int col);
-	
-	inline GtkWidget * gtkwindow() { return this->gtk_window; }
-	inline GtkWidget * gtkvbox() { return this->gtk_window_vbox; }
-	inline GtkWidget * gtkmenu() { return this->gtk_menu; }
-	inline Config * config() { return this->cfg; }
-	inline proactor::Proactor * proactor() { return &this->pro; }
-	inline Workbook * wb() { return this->active_workbook; }
+
+	GtkWidget * gtkwindow (void);
+	GtkWidget * gtkvbox (void);
+	GtkWidget * gtkmenu (void);
+	Config * config (void);
+	proactor::Proactor * proactor (void);
+	Workbook * wb (void);
 };
 
 #endif
