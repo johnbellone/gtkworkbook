@@ -75,3 +75,4 @@ row_method_getcell (Row * row, gint column) {
 
 	return row->cells[ column ];
 }
+
