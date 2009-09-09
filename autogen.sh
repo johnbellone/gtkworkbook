@@ -102,4 +102,4 @@ echo ./configure $@
         exit 1
 }
 
-echo "Now type 'make' to compile $package."
+echo "Now type 'sh build all' to compile $package."

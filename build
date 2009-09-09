@@ -7,6 +7,7 @@ package="gtkworkbook"
 top_dir=`pwd`
 src_dir="$top_dir/src"
 bin_dir="$top_dir/bin"
+cfg_dir="$top_dir/cfg"
 
 if [ ! -f configure ]; then
     echo "Regenerating project files..."
@@ -30,6 +31,9 @@ make $@ || {
 }
 
 # copy files into the directory for binaries
-cp ${src_dir}/OBJS/pa1 ${bin_dir}/pa1
+cp ${src_dir}/OBJS/.libs/gtkworkbook ${bin_dir}/gtkworkbook
+cp ${src_dir}/OBJS/.libs/largefile.so ${bin_dir}/largefile.so
+cp ${src_dir}/OBJS/.libs/realtime.so ${bin_dir}/realtime.so
+cp ${cfg_dir}/application.cfg ${bin_dir}/application.cfg
 
-echo "Build of $package is complete; project file resides in $bin_dir"
+echo "Build of $package is complete.\nProject files resides in $bin_dir"
