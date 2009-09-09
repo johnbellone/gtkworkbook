@@ -25,14 +25,14 @@ gtkworkbook_LDADD= ../../libgtkworkbook/OBJS/libgtkworkbook.la
 
 lib_LTLIBRARIES= realtime.la largefile.la
 
-realtime_la_SOURCES= $(SOURCE)/realtime/CsvParser.cpp $(SOURCE)/realtime/Network.cpp $(SOURCE)/realtime/Packet.cpp \
-$(SOURCE)/realtime/PacketParser.cpp $(SOURCE)/realtime/PluginFactory.cpp $(SOURCE)/realtime/Realtime.cpp
+realtime_la_SOURCES= $(SOURCE)/realtime/Network.cpp $(SOURCE)/realtime/Packet.cpp $(SOURCE)/realtime/PacketParser.cpp \
+$(SOURCE)/realtime/PluginFactory.cpp $(SOURCE)/realtime/Realtime.cpp
 realtime_la_CPPFLAGS= -fPIC -Wall -Wno-write-strings $(C_FLAGS)
 realtime_la_LFLAGS= $(L_FLAGS) -lgtkworkbook -lcsv
 realtime_la_LDFLAGS= $(L_FLAGS) -lgtkworkbook -lcsv -module -export-dynamic 
 
-largefile_la_SOURCES= $(SOURCE)/largefile/CsvParser.cpp $(SOURCE)/largefile/File.cpp \
-$(SOURCE)/largefile/PluginFactory.cpp $(SOURCE)/largefile/Largefile.cpp
+largefile_la_SOURCES= $(SOURCE)/largefile/File.cpp $(SOURCE)/largefile/PluginFactory.cpp \
+$(SOURCE)/largefile/Largefile.cpp
 largefile_la_CPPFLAGS= -fPIC -Wall -Wno-write-strings $(C_FLAGS)
 largefile_la_LFLAGS= $(L_FLAGS) -lgtkworkbook -lcsv
 largefile_la_LDFLAGS= $(L_FLAGS) -lgtkworkbook -lcsv -module -export-dynamic

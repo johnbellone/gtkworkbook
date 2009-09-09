@@ -450,9 +450,9 @@ sheet_method_set_header_column (Sheet * sheet,
 	if (size > gtksheet->maxcol) size = gtksheet->maxcol;
 	
 	for (gint ii = 0; ii < size; ii++) {
-		Cell * array[ii];
+		Cell * cell = array[ii];
 
-		gtk_sheet_set_column_title (gtksheet, ii, cell->value);
+		gtk_sheet_set_column_title (gtksheet, ii, cell->value->str);
 		
 		cell->value->str[0] = 0;
 	}
@@ -470,9 +470,9 @@ sheet_method_set_header_row (Sheet * sheet,
 	if (size > gtksheet->maxrow) size = gtksheet->maxrow;
 	
 	for (gint ii = 0; ii < size; ii++) {
-		Cell * array[ii];
+		Cell * cell = array[ii];
 
-		gtk_sheet_set_row_title (gtksheet, ii, cell->value);
+		gtk_sheet_set_row_title (gtksheet, ii, cell->value->str);
 		
 		cell->value->str[0] = 0;
 	}

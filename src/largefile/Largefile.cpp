@@ -19,7 +19,7 @@
 #include <gdk/gdkkeysyms.h>
 #include <proactor/Proactor.hpp>
 #include <proactor/Event.hpp>
-#include <CsvParser.hpp>
+#include <workers/CsvParser.hpp>
 #include <vector>
 #include <fstream>
 #include <iostream>

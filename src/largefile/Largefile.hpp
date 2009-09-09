@@ -23,10 +23,10 @@
 #include <map>
 #include <string>
 #include "File.hpp"
+#include "GotoDialog.hpp"
 #include "../Plugin.hpp"
 #include "../Application.hpp"
 #include "../config.h"
-#include "GotoDialog.hpp"
 
 namespace largefile {
 

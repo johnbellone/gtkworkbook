@@ -28,7 +28,7 @@ typedef struct _ConfigRow ConfigRow;
 typedef struct _ConfigPair ConfigPair;
 typedef struct _ConfigVector ConfigVector;
 
-#include "header.h"
+#include <header.h>
 #include <cstdlib>
 
 struct _ConfigPair

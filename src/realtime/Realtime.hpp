@@ -24,13 +24,13 @@
 #include <vector>
 #include <memory>
 #include <concurrent/Thread.hpp>
+#include <workers/CsvParser.hpp>
 #include "../Plugin.hpp"
 #include "../Application.hpp"
 #include "../config.h"
 #include "OpenStreamDialog.hpp"
 #include "Network.hpp"
 #include "PacketParser.hpp"
-#include "CsvParser.hpp"
 
 namespace realtime {
 
@@ -58,7 +58,7 @@ namespace realtime {
 		bool OpenTcpClient (Sheet * sheet, const std::string & address, int port);
 		void Start (void);
 		
-		inline OpenStreamDialog * streamdialog() { return &this->stream_dialog; }
+		inline OpenStreamDialog * streamdialog (void) { return &this->stream_dialog; }
 	};
 }
 

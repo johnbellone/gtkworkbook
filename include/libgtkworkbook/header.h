@@ -16,8 +16,8 @@
    License along with the library; if not, write to the Free Software
    Foundation, Inc., 51 Franklin Street, Fifth Floor Boston, MA 02110-1301 USA
 */
-#ifndef LIBGTKWORKBOOK_SHARED
-#define LIBGTKWORKBOOK_SHARED
+#ifndef HPP_GTKWORKBOOK_HEADER
+#define HPP_GTKWORKBOOK_HEADER
 
 #include <glib.h> 
 #include <stdio.h>
@@ -25,7 +25,7 @@
 #define ASSERT(c) g_assert(c)
 #define FREE(p) { if (p) { g_free (p); p = NULL; } }
 #define NEW(T) (T*)g_malloc (sizeof (T))
-#define NEW_ARRAY(T,n) (T*)g_malloc (n * sizeof(T*)))
+#define NEW_ARRAY(T,n) g_malloc (sizeof(T)*n))
 
 #define IS_NULLSTR(s) (!s || (*s == '\0'))
 #define IS_NULL(p) (p == NULL)
@@ -34,8 +34,8 @@
 #define PCLOSE(fp) { if (fp != NULL) { pclose(fp); fp = NULL; } }
 
 #define ITERATE_BEGIN(TYPE, head) if (head) {	\
-		TYPE *it = NULL, *next = head;				\
-		do { it = next; next = it->next;	
+	TYPE *it = NULL, *next = head;					\
+	do { it = next; next = it->next;	
 
 #define ITERATE_END() } while (next); }
 
@@ -108,4 +108,5 @@
 #define DOUBLE_LINK(head, tail, item) LINK_OBJECT(head, tail, item)
 #define DOUBLE_UNLINK(item) UNLINK_OBJECT(item)
 
-#endif /*H_SHARED*/
+#endif /*HPP_GTKWORKBOOK_HEADER*/
+
