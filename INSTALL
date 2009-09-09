@@ -90,10 +90,11 @@ BUILD PROCESS
 
         E. GNU Autotools
 
-           This is the build tool-chain used which must be available. I have not come
-           across a version of Linux that does not have this installed. The code has been
-           tested and successfully built on the latest version of Ubuntu (9.04) and the
-           current version of CentOS 5.2 and RHEL as of this writing (September 2009). 
+           This is the build tool-chain used which must be available. I have 
+	   not come across a version of Linux that does not have this 
+	   installed. The code has been tested and successfully built on the 
+	   latest version of Ubuntu (9.04) and the current version of CentOS 
+	   5.2 and RHEL as of this writing (September 2009). 
 
 BASIC INSTALLATION
 
@@ -121,3 +122,17 @@ ADVANCED INSTALLATION
 	following command will perform the installation to your target.
 
 		sh build clean install
+
+RUNNING THE APPLICATION
+
+	Now that you have compiled (and in some instances, installed) the
+	application you are going to want to execute it to make sure that it
+	works properly. Your first step will be to modify the configuration
+	file that gets installed.
+
+	The configuration file is located inside of the `cfg' directory inside
+	of the project's root directory. There is a file called
+	"application.cfg" which you can modify and it will be automatically
+	installed with the build script. 
+
+	

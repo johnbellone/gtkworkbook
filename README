@@ -48,3 +48,20 @@ SOURCE CONTROL MANAGEMENT
 	This project uses git <http://www.git-scm.org> for source control and 
 	revision management. There are several tutorials available via Google
 	which explain basic instructions on how git operates. 
+
+	The latest changes are available on the GTKWorkbook project page's 
+	git repository which is hosted by Sourceforge.net. We currently
+	structure our changes in the following fashion:
+
+		  `master'    	 contains the latest *trunk* revision that is
+		  		 considered ready to be used for development.
+				 
+		  `stable'	 contains the latest revision, and any
+		  		 additional changes, which is available for 
+				 release on Sourceforge.net.
+
+		  `working'	 this is a copy of the branch that is being
+		  		 directly worked on currently. If you want to
+				 test out any new features this would be the
+				 branch to do so in.
+

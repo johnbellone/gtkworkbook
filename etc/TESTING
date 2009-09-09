@@ -1,6 +1,7 @@
 Testing
 
-This software has been tested on the following systems and verified to work correctly:
+This software has been tested on the following systems and verified to work 
+correctly:
 
 UBUNTU 9.04
 CENTOS 5.2 (via Sun Virtualbox)
@@ -8,11 +9,21 @@ CENTOS 5.1 (via Sun Virtualbox)
 
        - Intel Core Quad 2.8GHZ
        - 8GB memory
+       - 500GB hard-drive space
        
 RHEL (as of September 2009)
 
-       - Intel Xeon 
+       - Intel Xeon 2.4GHZ
        - 16GB memory
+       - 500GB hard-drive space
+
+Right now there is no official test suite, the plan is to eventually add a
+regression test for libgtkworkbook, but for right now we have included the 
+python scripts that are used for testing. If you look inside of the `etc'
+directory you can find scripts to start TCP socket sessions, pull information
+down from Yahoo's finance website, and generate large CSV files.
+
+
 
 
 
