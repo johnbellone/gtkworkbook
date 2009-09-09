@@ -19,6 +19,7 @@
 #include <gdk/gdkkeysyms.h>
 #include <proactor/Proactor.hpp>
 #include <proactor/Event.hpp>
+#include <CsvParser.hpp>
 #include <vector>
 #include <fstream>
 #include <iostream>
@@ -27,7 +28,6 @@
 #include "GotoDialog.hpp"
 #include "Largefile.hpp"
 #include "File.hpp"
-#include "CsvParser.hpp"
 
 using namespace largefile;
 

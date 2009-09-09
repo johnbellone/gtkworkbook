@@ -10,13 +10,14 @@ SOURCE= ..
 CONCURRENT= ../shared/concurrent
 PROACTOR= ../shared/proactor
 NETWORK= ../shared/network
+WORKERS= ../shared/workers
 
 bin_PROGRAMS= gtkworkbook
 gtkworkbook_SOURCES= $(SOURCE)/Application.cpp $(SOURCE)/config.cpp $(SOURCE)/main.cpp $(SOURCE)/parse.cpp \
 $(SOURCE)/Plugin.cpp $(SOURCE)/RecordView.cpp $(CONCURRENT)/Mutex.cpp $(CONCURRENT)/Runnable.cpp \
 $(CONCURRENT)/ScopedMemoryLock.cpp $(CONCURRENT)/Semaphore.cpp $(CONCURRENT)/Thread.cpp $(CONCURRENT)/ThreadGroup.cpp \
 $(CONCURRENT)/ThreadPool.cpp $(NETWORK)/Tcp.cpp $(PROACTOR)/Dispatcher.cpp $(PROACTOR)/Event.cpp \
-$(PROACTOR)/InputDispatcher.cpp $(PROACTOR)/Proactor.cpp $(PROACTOR)/Worker.cpp
+$(PROACTOR)/InputDispatcher.cpp $(PROACTOR)/Proactor.cpp $(PROACTOR)/Worker.cpp $(WORKERS)/CsvParser.cpp
 gtkworkbook_CPPFLAGS= -Wall $(C_FLAGS) -rdynamic
 gtkworkbook_LFLAGS= -ldl $(L_FLAGS) -lgtkworkbook -lcsv
 gtkworkbook_LDFLAGS= $(L_FLAGS) -lgtkworkbook -lcsv -rdynamic

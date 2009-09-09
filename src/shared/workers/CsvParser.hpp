@@ -16,8 +16,8 @@
   License along with the library; if not, write to the Free Software
   Foundation, Inc., 51 Franklin Street, Fifth Floor Boston, MA 02110-1301 USA
 */
-#ifndef HPP_LF_CSVPARSER
-#define HPP_LF_CSVPARSER
+#ifndef HPP_CSVPARSER
+#define HPP_CSVPARSER
 
 #include <proactor/Worker.hpp>
 #include <libgtkworkbook/sheet.h>
@@ -25,24 +25,20 @@
 #include <concurrent/Thread.hpp>
 #include <libcsv/csv.h>
 
-namespace largefile {
+class CsvParser : public proactor::Worker {
+private:
+	Sheet * sheet;
+	Workbook * wb;
+	Cell ** fields;
+	FILE * log;
+	int verbosity;
+	int maxOfFields;
+	int sizeOfFields;
+public:
+	CsvParser (Sheet * sheet, FILE * log, int verbosity, int maxOfFields = 10);
+	virtual ~CsvParser (void);
 
-	class CsvParser : public proactor::Worker {
-	private:
-		Sheet * sheet;
-		Workbook * wb;
-		Cell ** fields;
-		FILE * log;
-		int verbosity;
-		int maxOfFields;
-		int sizeOfFields;
-	public:
-		CsvParser (Sheet * sheet, FILE * log, int verbosity, int maxOfFields = 10);
-		virtual ~CsvParser (void);
-
-		void * run (void * null);
-	};
-
-} // end of namespace
+	void * run (void * null);
+};
 
 #endif

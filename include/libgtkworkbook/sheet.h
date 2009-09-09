@@ -65,25 +65,20 @@ extern "C" {
 		gboolean has_focus;
 
 		/* Methods */
-		void (*destroy) (Sheet *);
-		void (*set_attention) (Sheet *, gint);
-		void (*apply_range) (Sheet *, 
-									const GtkSheetRange *, 
-									const CellAttributes *);
-		void (*apply_array) (Sheet *, Cell **, gint);
-		void (*apply_cell) (Sheet *, const Cell *);
-		void (*apply_row) (Sheet *, Cell **, gint, gint);
-
-		void (*set_cell) (Sheet *, gint, gint, const gchar *);  
-		void (*range_set_background) (Sheet *, 
-												const GtkSheetRange *, 
-												const gchar *);
-		void (*range_set_foreground) (Sheet *, 
-												const GtkSheetRange *,
-												const gchar *);
-		gboolean (*save) (Sheet *, const gchar *);
-		gboolean (*load) (Sheet *, const gchar *);
+		void (*destroy) (Sheet * sheet);
+		void (*set_attention) (Sheet * sheet, gint attention);
+		void (*apply_range) (Sheet * sheet, const GtkSheetRange * range, const CellAttributes * attrib);
+		void (*apply_array) (Sheet * sheet, Cell ** array, gint size);
+		void (*apply_cell) (Sheet * sheet, const Cell * cell);
+		void (*apply_row) (Sheet * sheet, Cell ** array, gint row, gint size);
+		void (*set_cell) (Sheet * sheet, gint row, gint column, const gchar * value);  
+		void (*range_set_background) (Sheet * sheet, const GtkSheetRange * range, const gchar * desc);
+		void (*range_set_foreground) (Sheet * sheet, const GtkSheetRange * range, const gchar * desc);
+		gboolean (*save) (Sheet * sheet, const gchar * filepath);
+		gboolean (*load) (Sheet * sheet, const gchar * filepath);
 		void (*get_row) (Sheet * sheet, gint row, Cell ** array, gint size);
+		void (*set_column_titles) (Sheet * sheet, Cell ** array, gint size);
+		void (*set_row_titles) (Sheet * sheet, Cell ** array, gint size);
 	};
 
 	/* sheet.c */

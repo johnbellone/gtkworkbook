@@ -41,6 +41,8 @@ static gboolean sheet_method_load (Sheet *, const gchar *);
 static gboolean sheet_method_save (Sheet *, const gchar *);
 static void sheet_method_apply_cellrow (Sheet *, Cell **, gint, gint);
 static void sheet_method_get_cellrow (Sheet *, gint, Cell **, gint);
+static void sheet_method_set_header_column (Sheet *, Cell **, gint);
+static void sheet_method_set_header_row (Sheet *, Cell **, gint);
 
 struct geometryFileHeader {
 	gint fileVersion;
@@ -188,6 +190,8 @@ sheet_object_init (Workbook * book,
 	sheet->save = sheet_method_save;
 	sheet->load = sheet_method_load;
 	sheet->get_row = sheet_method_get_cellrow;
+	sheet->set_column_titles = sheet_method_set_header_column;
+	sheet->set_row_titles = sheet_method_set_header_row;
 
 	/* Connect any signals that we need to. */
 	if (!IS_NULL (sheet->workbook->signals[SIG_WORKBOOK_CHANGED]))
@@ -435,6 +439,46 @@ sheet_method_get_cellrow (Sheet * sheet,
 }
 
 static void
+sheet_method_set_header_column (Sheet * sheet,
+										 Cell ** array,
+										 gint size) {
+	ASSERT (sheet != NULL);
+	g_return_if_fail (array != NULL);
+	
+	GtkSheet * gtksheet = GTK_SHEET (sheet->gtk_sheet);
+
+	if (size > gtksheet->maxcol) size = gtksheet->maxcol;
+	
+	for (gint ii = 0; ii < size; ii++) {
+		Cell * array[ii];
+
+		gtk_sheet_set_column_title (gtksheet, ii, cell->value);
+		
+		cell->value->str[0] = 0;
+	}
+}
+
+static void
+sheet_method_set_header_row (Sheet * sheet,
+									  Cell ** array,
+									  gint size) {
+	ASSERT (sheet != NULL);
+	g_return_if_fail (array != NULL);
+	
+	GtkSheet * gtksheet = GTK_SHEET (sheet->gtk_sheet);
+
+	if (size > gtksheet->maxrow) size = gtksheet->maxrow;
+	
+	for (gint ii = 0; ii < size; ii++) {
+		Cell * array[ii];
+
+		gtk_sheet_set_row_title (gtksheet, ii, cell->value);
+		
+		cell->value->str[0] = 0;
+	}
+}
+
+static void
 sheet_method_apply_cellarray (Sheet * sheet, 
 										Cell ** array,
 										gint size)
@@ -562,7 +606,8 @@ sheet_method_range_set_foreground (Sheet * sheet,
    @value: The text string to be applied to the cell. */
 static void 
 sheet_method_set_cell (Sheet * sheet,
-							  gint row, gint col,
+							  gint row,
+							  gint column,
 							  const gchar * value)
 {
 	ASSERT (sheet != NULL);
@@ -572,7 +617,7 @@ sheet_method_set_cell (Sheet * sheet,
 	
 	gtk_sheet_set_cell (GTK_SHEET (sheet->gtk_sheet), 
 							  row, 
-							  col, 
+							  column, 
 							  GTK_JUSTIFY_LEFT, 
 							  value);
 }
