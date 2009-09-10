@@ -244,7 +244,6 @@ namespace largefile {
 		// going to get away from having to sequentially read this file in, but once we
 		// have line numbers we can jump throughout the file pretty quickly.
 		while ((ch = fgetc(this->fp)) != EOF) {
-						
 			if (ch=='\n') {
 				byte_beg = cursor;
 				count++;
@@ -262,13 +261,13 @@ namespace largefile {
 					break;
 				}
 				else {
-					Thread::sleep(5);								  
+					Thread::sleep(0);								  
 				}
 				
 				// Crude implementation of a spinlock. Wait while another thread is doing
 				// some reading before we begin indexing again.
 				while (this->marks->trylock() == false)
-					Thread::sleep(5);
+					Thread::sleep(0);
 			}
 		}
 
@@ -315,7 +314,7 @@ namespace largefile {
 			// Crude implementation of a spinlock. Wait while another thread is doing
 			// some reading before we begin indexing again.
 			while (this->marks->trylock() == false)
-				Thread::sleep(5);
+				Thread::sleep(0);
 			
 			if (line_max < this->marks->get(index).line) {
 				delta = this->startLine - this->marks->get(index-1).line;
