@@ -18,6 +18,7 @@ autom4te.cache/
 config.guess
 config.status
 config.sub
+configure
 src/OBJS/gtkworkbook
 .libs
 .deps
