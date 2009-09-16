@@ -36,4 +36,5 @@ cp ${src_dir}/OBJS/.libs/largefile.so ${bin_dir}/largefile.so
 cp ${src_dir}/OBJS/.libs/realtime.so ${bin_dir}/realtime.so
 cp ${cfg_dir}/application.cfg ${bin_dir}/application.cfg
 
-echo "Build of $package is complete.\nProject files resides in $bin_dir"
+echo "Build of $package is complete."
+echo "Project files resides in $bin_dir"
