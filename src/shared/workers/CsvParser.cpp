@@ -42,7 +42,7 @@ cb1 (void * s, size_t length, void * data) {
 	// Resize the cell array here.
 	if (column->field >= array_max) {
 		int max = (2 * array_max);
-		(column->array) = (Cell **) g_realloc ((column->array),max*sizeof (Cell*));
+		(column->array) = (Cell **)g_realloc ((column->array), max * sizeof (Cell*));
 
 		for (int ii = array_max; ii < max; ii++)
 			(column->array)[ii] = NULL;
@@ -141,7 +141,7 @@ CsvParser::run (void * null) {
 				if (column.row >= (column.sheet)->max_rows)
 					column.row = 0;
 
-				concurrent::Thread::sleep(5);
+				concurrent::Thread::sleep(0);
 			}
 				
 		}	

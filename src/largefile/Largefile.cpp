@@ -265,7 +265,7 @@ Largefile::BuildLayout (void) {
 	GtkWidget * box = gtk_vbox_new (FALSE, 0);
 	GtkWidget * largefile_menu = this->CreateMainMenu();
 	
-	gtk_menu_shell_append (GTK_MENU_SHELL (gtk_menu), largefile_menu);
+	gtk_menu_shell_prepend (GTK_MENU_SHELL (gtk_menu), largefile_menu);
 
 	wb->signals[SIG_WORKBOOK_CHANGED] = this->app()->signals[Application::SHEET_CHANGED];
 	wb->gtk_box = box;

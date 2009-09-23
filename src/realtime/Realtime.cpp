@@ -296,7 +296,7 @@ Realtime::BuildLayout (void) {
 	GtkWidget * realtime_menu = this->CreateMainMenu();
 
 	// Append to the existing menu structure from the application.
-	gtk_menu_shell_append (GTK_MENU_SHELL (gtk_menu), realtime_menu);
+	gtk_menu_shell_prepend (GTK_MENU_SHELL (gtk_menu), realtime_menu);
 
 	// Setup the workbook.
 	wb->signals[SIG_WORKBOOK_CHANGED] = this->app()->signals[Application::SHEET_CHANGED];

@@ -50,7 +50,7 @@ ApplicationKeypressCallback (GtkWidget * window, GdkEventKey * event, gpointer d
 
 			case GDK_F2: {
 				// There should be an existing sheet being focused on; this pointer cannot be null because
-				// we rely on inforamtion available from the widgets to make the Record View Sheet widget.
+				// we rely on information available from the widgets to make the Record View Sheet widget.
 				if (sheet) {
 					RecordView * view = new RecordView (app);
 				
@@ -78,22 +78,22 @@ GtkNotebookReorderedCallback (GtkNotebook * notebook, GtkNotebookPage * page, gi
 	return TRUE;
 }
 
-/* @description: This is the callback for the GtkNotebook 'switch-page' 
-   signal. It is called every single time a user *clicks* on different
-   tab. This method is called *before* the drawing takes place.
-
-   This method iterates through the Sheets and updates where neccesary.
-
-   @notebook: This is a pointer to the notebook object. The object is
-   equal to the Workbook->gtk_notebook pointer.
-   @page:
-   @page_num: The number of the *new* page.
-   @book: The Workbook object associated with the GtkNotebook.*/
+// @description: This is the callback for the GtkNotebook 'switch-page' 
+// signal. It is called every single time a user *clicks* on different
+// tab. This method is called *before* the drawing takes place.
+//
+// This method iterates through the Sheets and updates where neccesary.
+//
+// @notebook: This is a pointer to the notebook object. The object is
+// equal to the Workbook->gtk_notebook pointer.
+// @page:
+// @page_num: The number of the *new* page.
+// @book: The Workbook object associated with the GtkNotebook.
 static guint
 GtkNotebookSwitchPageCallback (GtkNotebook * notebook, GtkNotebookPage * page, gint page_num, Workbook * book) {
 	ASSERT (book != NULL);
 
-	/* Perform the "unfocus" on the old notebook tab. */
+	// Perform the "unfocus" on the old notebook tab.
 	if (!IS_NULL (book->focus_sheet)) {
       book->focus_sheet->has_focus = FALSE;
       book->focus_sheet->notices = 0;
@@ -103,15 +103,15 @@ GtkNotebookSwitchPageCallback (GtkNotebook * notebook, GtkNotebookPage * page, g
 
 	ITERATE_BEGIN (Sheet, book->sheet_first);
 	{
-		/* Once we find the right Sheet object we can perform what we need
-			to in order to change the "focus." Finally, set book pointer. */
+		// Once we find the right Sheet object we can perform what we need
+		//	to in order to change the "focus." Finally, set book pointer.
 		if (it->gtk_box == widget)
       {
 			it->page = page_num;
 			it->has_focus = TRUE;
 			it->notices = 0;
 	
-			/* Reset the label on the notebook tab to the object's name. */
+			// Reset the label on the notebook tab to the object's name.
 			gtk_notebook_set_tab_label_text (notebook, it->gtk_box, it->name);
 			book->focus_sheet = it;
 			break;
@@ -162,6 +162,35 @@ DestroyEventCallback (GtkWidget * window, gpointer data) {
 	return FALSE;
 }
 
+static void
+AboutDialogResponseCallback (GtkWidget * gtkdialog, gint response, gpointer data) {
+	AboutDialog * dialog = (AboutDialog *)data;
+
+	gtk_widget_hide_all (gtkdialog);
+}
+
+static void
+AboutDialogCallback (GtkWidget * window, gpointer data) {
+	Application * app = (Application *)data;
+	AboutDialog * dialog = app->aboutdialog();
+
+	if (dialog->widget == NULL) {
+		dialog->app = app;
+
+		dialog->widget = gtk_dialog_new_with_buttons ("About GTKWorkbook", GTK_WINDOW (app->gtkwindow()),
+																	 (GtkDialogFlags) (GTK_DIALOG_MODAL | GTK_DIALOG_NO_SEPARATOR),
+																	 GTK_STOCK_OK,
+																	 GTK_RESPONSE_OK,
+																	 NULL);
+		g_signal_connect (G_OBJECT (dialog->widget), "response",
+								G_CALLBACK (AboutDialogResponseCallback), dialog);
+		g_signal_connect (G_OBJECT (dialog->widget), "delete_event",
+								G_CALLBACK (gtk_widget_hide_on_delete), NULL);
+	}
+
+	gtk_widget_show_all (dialog->widget);
+}
+
 Application::Application (int argc, char *** argv) {
 	this->cfg = NULL;
 	this->gtk_window = NULL;
@@ -171,7 +200,7 @@ Application::Application (int argc, char *** argv) {
 
 	this->init (argc, argv);
 	
-	/* Set up the signals. */
+	// Set up the signals.
 	this->signals[NOTEBOOK_SWITCHED]
 		= (GSourceFunc)GtkNotebookSwitchPageCallback;
 	this->signals[NOTEBOOK_REORDERED]
@@ -192,7 +221,7 @@ Application::~Application (void) {
 		(*it)->destroy ( (*it) ); (*it) = NULL;
 		it++;
 	}
-	
+
 	FREE (this->absolute_path);
 }
 
@@ -209,6 +238,11 @@ Application::gtkvbox (void) {
 GtkWidget *
 Application::gtkmenu (void) {
 	return this->gtk_menu;
+}
+
+AboutDialog *
+Application::aboutdialog (void) {
+	return &this->about_dialog;
 }
 
 Config *
@@ -273,6 +307,7 @@ Application::open_extension (const gchar * filename, gboolean absolute_path) {
 								  GTK_SIGNAL_FUNC (GtkNotebookSwitchPageCallback), plugin->workbook());
 	
 		gtk_widget_show_all (this->gtk_menu);
+		
 		this->active_workbook = wb;
 		this->workbooks.push_back (wb);
 	}
@@ -291,9 +326,9 @@ Application::init (int argc, char *** argv) {
 
 	this->absolute_path = ::munchpath (*argv[0]);
 	
-	/* This block parses the commandline for options. A better example on how
-		this code works can be found on the GNU website at the following URI:
-		http://gnu.org/software/libtool/manual/libc/Using-Getopt.html */
+	// This block parses the commandline for options. A better example on how
+	//	this code works can be found on the GNU website at the following URI:
+	//	http://gnu.org/software/libtool/manual/libc/Using-Getopt.html
 	while ((c = getopt (argc, *argv, "c:")) != -1) {
       switch (c) {
 			case 'c': {
@@ -321,15 +356,32 @@ Application::init (int argc, char *** argv) {
 
 	gtk_init (&argc, argv);
 
-	/* Create the window and connect two callback to the signals. */
+	// Create the window and connect two callback to the signals.
 	this->gtk_window = gtk_window_new (GTK_WINDOW_TOPLEVEL);
 	this->gtk_menu = gtk_menu_bar_new();
+
+	// Setup the application menu.
+	GtkWidget * helpmenu = gtk_menu_new();
+	GtkWidget * helpmenu_item = gtk_menu_item_new_with_label ("Help");
+	GtkWidget * helpmenu_about = gtk_menu_item_new_with_label ("About");
+	gtk_menu_shell_append (GTK_MENU_SHELL (helpmenu), helpmenu_about);
+	gtk_menu_item_set_submenu (GTK_MENU_ITEM (helpmenu_item), helpmenu);
+	gtk_menu_shell_insert (GTK_MENU_SHELL (this->gtk_menu), helpmenu_item, 0);
 	
-	/* Set the initial size of the application; we could load this
-		from a configuration file eventually. */
+	/*
+	GtkWidget * wbmenu = gtk_menu_new();
+	GtkWidget * wbmenu_item = gtk_menu_item_new_with_label ("Workbooks");
+	gtk_menu_item_set_submenu (GTK_MENU_ITEM (wbmenu_item), wbmenu);
+	gtk_menu_shell_insert (GTK_MENU_SHELL (this->gtk_menu), wbmenu_item, 0);
+	*/
+	
+	g_signal_connect (G_OBJECT (helpmenu_about), "activate", G_CALLBACK (AboutDialogCallback), this);
+	
+	// Set the initial size of the application; we could load this
+	//	from a configuration file eventually. */
 	gtk_widget_set_usize (this->gtk_window, 1024, 820);
   
-	/* Attach the window box to the window and present to the screen. */
+	// Attach the window box to the window and present to the screen.
 	GtkWidget * window_box = gtk_vbox_new (FALSE, 1);
 	gtk_container_add (GTK_CONTAINER (this->gtk_window), window_box);
 	gtk_box_pack_start (GTK_BOX (window_box), this->gtk_menu, FALSE, FALSE, 0);
@@ -341,12 +393,12 @@ Application::init (int argc, char *** argv) {
 		Config * cfg = this->cfg;
       cfg->open (cfg);
      
-      /* Load extensions */
+      // Load extensions
       ConfigRow * load = cfg->get_row (cfg, "application", "load");
 
-      /* Did a little bit of fixing here. We needed something to specify that
-			certain extensions will start automatically when the application is
-			started. */
+      // Did a little bit of fixing here. We needed something to specify that
+		//	certain extensions will start automatically when the application is
+		//	started.
       if (!IS_NULL (load)) {
 			ConfigVector * ext = load->get_vector (load, "extensions");
 			gchar * block = NULL;

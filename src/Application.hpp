@@ -26,6 +26,7 @@
 #include <libgtkworkbook/workbook.h>
 #include "config.h"
 #include "proactor/Proactor.hpp"
+#include "AboutDialog.hpp"
 
 class Plugin;
 class RecordView;
@@ -56,6 +57,7 @@ private:
 	proactor::Proactor pro;
 	WorkbookList workbooks;
 	PluginList plugins;
+	AboutDialog about_dialog;
 	gchar * absolute_path;
 	
 	void init (int argc, char *** argv);
@@ -73,6 +75,7 @@ public:
 	GtkWidget * gtkwindow (void);
 	GtkWidget * gtkvbox (void);
 	GtkWidget * gtkmenu (void);
+	AboutDialog * aboutdialog (void);
 	Config * config (void);
 	proactor::Proactor * proactor (void);
 	Workbook * wb (void);
