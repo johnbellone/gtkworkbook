@@ -391,7 +391,7 @@ sheet_method_apply_cellrow (Sheet * sheet, Cell ** array, gint row, gint size) {
 	for (int col = 0; col < size; col++) {
 		item = array[col]; 
 		cell = &gtksheet->data[row][col];
-
+		
 		gtk_sheet_set_cell_text (gtksheet,
 										 row,
 										 col,

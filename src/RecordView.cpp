@@ -19,6 +19,7 @@
 #include "RecordView.hpp"
 #include <libgtkworkbook/row.h>
 #include <gtkextra/gtksheet.h>
+#include <iostream>
 
 static guint
 DeleteEventCallback (GtkWindow * window, GdkEvent * event, gpointer data) {
@@ -59,21 +60,32 @@ void
 RecordView::AddSheetRecord (Sheet * sheet) {
 	ASSERT (sheet != NULL);
 	GtkSheet * gtksheet = GTK_SHEET (sheet->gtk_sheet);
-	gint row = gtksheet->active_cell.row;
-	
-	Sheet * record_sheet = this->wb->add_new_sheet (this->wb,sheet->name,gtksheet->maxcol,1);
-
+	GtkSheetRange range = {gtksheet->range.row0, 0, gtksheet->range.rowi, 0};
 	Row * tuple = row_new (gtksheet->maxcol);
-		
-	sheet->get_row (sheet, row, tuple->cells, tuple->size);
-
-	for (int ii = 0; ii < tuple->size; ii++) {
-		
-		record_sheet->set_cell (record_sheet,
-										ii,
-										0,
-										tuple->cells[ii]->value->str);
+	gint sheet_rows = 1;
+	
+	// More than one row is selected; we must transpose them all into the RV sheet.
+	if (range.row0 != range.rowi) {
+		sheet_rows = range.rowi - range.row0 + 1;
 	}
+			
+	Sheet * record_sheet = this->wb->add_new_sheet (this->wb,sheet->name,gtksheet->maxcol,sheet_rows);
+	int column = 0;
+	
+	do {
+		sheet->get_row (sheet, range.row0, tuple->cells, tuple->size);
+
+		for (int ii = 0; ii < tuple->size; ii++) {
+			
+			record_sheet->set_cell (record_sheet,
+											ii,
+											column,
+											tuple->cells[ii]->value->str);
+
+		}
+		
+		range.row0++; column++;
+	} while (range.row0 <= range.rowi);
 
 	tuple->destroy (tuple);
 }

@@ -37,9 +37,6 @@ struct csv_column {
 static void 
 cb1 (void * s, size_t length, void * data) {
 	struct csv_column * column = (struct csv_column *) data;
-	
-	if ((column->array)[column->field] == NULL)
-		(column->array)[column->field] = cell_new();
 
 	Cell * cell = (column->array)[column->field];
 	cell->set_row (cell, column->row);
@@ -70,7 +67,7 @@ CsvParser::CsvParser (Sheet * sheet,
 		this->fields[jj] = (Cell **)g_malloc (maxOfFields * sizeof (Cell*) + sizeof(double));
 		
 		for (int ii = 0; ii < this->maxOfFields; ii++)
-			this->fields[jj][ii] = NULL;
+			this->fields[jj][ii] = cell_new();
 	}
 }
 
