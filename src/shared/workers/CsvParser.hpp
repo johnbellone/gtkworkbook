@@ -29,13 +29,14 @@ class CsvParser : public proactor::Worker {
 private:
 	Sheet * sheet;
 	Workbook * wb;
-	Cell ** fields;
+	Cell *** fields;
 	FILE * log;
 	int verbosity;
 	int maxOfFields;
 	int sizeOfFields;
+	int maxOfRows;
 public:
-	CsvParser (Sheet * sheet, FILE * log, int verbosity, int maxOfFields = 10);
+	CsvParser (Sheet * sheet, FILE * log, int verbosity, int maxOfFields = 20, int maxOfRows = 1000);
 	virtual ~CsvParser (void);
 
 	void * run (void * null);

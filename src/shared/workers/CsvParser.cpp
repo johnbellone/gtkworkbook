@@ -37,16 +37,6 @@ struct csv_column {
 static void 
 cb1 (void * s, size_t length, void * data) {
 	struct csv_column * column = (struct csv_column *) data;
-	int & array_max = column->array_max;
-
-	// Resize the cell array here.
-	if (column->field >= array_max) {
-		int max = (2 * array_max);
-		(column->array) = (Cell **)g_realloc ((column->array), max * sizeof (Cell*));
-
-		for (int ii = array_max; ii < max; ii++)
-			(column->array)[ii] = NULL;
-	}
 	
 	if ((column->array)[column->field] == NULL)
 		(column->array)[column->field] = cell_new();
@@ -68,22 +58,31 @@ cb2 (int c, void * data) {
 CsvParser::CsvParser (Sheet * sheet,
 							 FILE * log,
 							 int verbosity,
-							 int maxOfFields)
-	: sheet(sheet), log (log), maxOfFields (maxOfFields) {
+							 int maxOfFields,
+							 int maxOfRows)
+	: sheet(sheet), log (log), maxOfFields (maxOfFields), maxOfRows(maxOfRows) {
 	this->wb = sheet->workbook;
 	this->sizeOfFields = 0;
-	this->fields = (Cell **) g_malloc (maxOfFields*sizeof (Cell*));
-
-	for (int ii = 0; ii < this->maxOfFields; ii++)
-		this->fields[ii] = NULL;
+	
+	this->fields = (Cell ***) g_malloc (this->maxOfRows * sizeof (Cell**) + sizeof(double));
+	
+	for (int jj = 0; jj < this->maxOfRows; jj++) {
+		this->fields[jj] = (Cell **)g_malloc (maxOfFields * sizeof (Cell*) + sizeof(double));
+		
+		for (int ii = 0; ii < this->maxOfFields; ii++)
+			this->fields[jj][ii] = NULL;
+	}
 }
 
 CsvParser::~CsvParser (void) {
-	for (int ii = 0; ii < this->maxOfFields; ii++) {
-		if (this->fields[ii])
-			(this->fields[ii])->destroy (this->fields[ii]);
+	for (int jj = 0; jj < this->maxOfRows; jj++) {
+		for (int ii = 0; ii < this->maxOfFields; ii++) {
+			if (this->fields[jj][ii])
+				(this->fields[jj][ii])->destroy (this->fields[jj][ii]);
+		}
+
+		g_free (this->fields[jj]);
 	}
-    
 	g_free (this->fields);
 }
 
@@ -91,14 +90,8 @@ void *
 CsvParser::run (void * null) {
 	std::queue<std::string> queue;
 	struct csv_parser csv;
-	struct csv_column column = {sheet,
-										 this->fields,
-										 this->maxOfFields,
-										 this->sizeOfFields,
-										 0,
-										 0,
-										 new char [1024]};
-    
+	char buf[1024];
+	    
 	if (csv_init (&csv, CSV_STRICT) != 0) {
 		std::cerr << "Failed initializing libcsv parser library\n";
 		return NULL;
@@ -106,7 +99,16 @@ CsvParser::run (void * null) {
 
 	while (this->isRunning() == true) {
 		if (this->inputQueue.size() > 0) {
-	
+			bool draw = false;
+			struct csv_column column = {sheet,
+												 this->fields[0],
+												 this->maxOfFields,
+												 this->sizeOfFields,
+												 0,
+												 0,
+												 &buf[0]};
+
+			
 			// Lock, copy, clear, unlock. - Free this up.
 			this->inputQueue.lock();
 			this->inputQueue.copy (queue);
@@ -114,13 +116,13 @@ CsvParser::run (void * null) {
 			this->inputQueue.unlock();
 
 			while (queue.size() > 0) {
-				std::string buf = queue.front(); queue.pop();
-				size_t bytes = buf.length();
+				std::string str = queue.front(); queue.pop();
+				size_t bytes = str.length();
 
 				if (this->isRunning() == false)
 					break;
 
-				if ((bytes = csv_parse (&csv, buf.c_str(), bytes, cb1, cb2, &column)) == bytes) {
+				if ((bytes = csv_parse (&csv, str.c_str(), bytes, cb1, cb2, &column)) == bytes) {
 					if (csv_error (&csv) == CSV_EPARSE) {
 						std::cerr << "Parsing error on input: "<<"\n";
 						continue;
@@ -128,24 +130,28 @@ CsvParser::run (void * null) {
 				}
 
 				csv_fini (&csv, cb1, cb2, &column);
-
-				gdk_threads_enter ();
-					
-				sheet->apply_row (sheet,
-										this->fields,
-										column.row - 1,
-										this->sizeOfFields);
-
-				gdk_threads_leave ();
-
+				
 				if (column.row >= (column.sheet)->max_rows)
 					column.row = 0;
-
-				concurrent::Thread::sleep(0);
+				else {
+					column.array = this->fields[column.row];
+					draw = true;
+				}
 			}
+
+			if (draw) {
 				
+				gdk_threads_enter();	
+	
+				for (int jj = 0; jj < this->maxOfRows; jj++) {
+					sheet->apply_row (sheet, this->fields[jj], jj, this->maxOfFields-1);
+				}
+	
+				gdk_threads_leave();
+				
+			}
 		}	
-		concurrent::Thread::sleep(5);
+		concurrent::Thread::sleep(1);
 	}
 
 	return NULL;
