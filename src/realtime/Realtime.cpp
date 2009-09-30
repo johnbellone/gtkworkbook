@@ -303,7 +303,7 @@ Realtime::BuildLayout (void) {
 	wb->gtk_box = box;
 
 	// Pack all of the objects into a vertical box, and then pack that box into the application.
-	gtk_box_pack_start (GTK_BOX (box), wb->gtk_notebook, FALSE, FALSE, 0);
-	gtk_box_pack_start (GTK_BOX (this->app()->gtkvbox()), box, FALSE, FALSE, 0);
+	gtk_box_pack_start (GTK_BOX (box), wb->gtk_notebook, TRUE, TRUE, 0);
+	gtk_box_pack_start (GTK_BOX (this->app()->gtkvbox()), box, TRUE, TRUE, 0);
 	return box;
 }
