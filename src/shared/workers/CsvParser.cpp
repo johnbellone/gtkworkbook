@@ -27,11 +27,8 @@
 static void 
 cb1 (void * s, size_t length, void * data) {
 	struct csv_column * column = (struct csv_column *)data;
-
-	Cell * cell = (column->array)[column->row][column->field];
-	cell->set_row (cell, column->row);
-	cell->set_column (cell, column->field++);
-	cell->set_value_length (cell, s, length);
+	
+	column->sheet->set_cell_value_length (column->sheet, column->row, column->field++, s, length);
 }
   
 static void
@@ -39,13 +36,10 @@ cb2 (int c, void * data) {
 	struct csv_column * column = (struct csv_column *)data;
 
 	gdk_threads_enter();
-	column->sheet->apply_row (column->sheet,
-									  (column->array)[column->row],
-									  column->row,
-									  column->field);
+	column->sheet->apply_row (column->sheet, column->row);
 	gdk_threads_leave();
 	
-	column->row++;
+	column->row = (column->row >= column->sheet->max_rows) ? 0 : column->row + 1;
 	column->field = 0;
 }
 
@@ -54,31 +48,9 @@ CsvParser::CsvParser (Sheet * sheet,
 							 int verbosity)
 	: sheet(sheet), log (log) {
 	this->wb = sheet->workbook;
-	this->maxOfFields = GTK_SHEET(sheet->gtk_sheet)->maxcol + 1;
-	this->maxOfRows = GTK_SHEET(sheet->gtk_sheet)->maxrow + 1;
-	this->fields = (Cell ***) g_malloc (this->maxOfRows * sizeof (Cell**));
-
-	for (int ii = 0; ii < this->maxOfRows; ii++) {
-		this->fields[ii] = (Cell **) g_malloc (this->maxOfFields * sizeof (Cell*));
-		
-		for (int jj = 0; jj < this->maxOfFields; jj++) {
-			this->fields[ii][jj] = cell_new();
-
-			this->fields[ii][jj]->row = ii;
-			this->fields[ii][jj]->column = jj;
-		}
-	}
 }
 
 CsvParser::~CsvParser (void) {
-	for (int ii = 0; ii < this->maxOfRows; ii++) {
-		for (int jj = 0; jj < this->maxOfFields; jj++) {
-			if (this->fields[ii][jj])
-				this->fields[ii][jj]->destroy (this->fields[ii][jj]);
-		}
-		FREE (this->fields[ii]);
-	}
-	FREE (this->fields);
 }
 
 void *
@@ -86,11 +58,7 @@ CsvParser::run (void * null) {
 	std::queue<std::string> queue;
 	struct csv_parser csv;
 	char buf[1024];
-	struct csv_column column = {sheet,
-										 this->fields,
-										 0,
-										 0,
-										 &buf[0]};
+	struct csv_column column = {sheet,0,0,&buf[0]};
 	
 	if (csv_init (&csv, CSV_STRICT) != 0) {
 		std::cerr << "Failed initializing libcsv parser library\n";
@@ -121,10 +89,6 @@ CsvParser::run (void * null) {
 				}
 				
 				csv_fini (&csv, cb1, cb2, &column);
-			
-				if (column.row >= sheet->max_rows) {
-					column.row = 0;
-				}
 			}
 		}	
 		concurrent::Thread::sleep(1);

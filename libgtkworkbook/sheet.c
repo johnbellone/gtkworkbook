@@ -39,10 +39,11 @@ static void sheet_method_range_set_foreground (Sheet *,
 static void sheet_method_set_attention (Sheet *, gint);
 static gboolean sheet_method_load (Sheet *, const gchar *);
 static gboolean sheet_method_save (Sheet *, const gchar *);
-static void sheet_method_apply_cellrow (Sheet *, Cell **, gint, gint);
+static void sheet_method_apply_cellrow (Sheet *, gint);
 static void sheet_method_get_cellrow (Sheet *, gint, Cell **, gint);
 static void sheet_method_set_header_column (Sheet *, Cell **, gint);
 static void sheet_method_set_header_row (Sheet *, Cell **, gint);
+static void sheet_method_set_cell_value_length (Sheet *,gint,gint,void *,size_t);
 
 struct geometryFileHeader {
 	gint fileVersion;
@@ -177,9 +178,21 @@ sheet_object_init (Workbook * book,
 	sheet->max_rows = rows;
 	sheet->max_columns = columns;
 
+	sheet->cells = (Cell ***) g_malloc (rows * sizeof (Cell**));
+	for (int ii = 0; ii < rows; ii++) {
+		sheet->cells[ii] = (Cell **) g_malloc (columns * sizeof (Cell*));
+
+		for (int jj = 0; jj < columns; jj++) {
+			sheet->cells[ii][jj] = cell_new();
+			sheet->cells[ii][jj]->row = ii;
+			sheet->cells[ii][jj]->column = jj;
+		}
+	}
+	
 	/* Methods */
 	sheet->destroy = sheet_method_destroy;
 	sheet->set_cell = sheet_method_set_cell;
+	sheet->set_cell_value_length = sheet_method_set_cell_value_length;
 	sheet->apply_range = sheet_method_apply_cellrange;
 	sheet->apply_array = sheet_method_apply_cellarray;
 	sheet->apply_cell = sheet_method_apply_cell;
@@ -266,6 +279,8 @@ sheet_method_load (Sheet * sheet, const gchar * filepath)
 	FCLOSE (fp);
 	return TRUE;
 }
+
+
 
 static gboolean
 sheet_method_save (Sheet * sheet, const gchar * filepath) {
@@ -362,6 +377,14 @@ static void
 sheet_object_free (Sheet * sheet) {
 	ASSERT (sheet != NULL);
 
+	for (int ii = 0; ii < sheet->max_rows; ii++) {
+		for (int jj = 0; jj < sheet->max_columns; jj++) {
+			sheet->cells[ii][jj]->destroy (sheet->cells[ii][jj]);
+		}
+		FREE (sheet->cells[ii]);
+	}
+	
+	FREE (sheet->cells);
 	FREE (sheet->name);
 	FREE (sheet);
 	return;
@@ -377,41 +400,13 @@ sheet_method_apply_cellrange (Sheet * sheet,
 }
 
 static void
-sheet_method_apply_cellrow (Sheet * sheet, Cell ** array, gint row, gint size) {
+sheet_method_apply_cellrow (Sheet * sheet, gint row) {
 	ASSERT (sheet != NULL);
-	g_return_if_fail (array != NULL);
-	
+
 	GtkSheet * gtksheet = GTK_SHEET (sheet->gtk_sheet);
-	GtkSheetCell ** cell;
-	Cell * item;
-
-	if (row > gtksheet->maxrow || row < 0) return;
-	if (size > gtksheet->maxcol || size < 0) return;
-
-	for (int ii = 0; ii < size; ii++) {
-		item = array[ii]; 
-			
-		gtk_sheet_set_cell_text (gtksheet,
-										 item->row,
-										 item->column,
-										 item->value->str);
-			
-		/*
-		  cell = &gtksheet->data[item->row][item->colum];
-		  
-		  if (*cell == NULL)
-		  (*cell) = gtk_sheet_cell_new();
-      
-		  (*cell)->row = row;
-		  (*cell)->col = col;
-
-		  if ((*cell)->text)
-		  g_free ((*cell)->text);
-      
-		  (*cell)->text = g_strdup (item->value->str);
-		*/
-
-		item->value->str[0] = item->attributes.bgcolor->str[0] = item->attributes.fgcolor->str[0] = 0;
+	
+	for (int jj = 0; jj < sheet->max_columns; jj++) {
+		gtk_sheet_set_cell_text (gtksheet, row, jj, sheet->cells[row][jj]->value->str);
 	}
 }
 
@@ -599,6 +594,18 @@ sheet_method_range_set_foreground (Sheet * sheet,
 											  range, &color);
 }
 
+static void
+sheet_method_set_cell_value_length (Sheet * sheet,
+												gint row,
+												gint column,
+												void * value,
+												size_t length) {
+	ASSERT (sheet != NULL);
+	if (row < 0 || column < 0 || row > sheet->max_rows || column > sheet->max_columns) return;
+	Cell * cell = sheet->cells[row][column];
+	cell->set_value_length (cell, value, length);
+}
+
 /* @description: This method manually sets a GtkSheet cell's value. It does
    not require the use of the Cell object.
    @sheet: A pointer to the Sheet object that contains GtkSheet.
@@ -615,10 +622,10 @@ sheet_method_set_cell (Sheet * sheet,
 
 	if (sheet->has_focus == FALSE)
 		sheet->notices++;
-	
+
 	gtk_sheet_set_cell (GTK_SHEET (sheet->gtk_sheet), 
-							  row, 
-							  column, 
+							  sheet->cells[row][column]->row, 
+							  sheet->cells[row][column]->column, 
 							  GTK_JUSTIFY_LEFT, 
 							  value);
 }

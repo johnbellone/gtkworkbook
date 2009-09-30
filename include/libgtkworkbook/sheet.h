@@ -51,6 +51,7 @@ extern "C" {
 		/* Members */
 		Sheet * next;
 		Sheet * prev;
+		Cell *** cells;
 		gchar * name;
 		Workbook * workbook;
 		GtkWidget * gtk_label;
@@ -70,8 +71,9 @@ extern "C" {
 		void (*apply_range) (Sheet * sheet, const GtkSheetRange * range, const CellAttributes * attrib);
 		void (*apply_array) (Sheet * sheet, Cell ** array, gint size);
 		void (*apply_cell) (Sheet * sheet, const Cell * cell);
-		void (*apply_row) (Sheet * sheet, Cell ** array, gint row, gint size);
-		void (*set_cell) (Sheet * sheet, gint row, gint column, const gchar * value);  
+		void (*apply_row) (Sheet * sheet, gint row);
+		void (*set_cell) (Sheet * sheet, gint row, gint column, const gchar * value);
+		void (*set_cell_value_length) (Sheet * sheet, gint row, gint column, void * value, size_t length);
 		void (*range_set_background) (Sheet * sheet, const GtkSheetRange * range, const gchar * desc);
 		void (*range_set_foreground) (Sheet * sheet, const GtkSheetRange * range, const gchar * desc);
 		gboolean (*save) (Sheet * sheet, const gchar * filepath);

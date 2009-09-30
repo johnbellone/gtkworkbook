@@ -27,7 +27,6 @@
 
 struct csv_column {
 	Sheet * sheet;
-	Cell *** array;
 	int row;
 	int field;
 	char * value;
@@ -37,11 +36,8 @@ class CsvParser : public proactor::Worker {
 private:
 	Sheet * sheet;
 	Workbook * wb;
-	Cell *** fields;
 	FILE * log;
 	int verbosity;
-	int maxOfFields;
-	int maxOfRows;
 public:
 	CsvParser (Sheet * sheet, FILE * log, int verbosity);
 	virtual ~CsvParser (void);
