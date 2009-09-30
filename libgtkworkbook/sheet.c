@@ -388,16 +388,17 @@ sheet_method_apply_cellrow (Sheet * sheet, Cell ** array, gint row, gint size) {
 	if (row > gtksheet->maxrow || row < 0) return;
 	if (size > gtksheet->maxcol || size < 0) return;
 
-	for (int col = 0; col < size; col++) {
-		item = array[col]; 
-		cell = &gtksheet->data[row][col];
-		
+	for (int ii = 0; ii < size; ii++) {
+		item = array[ii]; 
+			
 		gtk_sheet_set_cell_text (gtksheet,
-										 row,
-										 col,
+										 item->row,
+										 item->column,
 										 item->value->str);
 			
 		/*
+		  cell = &gtksheet->data[item->row][item->colum];
+		  
 		  if (*cell == NULL)
 		  (*cell) = gtk_sheet_cell_new();
       

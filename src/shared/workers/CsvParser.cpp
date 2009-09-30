@@ -28,18 +28,7 @@ static void
 cb1 (void * s, size_t length, void * data) {
 	struct csv_column * column = (struct csv_column *)data;
 
-	// Resize the cell array here.
-	if (column->field >= column->array_max) {
-		int max = 2 * column->array_max;
-		(column->array) = (Cell **) g_realloc ( (column->array), max * sizeof (Cell*));
-
-		for (int jj = column->array_max; jj < max; jj++)
-			(column->array)[jj] = cell_new();
-
-		column->array_max = max;
-	}
-	
-	Cell * cell = (column->array)[column->field];
+	Cell * cell = (column->array)[column->row][column->field];
 	cell->set_row (cell, column->row);
 	cell->set_column (cell, column->field++);
 	cell->set_value_length (cell, s, length);
@@ -48,28 +37,48 @@ cb1 (void * s, size_t length, void * data) {
 static void
 cb2 (int c, void * data) {
 	struct csv_column * column = (struct csv_column *)data;
+
+	gdk_threads_enter();
+	column->sheet->apply_row (column->sheet,
+									  (column->array)[column->row],
+									  column->row,
+									  column->field);
+	gdk_threads_leave();
+	
 	column->row++;
 	column->field = 0;
 }
 
 CsvParser::CsvParser (Sheet * sheet,
 							 FILE * log,
-							 int verbosity,
-							 int maxOfFields)
-	: sheet(sheet), log (log), maxOfFields (maxOfFields) {
+							 int verbosity)
+	: sheet(sheet), log (log) {
 	this->wb = sheet->workbook;
-	this->fields = (Cell **) g_malloc (maxOfFields * sizeof (Cell*));
+	this->maxOfFields = GTK_SHEET(sheet->gtk_sheet)->maxcol + 1;
+	this->maxOfRows = GTK_SHEET(sheet->gtk_sheet)->maxrow + 1;
+	this->fields = (Cell ***) g_malloc (this->maxOfRows * sizeof (Cell**));
 
-	for (int jj = 0; jj < maxOfFields; jj++) {
-		this->fields[jj] = cell_new();
+	for (int ii = 0; ii < this->maxOfRows; ii++) {
+		this->fields[ii] = (Cell **) g_malloc (this->maxOfFields * sizeof (Cell*));
+		
+		for (int jj = 0; jj < this->maxOfFields; jj++) {
+			this->fields[ii][jj] = cell_new();
+
+			this->fields[ii][jj]->row = ii;
+			this->fields[ii][jj]->column = jj;
+		}
 	}
 }
 
 CsvParser::~CsvParser (void) {
-	for (int jj = 0; jj < this->maxOfFields; jj++) {
-		if (this->fields[jj])
-			this->fields[jj]->destroy (this->fields[jj]);
+	for (int ii = 0; ii < this->maxOfRows; ii++) {
+		for (int jj = 0; jj < this->maxOfFields; jj++) {
+			if (this->fields[ii][jj])
+				this->fields[ii][jj]->destroy (this->fields[ii][jj]);
+		}
+		FREE (this->fields[ii]);
 	}
+	FREE (this->fields);
 }
 
 void *
@@ -81,7 +90,6 @@ CsvParser::run (void * null) {
 										 this->fields,
 										 0,
 										 0,
-										 this->maxOfFields,
 										 &buf[0]};
 	
 	if (csv_init (&csv, CSV_STRICT) != 0) {
@@ -111,15 +119,9 @@ CsvParser::run (void * null) {
 						continue;
 					}
 				}
-
+				
 				csv_fini (&csv, cb1, cb2, &column);
 			
-				gdk_threads_enter();
-				
-				sheet->apply_row (sheet, this->fields, column.row - 1, this->maxOfFields-1);
-
-				gdk_threads_leave ();
-
 				if (column.row >= sheet->max_rows) {
 					column.row = 0;
 				}

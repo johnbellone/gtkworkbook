@@ -212,6 +212,16 @@ GtkKeypressCallback (GtkWidget * window, GdkEventKey * event, gpointer data) {
 			}
 		}
 		break;
+
+		case GDK_F3: {
+			GtkSheet * gtksheet = GTK_SHEET (sheet->gtk_sheet);
+			gpointer link = gtk_sheet_get_link (gtksheet, 0, 0);
+
+			gtk_sheet_link_cell (gtksheet, 0, 20, link);
+
+			std::cout << "fired\n";
+		}
+		break;
 	}
 	return result;
 }
@@ -335,7 +345,7 @@ Largefile::OpenFile (Sheet * sheet, const std::string & filename) {
 	
 	int fdEventId = proactor::Event::uniqueEventId();
 	FileDispatcher * fd = new FileDispatcher (fdEventId, appstate->proactor());
-	CsvParser * csv = new CsvParser (sheet, this->pktlog, 0, 20);
+	CsvParser * csv = new CsvParser (sheet, this->pktlog, 0);
 
 	if (appstate->proactor()->addWorker (fdEventId, csv) == false) {
 		g_critical ("Failed starting CsvParser for file %s", filename.c_str());

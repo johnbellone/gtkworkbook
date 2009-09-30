@@ -243,7 +243,7 @@ Realtime::OpenTcpClient (Sheet * sheet, const std::string & address, int port) {
 	// up with a simple way to strap on the ability to have multiple sheets without the need
 	// for an additioanl dispatcher/csv combo I would. It totally destroys the principle of
 	// the proactor design.
-	CsvParser * csv = new CsvParser (sheet, this->pktlog, 0, 20);
+	CsvParser * csv = new CsvParser (sheet, this->pktlog, 0);
 	if (this->app()->proactor()->addWorker (eventId, csv) == false) {
 		g_critical ("Failed starting csv parser and adding to proactor for %s:%d",
 						address.c_str(), port);
