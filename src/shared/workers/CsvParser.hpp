@@ -25,18 +25,25 @@
 #include <concurrent/Thread.hpp>
 #include <libcsv/csv.h>
 
+struct csv_column {
+	Sheet * sheet;
+	Cell ** array;
+	int row;
+	int field;
+	int & array_max;
+	char * value;
+};
+
 class CsvParser : public proactor::Worker {
 private:
 	Sheet * sheet;
 	Workbook * wb;
-	Cell *** fields;
+	Cell ** fields;
 	FILE * log;
 	int verbosity;
 	int maxOfFields;
-	int sizeOfFields;
-	int maxOfRows;
 public:
-	CsvParser (Sheet * sheet, FILE * log, int verbosity, int maxOfFields = 20, int maxOfRows = 1000);
+	CsvParser (Sheet * sheet, FILE * log, int verbosity, int maxOfFields = 15);
 	virtual ~CsvParser (void);
 
 	void * run (void * null);

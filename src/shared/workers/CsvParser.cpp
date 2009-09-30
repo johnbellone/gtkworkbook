@@ -21,23 +21,24 @@
 #include <string>
 #include <iostream>
 
-struct csv_column {
-	Sheet * sheet;
-	Cell ** array;
-	int & array_max;
-	int & array_size;
-	int row;
-	int field;
-	char * value;
-};
-
 /* This structure is due to the libcsv parser; it uses function pointers to
 	do any work inside of an actual tuple. So the cb1 is called after a field
 	is parsed and cb2 is called after a tuple/row is parsed. */
 static void 
 cb1 (void * s, size_t length, void * data) {
-	struct csv_column * column = (struct csv_column *) data;
+	struct csv_column * column = (struct csv_column *)data;
 
+	// Resize the cell array here.
+	if (column->field >= column->array_max) {
+		int max = 2 * column->array_max;
+		(column->array) = (Cell **) g_realloc ( (column->array), max * sizeof (Cell*));
+
+		for (int jj = column->array_max; jj < max; jj++)
+			(column->array)[jj] = cell_new();
+
+		column->array_max = max;
+	}
+	
 	Cell * cell = (column->array)[column->field];
 	cell->set_row (cell, column->row);
 	cell->set_column (cell, column->field++);
@@ -48,39 +49,27 @@ static void
 cb2 (int c, void * data) {
 	struct csv_column * column = (struct csv_column *)data;
 	column->row++;
-	column->array_size = column->field - 1;
 	column->field = 0;
 }
 
 CsvParser::CsvParser (Sheet * sheet,
 							 FILE * log,
 							 int verbosity,
-							 int maxOfFields,
-							 int maxOfRows)
-	: sheet(sheet), log (log), maxOfFields (maxOfFields), maxOfRows(maxOfRows) {
+							 int maxOfFields)
+	: sheet(sheet), log (log), maxOfFields (maxOfFields) {
 	this->wb = sheet->workbook;
-	this->sizeOfFields = 0;
-	
-	this->fields = (Cell ***) g_malloc (this->maxOfRows * sizeof (Cell**) + sizeof(double));
-	
-	for (int jj = 0; jj < this->maxOfRows; jj++) {
-		this->fields[jj] = (Cell **)g_malloc (maxOfFields * sizeof (Cell*) + sizeof(double));
-		
-		for (int ii = 0; ii < this->maxOfFields; ii++)
-			this->fields[jj][ii] = cell_new();
+	this->fields = (Cell **) g_malloc (maxOfFields * sizeof (Cell*));
+
+	for (int jj = 0; jj < maxOfFields; jj++) {
+		this->fields[jj] = cell_new();
 	}
 }
 
 CsvParser::~CsvParser (void) {
-	for (int jj = 0; jj < this->maxOfRows; jj++) {
-		for (int ii = 0; ii < this->maxOfFields; ii++) {
-			if (this->fields[jj][ii])
-				(this->fields[jj][ii])->destroy (this->fields[jj][ii]);
-		}
-
-		g_free (this->fields[jj]);
+	for (int jj = 0; jj < this->maxOfFields; jj++) {
+		if (this->fields[jj])
+			this->fields[jj]->destroy (this->fields[jj]);
 	}
-	g_free (this->fields);
 }
 
 void *
@@ -88,7 +77,13 @@ CsvParser::run (void * null) {
 	std::queue<std::string> queue;
 	struct csv_parser csv;
 	char buf[1024];
-	    
+	struct csv_column column = {sheet,
+										 this->fields,
+										 0,
+										 0,
+										 this->maxOfFields,
+										 &buf[0]};
+	
 	if (csv_init (&csv, CSV_STRICT) != 0) {
 		std::cerr << "Failed initializing libcsv parser library\n";
 		return NULL;
@@ -96,15 +91,6 @@ CsvParser::run (void * null) {
 
 	while (this->isRunning() == true) {
 		if (this->inputQueue.size() > 0) {
-			bool draw = false;
-			struct csv_column column = {sheet,
-												 this->fields[0],
-												 this->maxOfFields,
-												 this->sizeOfFields,
-												 0,
-												 0,
-												 &buf[0]};
-
 			
 			// Lock, copy, clear, unlock. - Free this up.
 			this->inputQueue.lock();
@@ -127,25 +113,16 @@ CsvParser::run (void * null) {
 				}
 
 				csv_fini (&csv, cb1, cb2, &column);
+			
+				gdk_threads_enter();
 				
-				if (column.row >= (column.sheet)->max_rows)
-					column.row = 0;
-				else {
-					column.array = this->fields[column.row];
-					draw = true;
-				}
-			}
+				sheet->apply_row (sheet, this->fields, column.row - 1, this->maxOfFields-1);
 
-			if (draw) {
-				
-				gdk_threads_enter();	
-	
-				for (int jj = 0; jj < this->maxOfRows; jj++) {
-					sheet->apply_row (sheet, this->fields[jj], jj, this->maxOfFields-1);
+				gdk_threads_leave ();
+
+				if (column.row >= sheet->max_rows) {
+					column.row = 0;
 				}
-	
-				gdk_threads_leave();
-				
 			}
 		}	
 		concurrent::Thread::sleep(1);

@@ -427,7 +427,6 @@ Application::init (int argc, char *** argv) {
 			}
 		}
 	}
-
 	
 	gtk_signal_connect (GTK_OBJECT (this->gtk_window), "destroy",
 							  G_CALLBACK (DestroyEventCallback), this);
