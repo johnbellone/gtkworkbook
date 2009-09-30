@@ -212,16 +212,6 @@ GtkKeypressCallback (GtkWidget * window, GdkEventKey * event, gpointer data) {
 			}
 		}
 		break;
-
-		case GDK_F3: {
-			GtkSheet * gtksheet = GTK_SHEET (sheet->gtk_sheet);
-			gpointer link = gtk_sheet_get_link (gtksheet, 0, 0);
-
-			gtk_sheet_link_cell (gtksheet, 0, 20, link);
-
-			std::cout << "fired\n";
-		}
-		break;
 	}
 	return result;
 }
