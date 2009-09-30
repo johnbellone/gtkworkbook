@@ -39,7 +39,7 @@ cb2 (int c, void * data) {
 	column->sheet->apply_row (column->sheet, column->row);
 	gdk_threads_leave();
 	
-	column->row = (column->row >= column->sheet->max_rows) ? 0 : column->row + 1;
+	column->row++;
 	column->field = 0;
 }
 
@@ -89,6 +89,11 @@ CsvParser::run (void * null) {
 				}
 				
 				csv_fini (&csv, cb1, cb2, &column);
+
+				if (column.row >= sheet->max_rows) {
+					column.row = 0;
+					break;
+				}
 			}
 		}	
 		concurrent::Thread::sleep(1);

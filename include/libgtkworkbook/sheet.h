@@ -58,6 +58,7 @@ extern "C" {
 		GtkWidget * gtk_sheet;
 		GtkWidget * gtk_box;
 		GtkWidget * gtk_scrolledwindow;
+		gint x;
 		gint page;
 		gint attention;
 		gint notices;
@@ -79,8 +80,6 @@ extern "C" {
 		gboolean (*save) (Sheet * sheet, const gchar * filepath);
 		gboolean (*load) (Sheet * sheet, const gchar * filepath);
 		void (*get_row) (Sheet * sheet, gint row, Cell ** array, gint size);
-		void (*set_column_titles) (Sheet * sheet, Cell ** array, gint size);
-		void (*set_row_titles) (Sheet * sheet, Cell ** array, gint size);
 	};
 
 	/* sheet.c */

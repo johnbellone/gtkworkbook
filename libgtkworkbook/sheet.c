@@ -41,8 +41,6 @@ static gboolean sheet_method_load (Sheet *, const gchar *);
 static gboolean sheet_method_save (Sheet *, const gchar *);
 static void sheet_method_apply_cellrow (Sheet *, gint);
 static void sheet_method_get_cellrow (Sheet *, gint, Cell **, gint);
-static void sheet_method_set_header_column (Sheet *, Cell **, gint);
-static void sheet_method_set_header_row (Sheet *, Cell **, gint);
 static void sheet_method_set_cell_value_length (Sheet *,gint,gint,void *,size_t);
 
 struct geometryFileHeader {
@@ -203,9 +201,7 @@ sheet_object_init (Workbook * book,
 	sheet->save = sheet_method_save;
 	sheet->load = sheet_method_load;
 	sheet->get_row = sheet_method_get_cellrow;
-	sheet->set_column_titles = sheet_method_set_header_column;
-	sheet->set_row_titles = sheet_method_set_header_row;
-
+	
 	/* Connect any signals that we need to. */
 	if (!IS_NULL (sheet->workbook->signals[SIG_WORKBOOK_CHANGED]))
 	{
@@ -431,46 +427,6 @@ sheet_method_get_cellrow (Sheet * sheet,
 			p->set (p, row, ii, "");
 		else
 			p->set (p, row, ii, label);
-	}
-}
-
-static void
-sheet_method_set_header_column (Sheet * sheet,
-										 Cell ** array,
-										 gint size) {
-	ASSERT (sheet != NULL);
-	g_return_if_fail (array != NULL);
-	
-	GtkSheet * gtksheet = GTK_SHEET (sheet->gtk_sheet);
-
-	if (size > gtksheet->maxcol) size = gtksheet->maxcol;
-	
-	for (gint ii = 0; ii < size; ii++) {
-		Cell * cell = array[ii];
-
-		gtk_sheet_set_column_title (gtksheet, ii, cell->value->str);
-		
-		cell->value->str[0] = 0;
-	}
-}
-
-static void
-sheet_method_set_header_row (Sheet * sheet,
-									  Cell ** array,
-									  gint size) {
-	ASSERT (sheet != NULL);
-	g_return_if_fail (array != NULL);
-	
-	GtkSheet * gtksheet = GTK_SHEET (sheet->gtk_sheet);
-
-	if (size > gtksheet->maxrow) size = gtksheet->maxrow;
-	
-	for (gint ii = 0; ii < size; ii++) {
-		Cell * cell = array[ii];
-
-		gtk_sheet_set_row_title (gtksheet, ii, cell->value->str);
-		
-		cell->value->str[0] = 0;
 	}
 }
 
