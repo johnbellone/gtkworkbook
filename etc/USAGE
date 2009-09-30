@@ -1,0 +1,63 @@
+GTKWorkbook - Usage Information
+John Bellone <jvb4@njit.edu>
+	
+LIBGTKWORKBOOK
+
+	STRUCTURES
+
+		`Workbook' -
+
+		`Sheet' -
+
+		`Row' -
+
+		`Cell' -
+
+GTKWORKBOOK
+
+	KEYBOARD
+
+	`F2' - "Record view" transposes rows to columns from any number of 
+	selected rows. A new window, as well as workbook, is created to 
+	facilitate this feature. 
+
+LARGEFILE
+
+	KEYBOARD
+
+		`F1' - "Goto" or "jump" options that allow for quickly 
+		paging through a large file utilizng one of the three options. 
+
+		(Byte offset) - You can manually specify an byte offset and
+		receive the immediate _next line_ from that specified offset.
+
+		(Absolute line) - An indexer runs in the background and must
+		go completely through the file in order to get an exact line
+		index. As the index becomes available you are able to specify
+		an absolute line number. The index time depends on (a) the
+		size of the file in question, (b) the version of Linux, and
+		the (c) computer's hardware itself. 
+
+		(Percentage) - You can quickly jump to a relative percentage
+		of the file. This is based strictly on the _byte offset_ and
+		is calculated by taking the size of the file in question.
+
+	MOUSE
+
+		The "Largefile" menu item at the top allows for a dialog to
+		be opened to browse, and open, a CSV file. 
+		
+REALTIME
+
+	When the plugin is first initialized a TCP server is started on a port
+	specified inside of the configuration file. This is open on the main
+	ethernet and allows for "control" over the application's sheets, cells,
+	and workbooks. 
+
+	MOUSE
+
+		The "Realtime" menu item at the top allows for a dialog to
+		be opened to create a TCP client connect to a server that
+		streams CSV information.
+
+	PACKET FORMAT
