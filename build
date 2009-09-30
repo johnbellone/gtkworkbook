@@ -34,7 +34,10 @@ make $@ || {
 cp ${src_dir}/OBJS/.libs/gtkworkbook ${bin_dir}/gtkworkbook
 cp ${src_dir}/OBJS/.libs/largefile.so ${bin_dir}/largefile.so
 cp ${src_dir}/OBJS/.libs/realtime.so ${bin_dir}/realtime.so
-cp ${cfg_dir}/application.cfg ${bin_dir}/application.cfg
+
+if [ ! -f ${cfg_dir}/application.cfg ]; then
+    cp ${cfg_dir}/application.cfg ${bin_dir}/application.cfg
+fi
 
 echo "Build of $package is complete."
 echo "Project files resides in $bin_dir"
