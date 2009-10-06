@@ -40,18 +40,15 @@ namespace realtime {
 		Array<String> fields;
 		gchar delimiter;
 	public:
-		enum {
-			TYPE_UPDATECELL = 0,
-			TYPE_ADDSHEET,
-			TYPE_REMSHEET,
-			TYPE_MOVESHEETINDEX,
-			TYPE_MOVESHEET,
-			TYPE_SAVESHEET,
-			TYPE_LOADSHEET,
-			/**/
-			MAX_TYPES
-		};
-  
+		const static int TYPE_UPDATECELL = 0;
+		const static int TYPE_ADDSHEET = 1;
+		const static int TYPE_REMSHEET = 2;
+		const static int TYPE_MOVESHEETINDEX = 3;
+		const static int TYPE_MOVESHEET = 4;
+		const static int TYPE_SAVESHEET = 5;
+		const static int TYPE_LOADSHEET = 6;
+		const static int MAX_TYPES = 7;
+		  
 		Packet (void);
 		~Packet (void);
   
