@@ -215,7 +215,7 @@ namespace realtime {
 					Thread::sleep(5);
 				}
 			}
-			Thread::sleep (10);
+			Thread::sleep (1);
 		}
 		return NULL;
 	}
