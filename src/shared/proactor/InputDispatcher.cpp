@@ -41,17 +41,17 @@ namespace proactor {
 	void *
 	InputDispatcher::run (void * null) {
 		while (this->isRunning() == true) {
-			// Dispatch all of the input items on the queue.
+			while (this->inputQueue.size() == 0) {
+				if (this->isRunning() == false)
+					return NULL;
+				Thread::sleep(1);
+			}
+			
 			this->inputQueue.lock();
 
-			while (this->inputQueue.size() > 0) {
-				// For right now all we're doing is pushing up the chain.
-				this->pro->onReadComplete ( this->inputQueue.pop() );
-			}
-
+			this->pro->onReadComplete ( this->inputQueue.pop() );
+	
 			this->inputQueue.unlock();
-
-			Thread::sleep(100);
 		}
   
 		return NULL; 

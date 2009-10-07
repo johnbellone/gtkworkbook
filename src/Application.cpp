@@ -59,7 +59,6 @@ ApplicationKeypressCallback (GtkWidget * window, GdkEventKey * event, gpointer d
 				}
 			}
 			break;
-
 		}
 	}
 
@@ -164,7 +163,7 @@ DestroyEventCallback (GtkWidget * window, gpointer data) {
 
 static void
 AboutDialogResponseCallback (GtkWidget * gtkdialog, gint response, gpointer data) {
-	AboutDialog * dialog = (AboutDialog *)data;
+	//	AboutDialog * dialog = (AboutDialog *)data;
 
 	gtk_widget_hide_all (gtkdialog);
 }

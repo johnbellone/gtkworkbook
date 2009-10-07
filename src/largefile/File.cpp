@@ -111,18 +111,17 @@ namespace largefile {
 		this->Index();
 		
 		while (this->isRunning() == true) {
-			this->inputQueue.lock();
-      
-			while (this->inputQueue.size() > 0) {
+			while (this->inputQueue.size() == 0) {
 				if (this->isRunning() == false)
-					break;
-
-				this->pro->onReadComplete (this->inputQueue.pop());
+					return NULL;
+				concurrent::Thread::sleep(1);
 			}
+						
+			this->inputQueue.lock();
 
+			this->pro->onReadComplete (this->inputQueue.pop());
+			
 			this->inputQueue.unlock();
-
-			concurrent::Thread::sleep(5);
 		}
 
 		return NULL;
@@ -261,13 +260,13 @@ namespace largefile {
 					break;
 				}
 				else {
-					Thread::sleep(0);								  
+					Thread::sleep(1);								  
 				}
 				
 				// Crude implementation of a spinlock. Wait while another thread is doing
 				// some reading before we begin indexing again.
 				while (this->marks->trylock() == false)
-					Thread::sleep(0);
+					Thread::sleep(1);
 			}
 		}
 
@@ -314,7 +313,7 @@ namespace largefile {
 			// Crude implementation of a spinlock. Wait while another thread is doing
 			// some reading before we begin indexing again.
 			while (this->marks->trylock() == false)
-				Thread::sleep(0);
+				Thread::sleep(1);
 			
 			if (line_max < this->marks->get(index).line) {
 				delta = this->startLine - this->marks->get(index-1).line;

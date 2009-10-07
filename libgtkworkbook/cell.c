@@ -47,10 +47,21 @@ cell_object_init (void)
 {
 	Cell * obj = (Cell*)g_malloc(sizeof (Cell));
 
+	if (!obj) {
+		g_critical ("Failed allocating space for cell object");
+		return NULL;
+	}
+	
 	obj->value = g_string_new_len ("", 4096);
 	obj->attributes.bgcolor = g_string_new_len ("", 1024);
 	obj->attributes.fgcolor = g_string_new_len ("", 1024);
 
+	if (!obj->value || !obj->attributes.bgcolor || !obj->attributes.fgcolor) {
+		g_critical ("failed allocating space for g_string structure");
+		cell_object_free (obj);
+		return NULL;
+	}
+	
 	/* Methods */
 	obj->set_fgcolor = cell_method_set_fgcolor;
 	obj->set_bgcolor = cell_method_set_bgcolor;
