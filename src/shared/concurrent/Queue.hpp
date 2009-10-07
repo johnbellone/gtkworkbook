@@ -41,7 +41,7 @@ namespace concurrent {
     inline void clear (void) {
       this->lock();
       while (this->the_queue.size() > 0)
-	this->the_queue.pop();
+			this->the_queue.pop();
       this->unlock();
     }
 

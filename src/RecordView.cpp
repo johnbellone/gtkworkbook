@@ -61,7 +61,7 @@ RecordView::AddSheetRecord (Sheet * sheet) {
 	ASSERT (sheet != NULL);
 	GtkSheet * gtksheet = GTK_SHEET (sheet->gtk_sheet);
 	GtkSheetRange range = {gtksheet->range.row0, 0, gtksheet->range.rowi, 0};
-	Row * tuple = row_new (gtksheet->maxcol);
+	Row * tuple = row_new (gtksheet->maxcol + 1);
 	gint sheet_rows = 1;
 	
 	// More than one row is selected; we must transpose them all into the RV sheet.
@@ -69,13 +69,27 @@ RecordView::AddSheetRecord (Sheet * sheet) {
 		sheet_rows = range.rowi - range.row0 + 1;
 	}
 			
-	Sheet * record_sheet = this->wb->add_new_sheet (this->wb,sheet->name,gtksheet->maxcol,sheet_rows);
-	int column = 0;
-	
+	Sheet * record_sheet = this->wb->add_new_sheet (this->wb,sheet->name,gtksheet->maxcol + 1,sheet_rows);
+	int column = 0, row = 0;
+
 	do {
 		sheet->get_row (sheet, range.row0, tuple->cells, tuple->size);
 
+		// Change the titles of the columns to the row titles. This is only going to work if the
+		// row titles have been explicitly set somewhere inside of the plugin.
+		record_sheet->set_column_title (record_sheet,
+												  row,
+												  sheet->row_titles->cells[range.row0]->value->str);
+		
 		for (int ii = 0; ii < tuple->size; ii++) {
+
+			// We only need to change the row titles once. This can happen on our last iteration.
+			if (range.row0 == range.rowi) {
+				record_sheet->set_row_title (record_sheet,
+													  ii,
+													  sheet->column_titles->cells[ii]->value->str);
+
+			}
 			
 			record_sheet->set_cell (record_sheet,
 											ii,
@@ -84,7 +98,7 @@ RecordView::AddSheetRecord (Sheet * sheet) {
 
 		}
 		
-		range.row0++; column++;
+		range.row0++; column++; row++;
 	} while (range.row0 <= range.rowi);
 
 	tuple->destroy (tuple);

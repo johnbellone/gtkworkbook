@@ -122,7 +122,7 @@ sheet_object_init (Workbook * book,
 	sheet->max_columns = columns;
 	sheet->column_titles = row_new ( sheet->max_columns );
 	sheet->row_titles = row_new ( sheet->max_rows );
-
+	
 	/* Allocation procedure for our cell buffer */
 	sheet->cells = (Cell ***) g_malloc (rows * sizeof (Cell**));
 	for (int ii = 0; ii < rows; ii++) {
@@ -350,7 +350,8 @@ sheet_method_apply_cellrange (Sheet * sheet,
 static void
 sheet_method_set_column_title (Sheet * sheet, gint column, const gchar * title) {
 	ASSERT (sheet != NULL);
-
+	g_return_if_fail (title != NULL);
+	
 	gtk_sheet_column_button_add_label ( GTK_SHEET (sheet->gtk_sheet), column, title);
 	g_string_assign (sheet->column_titles->cells[column]->value, title);
 }
@@ -358,7 +359,8 @@ sheet_method_set_column_title (Sheet * sheet, gint column, const gchar * title) 
 static void
 sheet_method_set_row_title (Sheet * sheet, gint row, const gchar * title) {
 	ASSERT (sheet != NULL);
-
+	g_return_if_fail (title != NULL);
+		
 	gtk_sheet_row_button_add_label ( GTK_SHEET (sheet->gtk_sheet), row, title);
 	g_string_assign (sheet->row_titles->cells[row]->value, title);
 }
