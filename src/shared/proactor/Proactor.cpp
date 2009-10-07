@@ -26,6 +26,15 @@ namespace proactor {
 	}
 
 	Proactor::~Proactor (void) {
+		// This is a hack right now:
+		// We do the teardown for a thread inside of the Thread object. This is merely
+		// replicating the feature because there is a problem with the lock inside of the
+		// queue object, e.g., we need to implement a pthread wait condition.
+		if (this->isRunning() == true) {
+			this->setRunning (false);
+			this->join();
+		}
+		
 		// Remove all of the lists of event handlers.
 		{
 			EventMapType::iterator it = this->eventsToHandlers.begin();
@@ -46,8 +55,7 @@ namespace proactor {
 				it++;
 			}
 		}
-  
-	}
+ 	}
 
 	bool
 	Proactor::addWorker (int e, Worker * job) {
@@ -124,9 +132,10 @@ namespace proactor {
 					return NULL;
 				Thread::sleep(1);
 			}
-			
-			this->events.lock();
 
+			// STUB: Should probably copy the events queue into a local one to free up
+			// the resource, e.g. the spinlock at the top might never let go if we continually
+			// add items to the queue.
 			Event e = this->events.pop();
 
 			// We are throwing events with no handlers to catch them.
@@ -143,8 +152,6 @@ namespace proactor {
 		      
 				it++;
 			}
-		
-			this->events.unlock();
 		}
 		return NULL;
 	}

@@ -117,11 +117,7 @@ namespace largefile {
 				concurrent::Thread::sleep(1);
 			}
 						
-			this->inputQueue.lock();
-
 			this->pro->onReadComplete (this->inputQueue.pop());
-			
-			this->inputQueue.unlock();
 		}
 
 		return NULL;
