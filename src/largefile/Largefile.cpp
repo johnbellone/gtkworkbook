@@ -367,8 +367,7 @@ Largefile::CloseFile (const std::string & filename) {
 	
 	FilenameMap::iterator it = this->mapping.find(filename);
 	if (it == this->mapping.end()) {
-		// STUB: something meaningful here to mention that the file does not exist inside
-		// of the map. They're trying to exit from a file that seemingly has not been opened.
+		g_critical ("Filename %s does not appear to be inside of map", filename.c_str());
 		this->unlock();
 		return false;
 	}

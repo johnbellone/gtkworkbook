@@ -46,12 +46,8 @@ namespace proactor {
 					return NULL;
 				Thread::sleep(1);
 			}
-			
-			this->inputQueue.lock();
-
-			this->pro->onReadComplete ( this->inputQueue.pop() );
 	
-			this->inputQueue.unlock();
+			this->pro->onReadComplete ( this->inputQueue.pop() );
 		}
   
 		return NULL; 
