@@ -112,12 +112,13 @@ CsvParser::run (void * null) {
 	gdk_threads_leave();
 	
 	while (this->isRunning() == true) {
-
-		if (this->inputQueue.size() > 0)
-			this->process(queue, csv, column);
-			
-		concurrent::Thread::sleep(1);
+		while (this->inputQueue.size() == 0) {
+			if (this->isRunning() == false)
+				return NULL;
+			concurrent::Thread::sleep(1);
+		}
+		
+		this->process(queue, csv, column);
 	}
-
 	return NULL;
 }

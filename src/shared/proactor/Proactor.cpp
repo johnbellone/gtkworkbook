@@ -119,30 +119,33 @@ namespace proactor {
 		WorkerListType::iterator it;
 
 		while (this->isRunning() == true) {
+			while (this->events.size() == 0) {
+				if (this->isRunning() == false)
+					return NULL;
+				Thread::sleep(1);
+			}
+			
 			this->events.lock();
 
-			while (this->events.size() > 0) {
-				Event e = this->events.pop();
+			Event e = this->events.pop();
 
-				// We are throwing events with no handlers to catch them.
-				if (this->eventsToHandlers.find (e.id) == 
-					 this->eventsToHandlers.end())
-					continue;
+			// We are throwing events with no handlers to catch them.
+			if (this->eventsToHandlers.find (e.id) == 
+				 this->eventsToHandlers.end())
+				continue;
  
-				it = this->eventsToHandlers[e.id]->begin();
+			it = this->eventsToHandlers[e.id]->begin();
 	  
-				while (it != this->eventsToHandlers[e.id]->end()) {
-					Worker * j = (*it);
+			while (it != this->eventsToHandlers[e.id]->end()) {
+				Worker * j = (*it);
 	      
-					j->pushInputQueue (e.buf);
+				j->pushInputQueue (e.buf);
 		      
-					it++;
-				}
+				it++;
 			}
+		
 			this->events.unlock();
-      
-			Thread::sleep(100);
-      }
+		}
 		return NULL;
 	}
 
