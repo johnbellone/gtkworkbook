@@ -27,21 +27,17 @@ static void sheet_method_destroy (Sheet *);
 static void sheet_method_set_cell (Sheet *, gint, gint, const gchar *);
 static void sheet_method_apply_cell (Sheet *, const Cell *);
 static void sheet_method_apply_cellarray (Sheet *, Cell **, gint);
-static void sheet_method_apply_cellrange (Sheet *, 
-														const GtkSheetRange *,
-														const CellAttributes *);
-static void sheet_method_range_set_background (Sheet *, 
-															  const GtkSheetRange *,
-															  const gchar *);
-static void sheet_method_range_set_foreground (Sheet *,
-															  const GtkSheetRange *,
-															  const gchar *);
+static void sheet_method_apply_cellrange (Sheet *, const GtkSheetRange *, const CellAttributes *);
+static void sheet_method_range_set_background (Sheet *, const GtkSheetRange *, const gchar *);
+static void sheet_method_range_set_foreground (Sheet *, const GtkSheetRange *, const gchar *);
 static void sheet_method_set_attention (Sheet *, gint);
 static gboolean sheet_method_load (Sheet *, const gchar *);
 static gboolean sheet_method_save (Sheet *, const gchar *);
 static void sheet_method_apply_cellrow (Sheet *, gint);
 static void sheet_method_get_cellrow (Sheet *, gint, Cell **, gint);
 static void sheet_method_set_cell_value_length (Sheet *,gint,gint,void *,size_t);
+static void sheet_method_set_column_title (Sheet *, gint, const gchar *);
+static void sheet_method_set_row_title (Sheet *, gint, const gchar *);
 
 struct geometryFileHeader {
 	gint fileVersion;
@@ -59,58 +55,7 @@ struct geometryFileEntry {
 	GdkColor cellForeground;
 	GdkColor cellBackground;
 };
-/*
-static GtkSheetCell *
-gtk_sheet_cell_new (void) {
-	GtkSheetCell * cell = g_new (GtkSheetCell, 1);
-	cell->text = NULL;
-	cell->link = NULL;
-	cell->attributes = NULL;
-	return cell;
-}
 
-static void
-GrowSheet (GtkSheet * tbl, gint newrows, gint newcols) {
-	gint ii, jj, inirow, inicol;
-
-	inirow = tbl->maxallocrow + 1;
-	inicol = tbl->maxalloccol + 1;
-
-	tbl->maxalloccol = tbl->maxalloccol + newcols;
-	tbl->maxallocrow = tbl->maxallocrow + newrows;
-
-	if (newrows > 0) {
-		tbl->data = (GtkSheetCell ***) g_realloc (tbl->data,
-																(tbl->maxallocrow+1)*sizeof(GtkSheetCell**)+sizeof(double));
-
-		for (ii = inirow; ii <= tbl->maxallocrow; ii++) {
-			tbl->data[ii] = (GtkSheetCell **) g_malloc ((tbl->maxcol+1)*sizeof(GtkSheetCell*)+sizeof(double));
-
-			for (jj = 0; jj < inicol; jj++)
-				tbl->data[ii][jj] = NULL;
-		}
-	}
-
-	if (newcols > 0) {
-		for (ii = 0; ii <= tbl->maxallocrow; ii++) {
-			tbl->data[ii] = (GtkSheetCell **) g_realloc (tbl->data[ii],
-																		(tbl->maxalloccol+1)*sizeof(GtkSheetCell*)+sizeof(double));
-
-			for (jj = inicol; jj <= tbl->maxalloccol; jj++)
-				tbl->data[ii][jj] = NULL;
-		}
-	}
-}
-
-static void
-CheckBounds (GtkSheet * tbl, gint row, gint col) {
-	gint newrows = 0, newcols = 0;
-
-	if (col > tbl->maxalloccol) newcols = col - tbl->maxalloccol;
-	if (row > tbl->maxallocrow) newrows = row - tbl->maxallocrow;
-	if (newrows > 0 || newcols > 0) GrowSheet (tbl, newrows, newcols);
-}
-*/
 /* @description: This method creates a new Sheet object and returns the
    pointer to that object. It calls the constructor function to do so.
    @book: A pointer to the Workbook that the object will be a part of.
@@ -175,7 +120,10 @@ sheet_object_init (Workbook * book,
 	sheet->next = sheet->prev = NULL;
 	sheet->max_rows = rows;
 	sheet->max_columns = columns;
+	sheet->column_titles = row_new ( sheet->max_columns );
+	sheet->row_titles = row_new ( sheet->max_rows );
 
+	/* Allocation procedure for our cell buffer */
 	sheet->cells = (Cell ***) g_malloc (rows * sizeof (Cell**));
 	for (int ii = 0; ii < rows; ii++) {
 		sheet->cells[ii] = (Cell **) g_malloc (columns * sizeof (Cell*));
@@ -201,6 +149,8 @@ sheet_object_init (Workbook * book,
 	sheet->save = sheet_method_save;
 	sheet->load = sheet_method_load;
 	sheet->get_row = sheet_method_get_cellrow;
+	sheet->set_column_title = sheet_method_set_column_title;
+	sheet->set_row_title = sheet_method_set_row_title;
 	
 	/* Connect any signals that we need to. */
 	if (!IS_NULL (sheet->workbook->signals[SIG_WORKBOOK_CHANGED]))
@@ -382,6 +332,8 @@ sheet_object_free (Sheet * sheet) {
 	
 	FREE (sheet->cells);
 	FREE (sheet->name);
+	FREE (sheet->row_titles);
+	FREE (sheet->column_titles);
 	FREE (sheet);
 	return;
 }
@@ -396,11 +348,27 @@ sheet_method_apply_cellrange (Sheet * sheet,
 }
 
 static void
+sheet_method_set_column_title (Sheet * sheet, gint column, const gchar * title) {
+	ASSERT (sheet != NULL);
+
+	gtk_sheet_column_button_add_label ( GTK_SHEET (sheet->gtk_sheet), column, title);
+	g_string_assign (sheet->column_titles->cells[column]->value, title);
+}
+
+static void
+sheet_method_set_row_title (Sheet * sheet, gint row, const gchar * title) {
+	ASSERT (sheet != NULL);
+
+	gtk_sheet_row_button_add_label ( GTK_SHEET (sheet->gtk_sheet), row, title);
+	g_string_assign (sheet->row_titles->cells[row]->value, title);
+}
+
+static void
 sheet_method_apply_cellrow (Sheet * sheet, gint row) {
 	ASSERT (sheet != NULL);
 
 	GtkSheet * gtksheet = GTK_SHEET (sheet->gtk_sheet);
-	
+
 	for (int jj = 0; jj < sheet->max_columns; jj++) {
 		gtk_sheet_set_cell_text (gtksheet, row, jj, sheet->cells[row][jj]->value->str);
 	}

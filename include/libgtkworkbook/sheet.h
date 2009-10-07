@@ -33,7 +33,8 @@ extern "C" {
 
 #include "workbook.h"
 #include "cell.h"
-
+#include "row.h"
+	
 	/*
 	  @description: This object abstracts away all of the calls to the native
 	  GtkSheet methods. It is meant to be used with the Cell object(s).
@@ -52,6 +53,8 @@ extern "C" {
 		Sheet * next;
 		Sheet * prev;
 		Cell *** cells;
+		Row * column_titles;
+		Row * row_titles;
 		gchar * name;
 		Workbook * workbook;
 		GtkWidget * gtk_label;
@@ -80,6 +83,8 @@ extern "C" {
 		gboolean (*save) (Sheet * sheet, const gchar * filepath);
 		gboolean (*load) (Sheet * sheet, const gchar * filepath);
 		void (*get_row) (Sheet * sheet, gint row, Cell ** array, gint size);
+		void (*set_column_title) (Sheet * sheet, gint column, const char * title);
+		void (*set_row_title) (Sheet * sheet, gint row, const char * title);
 	};
 
 	/* sheet.c */
