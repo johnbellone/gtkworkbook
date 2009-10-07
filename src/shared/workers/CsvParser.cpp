@@ -17,8 +17,6 @@
   Foundation, Inc., 51 Franklin Street, Fifth Floor Boston, MA 02110-1301 USA
 */
 #include "CsvParser.hpp"
-#include <queue>
-#include <string>
 #include <iostream>
 
 /* This structure is due to the libcsv parser; it uses function pointers to
@@ -53,6 +51,39 @@ CsvParser::CsvParser (Sheet * sheet,
 CsvParser::~CsvParser (void) {
 }
 
+void
+CsvParser::process (std::queue<std::string> & queue,
+						  struct csv_parser & csv,
+						  struct csv_column & column) {
+	// Lock, copy, clear, unlock. - Free this up.
+	this->inputQueue.lock();
+	this->inputQueue.copy (queue);
+	this->inputQueue.clear();
+	this->inputQueue.unlock();
+
+	while (queue.size() > 0) {
+		std::string str = queue.front(); queue.pop();
+		size_t bytes = str.length();
+			
+		if (this->isRunning() == false)
+			break;
+
+		if ((bytes = csv_parse (&csv, str.c_str(), bytes, cb1, cb2, &column)) == bytes) {
+			if (csv_error (&csv) == CSV_EPARSE) {
+				std::cerr << "Parsing error on input: "<<"\n";
+				continue;
+			}
+		}
+				
+		csv_fini (&csv, cb1, cb2, &column);
+			
+		if (column.row >= sheet->max_rows) {
+			column.row = 0;
+			break;
+		}
+	}
+}
+
 void *
 CsvParser::run (void * null) {
 	std::queue<std::string> queue;
@@ -65,37 +96,26 @@ CsvParser::run (void * null) {
 		return NULL;
 	}
 
+	// The first this is run we are going to want to grab the header row and set it
+	// appropriately. Right now there is no better way to do this. In the future it'll
+	// merely be a separate instance of the CsvParser on the running queue. 
+	while (this->inputQueue.size() == 0)
+		concurrent::Thread::sleep(1);
+
+	this->process(queue, csv, column);
+
+	// Assign the first row of the input to our header row.
+	gdk_threads_enter();
+	for (int ii = 0; ii < sheet->max_columns; ii++) {
+		sheet->set_column_title (sheet, ii, sheet->cells[0][ii]->value->str);
+	}
+	gdk_threads_leave();
+	
 	while (this->isRunning() == true) {
-		if (this->inputQueue.size() > 0) {
+
+		if (this->inputQueue.size() > 0)
+			this->process(queue, csv, column);
 			
-			// Lock, copy, clear, unlock. - Free this up.
-			this->inputQueue.lock();
-			this->inputQueue.copy (queue);
-			this->inputQueue.clear();
-			this->inputQueue.unlock();
-
-			while (queue.size() > 0) {
-				std::string str = queue.front(); queue.pop();
-				size_t bytes = str.length();
-
-				if (this->isRunning() == false)
-					break;
-
-				if ((bytes = csv_parse (&csv, str.c_str(), bytes, cb1, cb2, &column)) == bytes) {
-					if (csv_error (&csv) == CSV_EPARSE) {
-						std::cerr << "Parsing error on input: "<<"\n";
-						continue;
-					}
-				}
-				
-				csv_fini (&csv, cb1, cb2, &column);
-
-				if (column.row >= sheet->max_rows) {
-					column.row = 0;
-					break;
-				}
-			}
-		}	
 		concurrent::Thread::sleep(1);
 	}
 

@@ -24,6 +24,8 @@
 #include <libgtkworkbook/workbook.h>
 #include <concurrent/Thread.hpp>
 #include <libcsv/csv.h>
+#include <queue>
+#include <string>
 
 struct csv_column {
 	Sheet * sheet;
@@ -43,6 +45,7 @@ public:
 	virtual ~CsvParser (void);
 
 	void * run (void * null);
+	void process (std::queue<std::string> & queue, struct csv_parser & csv, struct csv_column & column);
 };
 
 #endif
