@@ -59,6 +59,20 @@ ApplicationKeypressCallback (GtkWidget * window, GdkEventKey * event, gpointer d
 				}
 			}
 			break;
+
+			case GDK_F3: {
+				if (sheet) {
+					sheet->freeze_selection (sheet);
+				}
+			}
+			break;
+
+			case GDK_F4: {
+				if (sheet) {
+					sheet->thaw_selection (sheet);
+				}
+			}
+			break;
 		}
 	}
 

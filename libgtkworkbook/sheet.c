@@ -38,6 +38,8 @@ static void sheet_method_get_cellrow (Sheet *, gint, Cell **, gint);
 static void sheet_method_set_cell_value_length (Sheet *,gint,gint,void *,size_t);
 static void sheet_method_set_column_title (Sheet *, gint, const gchar *);
 static void sheet_method_set_row_title (Sheet *, gint, const gchar *);
+static void sheet_method_freeze_selection (Sheet *);
+static void sheet_method_thaw_selection (Sheet *);
 
 struct geometryFileHeader {
 	gint fileVersion;
@@ -151,6 +153,8 @@ sheet_object_init (Workbook * book,
 	sheet->get_row = sheet_method_get_cellrow;
 	sheet->set_column_title = sheet_method_set_column_title;
 	sheet->set_row_title = sheet_method_set_row_title;
+	sheet->freeze_selection = sheet_method_freeze_selection;
+	sheet->thaw_selection = sheet_method_thaw_selection;
 	
 	/* Connect any signals that we need to. */
 	if (!IS_NULL (sheet->workbook->signals[SIG_WORKBOOK_CHANGED]))
@@ -225,8 +229,6 @@ sheet_method_load (Sheet * sheet, const gchar * filepath)
 	FCLOSE (fp);
 	return TRUE;
 }
-
-
 
 static gboolean
 sheet_method_save (Sheet * sheet, const gchar * filepath) {
@@ -316,6 +318,38 @@ sheet_method_destroy (Sheet * sheet) {
 	sheet_object_free (sheet);
 }
 
+static void
+sheet_method_freeze_selection (Sheet * sheet) {
+	ASSERT (sheet != NULL);
+	GtkSheet * gtksheet = GTK_SHEET (sheet->gtk_sheet);
+
+	sheet->range_set_background (sheet, &gtksheet->range, "#eeeeee");
+
+	for (int ii = gtksheet->range.row0; ii < gtksheet->range.rowi; ii++) {
+		for (int jj = gtksheet->range.col0; jj < gtksheet->range.coli; jj++) {
+			Cell * cell = sheet->cells[ii][jj];
+
+			cell->attributes.editable = FALSE;
+		}
+	}
+}
+
+static void
+sheet_method_thaw_selection (Sheet * sheet) {
+	ASSERT (sheet != NULL);
+	GtkSheet * gtksheet = GTK_SHEET (sheet->gtk_sheet);
+
+	sheet->range_set_background (sheet, &gtksheet->range, "#ffffff");
+
+	for (int ii = gtksheet->range.row0; ii < gtksheet->range.rowi; ii++) {
+		for (int jj = gtksheet->range.col0; jj < gtksheet->range.coli; jj++) {
+			Cell * cell = sheet->cells[ii][jj];
+
+			cell->attributes.editable = TRUE;
+		}
+	}
+}
+
 /* @description: This method frees the memory that was used by the Sheet
    object. This should only be called from sheet->destroy()
    @sheet: A pointer to the Sheet object that will be freed. */
@@ -368,11 +402,13 @@ sheet_method_set_row_title (Sheet * sheet, gint row, const gchar * title) {
 static void
 sheet_method_apply_cellrow (Sheet * sheet, gint row) {
 	ASSERT (sheet != NULL);
-
 	GtkSheet * gtksheet = GTK_SHEET (sheet->gtk_sheet);
 
 	for (int jj = 0; jj < sheet->max_columns; jj++) {
-		gtk_sheet_set_cell_text (gtksheet, row, jj, sheet->cells[row][jj]->value->str);
+		Cell * cell = sheet->cells[row][jj];
+		
+		if (cell->attributes.editable == TRUE)
+			gtk_sheet_set_cell_text (gtksheet, row, jj, cell->value->str);
 	}
 }
 
@@ -417,6 +453,9 @@ sheet_method_apply_cellarray (Sheet * sheet,
 	for (gint ii = 0; ii < size; ii++) {
 		Cell * cell = array[ii];
 
+		if (sheet->cells[cell->row][cell->column]->attributes.editable == FALSE)
+			continue;
+		
 		gtk_sheet_set_cell_text (gtksheet,
 										 cell->row,
 										 cell->column,
@@ -446,10 +485,11 @@ sheet_method_apply_cell (Sheet * sheet, const Cell * cell)
 {
 	ASSERT (sheet != NULL);
 	g_return_if_fail (cell != NULL);
-
+	g_return_if_fail (sheet->cells[cell->row][cell->column]->attributes.editable == TRUE);
+		
 	if (sheet->has_focus == FALSE)
 		sheet->notices++;
-
+	
 	gtk_sheet_set_cell (GTK_SHEET (sheet->gtk_sheet),
 							  cell->row,
 							  cell->column,
@@ -467,9 +507,9 @@ sheet_method_apply_cell (Sheet * sheet, const Cell * cell)
 											  cell->attributes.fgcolor->str);
 
 	/* Clear all of the strings */
-	g_string_assign (cell->value, "");
+	/*g_string_assign (cell->value, "");
 	g_string_assign (cell->attributes.bgcolor, "");
-	g_string_assign (cell->attributes.fgcolor, "");
+	g_string_assign (cell->attributes.fgcolor, "");*/
 }
 
 /* @description: This method changes the background of a range of cells. 
@@ -485,15 +525,17 @@ sheet_method_range_set_background (Sheet * sheet,
 {
 	ASSERT (sheet != NULL); ASSERT (range != NULL);
 	GdkColor color;
+	GdkColor black;
 
 	/* The color needs to be taken from the colormap; there is an alternative
 		way to do this if we use #rgb or #rrggbb formats. */
 	gdk_color_parse (desc, &color);
-	gdk_color_alloc (gtk_widget_get_colormap (sheet->gtk_sheet),
-						  &color);
+	gdk_color_parse ("black", &black);
+	gdk_color_alloc (gtk_widget_get_colormap (sheet->gtk_sheet), &color);
+	gdk_color_alloc (gtk_widget_get_colormap (sheet->gtk_sheet), &black);
   
-	gtk_sheet_range_set_background (GTK_SHEET (sheet->gtk_sheet),
-											  range, &color);
+	gtk_sheet_range_set_background (GTK_SHEET (sheet->gtk_sheet), range, &color);
+	gtk_sheet_range_set_border_color (GTK_SHEET (sheet->gtk_sheet), range, &black);
 }
 
 /* @description: This method changes the foreground color over a range of
@@ -545,7 +587,8 @@ sheet_method_set_cell (Sheet * sheet,
 							  const gchar * value)
 {
 	ASSERT (sheet != NULL);
-
+	g_return_if_fail (sheet->cells[row][column]->attributes.editable == TRUE);
+	
 	if (sheet->has_focus == FALSE)
 		sheet->notices++;
 
