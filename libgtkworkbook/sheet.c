@@ -344,7 +344,7 @@ sheet_method_highlight_selection (Sheet * sheet) {
   ASSERT (sheet != NULL);
   GtkSheet * gtksheet = GTK_SHEET (sheet->gtk_sheet);
 
-  sheet->range_set_background (sheet, &gtksheet->range, "");
+  sheet->range_set_background (sheet, &gtksheet->range, "#ffffcc");
 
   for (int ii = gtksheet->range.row0; ii < gtksheet->range.rowi; ii++) {
     register int jj = gtksheet->range.col0;

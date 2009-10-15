@@ -73,6 +73,20 @@ ApplicationKeypressCallback (GtkWidget * window, GdkEventKey * event, gpointer d
 				}
 			}
 			break;
+
+			case GDK_F5: {
+				if (sheet) {
+					sheet->highlight_selection (sheet);
+				}
+			}
+			break;
+
+			case GDK_F6: {
+				if (sheet) {
+					sheet->dehighlight_selection (sheet);
+				}
+			}
+			break;
 		}
 	}
 
