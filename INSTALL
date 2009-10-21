@@ -88,7 +88,7 @@ BUILD PROCESS
 	testing purposes. Note that currently if the build process files the 
 	previous build's files will not be removed. 
 
-        E. GNU Autotools
+        E. GNU Autotools (Automake 1.90 and Autoconf 2.59 or better)
 
            This is the build tool-chain used which must be available. I have 
 	   not come across a version of Linux that does not have this 

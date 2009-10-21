@@ -1,0 +1,12 @@
+
+UBUNTU 9.10
+	- As of October 20th 2009 the current trunk version of GTKWorkbook 
+	does not work with the beta release of Ubuntu 9.10. This has to do
+	seemingly with changes made to the underlying Gnome libraries.
+
+	- The problem exists in the required dependency of GtkExtra which 
+	seems to directly use structures that may have been deprecated. More
+	investigation will need to be done.
+
+	- This may be the case with FEDORA 12 as it will most likely be using
+	the same (or newer) Gnome subsystem. 
