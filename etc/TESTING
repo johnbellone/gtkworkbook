@@ -1,30 +1,29 @@
-Testing
+GTKWorkbook -- Testing Information
+John Bellone <jvb4@njit.edu>
 
-This software has been tested on the following systems and verified to work 
-correctly:
+OPERATING SYSTEM
 
-UBUNTU 9.04
-CENTOS 5.2 (via Sun Virtualbox)
-CENTOS 5.1 (via Sun Virtualbox)
+	This software has been tested on the following operating systems and 
+	verified to work correctly:
 
-       - Intel Core Quad 2.8GHZ
-       - 8GB memory
-       - 500GB hard-drive space
-       
-RHEL (as of September 2009)
+	UBUNTU 9.04
+	CENTOS 5.x
+	RHEL 5.x
 
-       - Intel Xeon 2.4GHZ
-       - 16GB memory
-       - 500GB hard-drive space
+	This software has been tested on the following operating systems and 
+	found to NOT work correctly:
 
-Right now there is no official test suite, the plan is to eventually add a
-regression test for libgtkworkbook, but for right now we have included the 
-python scripts that are used for testing. If you look inside of the `etc'
-directory you can find scripts to start TCP socket sessions, pull information
-down from Yahoo's finance website, and generate large CSV files.
+	UBUNTU 9.10 
+		* due to underlying Gnome changes that affect GtkExtra package
 
+UNIT/REGRESSION TESTING
 
+	The choice has been made to go with Google's C++ Testing framework 
+	that is available for free from http://code.google.com/p/googletest/
 
+	In order to run the tests you will need to properly install the Google
+	Test framework on your system. GTKWorkbook will check to make sure that
+	the "gtest-config" script is available before it will run any tests.
 
 
       
