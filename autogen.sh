@@ -10,7 +10,6 @@ echo "#!/bin/sh" > autoregen.sh
 echo "./autogen.sh $@ \$@" >> autoregen.sh
 chmod +x autoregen.sh
 
-
 if test `uname` = FreeBSD -a -e macros/$package.0.m4 ; then
 	echo
 	echo -n 'FreeBSD patch: removing "macros/$package.0.m4"... '

@@ -1,3 +1,6 @@
+lib
+build-aux/config.h
+.dirstamp
 gmon.out
 CHANGES
 configure

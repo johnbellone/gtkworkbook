@@ -8,10 +8,12 @@ AC_INIT([GTKWorkbook],
 
 # Options for Autoconf that need to be specified up front.
 AC_PREREQ(2.59)
-AC_CONFIG_SRCDIR([./COPYING])
+AC_CONFIG_AUX_DIR([build-aux])
+AC_CONFIG_HEADERS([build-aux/config.h])
+AC_CONFIG_FILES([Makefile])
 
 # Initialize Automake with basic options.
-AM_INIT_AUTOMAKE([1.9])
+AM_INIT_AUTOMAKE([1.9 foreign subdir-objects])
 AM_PROG_CC_C_O
 
 # Check for programs and requirements for GTKWorkbook
@@ -20,8 +22,5 @@ AC_PROG_CXX
 AC_PROG_LIBTOOL
 
 # End of the line: output all the files and let's get ready to rock!
-AC_OUTPUT([Makefile
-	   cfg/Makefile
-	   libgtkworkbook/OBJS/Makefile
-           src/OBJS/Makefile])
+AC_OUTPUT
 

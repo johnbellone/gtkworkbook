@@ -5,9 +5,9 @@
 
 package="gtkworkbook"
 top_dir=`pwd`
-src_dir="$top_dir/src"
 bin_dir="$top_dir/bin"
 cfg_dir="$top_dir/cfg"
+lib_dir="$top_dir/lib/.libs"
 
 if [ ! -f configure ]; then
     echo "Regenerating project files..."
@@ -19,10 +19,14 @@ if [ ! -f Makefile ]; then
     sh configure
 fi
 
-# create the directory if it does not exist
+if [ ! -d $lib_dir ]; then
+    echo "Creating $lib_dir..."
+    mkdir -p $lib_dir
+fi
+
 if [ ! -d $bin_dir ]; then
     echo "Creating $bin_dir..."
-    mkdir $bin_dir
+    mkdir -p $bin_dir
 fi
 
 make $@ || {
@@ -30,14 +34,12 @@ make $@ || {
     exit 1
 }
 
-# copy files into the directory for binaries
-cp ${src_dir}/OBJS/.libs/gtkworkbook ${bin_dir}/gtkworkbook
-cp ${src_dir}/OBJS/.libs/largefile.so ${bin_dir}/largefile.so
-cp ${src_dir}/OBJS/.libs/realtime.so ${bin_dir}/realtime.so
-
 if [ ! -f ${cfg_dir}/application.cfg ]; then
     cp ${cfg_dir}/application.cfg ${bin_dir}/application.cfg
 fi
 
+cp ${lib_dir}/gtkworkbook ${bin_dir}/gtkworkbook
+cp ${lib_dir}/largefile.so ${bin_dir}/largefile.so
+cp ${lib_dir}/realtime.so ${bin_dir}/realtime.so
 echo "Build of $package is complete."
 echo "Project files resides in $bin_dir"
