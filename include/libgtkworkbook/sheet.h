@@ -85,6 +85,8 @@ extern "C" {
 		void (*get_row) (Sheet * sheet, gint row, Cell ** array, gint size);
 		void (*set_column_title) (Sheet * sheet, gint column, const char * title);
 		void (*set_row_title) (Sheet * sheet, gint row, const char * title);
+		void (*freeze_selection) (Sheet * sheet);
+		void (*thaw_selection) (Sheet * sheet);
 	};
 
 	/* sheet.c */

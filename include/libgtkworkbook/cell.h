@@ -58,6 +58,7 @@ extern "C" {
 		GString * bgcolor;
 		GString * fgcolor;
 		GtkJustification justification;
+		gboolean editable;
 	};
 
 	struct _Cell
