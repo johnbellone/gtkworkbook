@@ -145,7 +145,7 @@ CsvOpenDialogCallback (GtkWidget * w, gpointer data) {
 }
 
 static gint
-GtkKeypressCallback (GtkWidget * window, GdkEventKey * event, gpointer data) {
+LargefileKeypressCallback (GtkWidget * window, GdkEventKey * event, gpointer data) {
 	gint result = FALSE;
 	Largefile * lf = (Largefile *)data;
 	GotoDialog * dialog = lf->gotodialog();
@@ -238,7 +238,7 @@ Largefile::Largefile (Application * appstate, Handle * platform)
     }
 
 	gtk_signal_connect (GTK_OBJECT (this->wb->gtk_window), "key_press_event",
-							  GTK_SIGNAL_FUNC (GtkKeypressCallback), this);
+							  GTK_SIGNAL_FUNC (LargefileKeypressCallback), this);
 }
 
 Largefile::~Largefile (void) {
