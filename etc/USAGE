@@ -3,15 +3,141 @@ John Bellone <jvb4@njit.edu>
 	
 LIBGTKWORKBOOK
 
-	STRUCTURES
+	STRUCTURES (as of b2.2)
+	
+		[Cell]
+		sheet : Sheet *
+		next : Cell *
+		value : GString *
+		attributes : CellAttributes
+		range : GtkSheetRange
+		row : int
+		column : int
 
-		`Workbook' -
+		void set (Cell * cell,
+			  int row,
+			  int column,
+			  const gchar * value);
+		void set_value (Cell * cell,
+				const gchar * value);
+		void set_value_length (Cell * cell,
+				       void * string,
+				       size_t length);
+		void set_column (Cell * cell,
+				 int column);
+		void set_row (Cell * cell,
+			      int row);
+		void set_range (Cell * cell,
+				const GtkSheetRange * range);
+		void set_justification (Cell * cell,
+					GtkJustification justification);
+		void set_fgcolor (Cell * cell,
+				  const gchar * color);
+		void set_bgcolor (Cell * cell,
+				  const gchar * color);
+		void set_attributes (Cell * cell,
+				     const CellAttributes * attrib);
+		void destroy (Cell * cell);
 
-		`Sheet' -
+		[Row]
+		cells : Cell **
+		size : int
 
-		`Row' -
+		void destroy (Row * row);
+		Cell * get_cell (Row * row,
+				 int column);
 
-		`Cell' -
+		[Sheet]
+		next : Sheet *
+		prev : Sheet *
+		cells : Cell ***
+		column_titles : Row *	
+		row_titles : Row *
+		name : gchar *
+		workbook : Workbook *
+		gtk_label : GtkWidget *
+		gtk_sheet : GtkWidget *
+		gtk_box : GtkWidget *
+		gtk_scrolledwindow : GtkWidget *
+		page : int
+		attention : int
+		notices : int
+		max_rows : int
+		max_columns : int
+		has_focus : gboolean
+
+		void destroy (Sheet * sheet);
+		void set_attention (Sheet * sheet,
+				    int attention);
+		void apply_range (Sheet * sheet,
+				  const GtkSheetRange * range,
+				  const CellAttributes * attrib);
+		void apply_array (Sheet * sheet,
+				  Cell ** array,
+				  int size);
+		void apply_cell (Sheet * sheet,
+				 const Cell * cell);
+		void apply_row (Sheet * sheet,
+				iint row);
+		void set_cell (Sheet * sheet,
+			       int row,
+			       int column,
+			       const gchar * value);
+		void set_cell_value_length (Sheet * sheet,
+					    int row,
+					    int column,
+					    void * value,
+					    size_t length);
+		void range_set_background (Sheet * sheet,
+					   const GtkSheetRange * range,
+					   const gchar * color);
+		void range_set_foreground (Sheet * sheet,
+					   const GtkSheetRange * range,
+					   const gchar * color);
+		gboolean save (Sheet * sheet,
+			       const gchar * filepath);
+		gboolean load (Sheet * sheet,
+			       const gchar * filepath);
+		void get_row (Sheet * sheet,
+			      Cell ** array,
+			      int size);
+		void set_column_title (Sheet * sheet,
+				       int column,
+				       const gchar * title);
+		void set_row_title (Sheet * sheet,
+				    int row,
+				    const gchar * title);
+		void freeze_selection (Sheet * sheet);
+		void thaw_selection (Sheet * sheet);
+
+		[Workbook]
+
+		sheet_first : Sheet *
+		sheet_last : Sheet *
+		focus_sheet : Sheet *
+		next : Workbook *
+		prev : Workbook *
+		gtk_notebook : GtkWidget *
+		gtk_window : GtkWidget *
+		gtk_box : GtkWidget *
+		filename : gchar *
+
+		void destroy (Workbook * wb);
+		void remove_sheet (Workbook * wb, 
+				   Sheet * sheet);
+		int move_sheet (Workbook * wb,
+				Sheet * sheet,
+				const gchar * name,
+				int after);
+		int move_sheet_index (Workbook * wb,
+				      Sheet * sheet,
+				      int index);
+		Sheet * get_sheet (Workbook * wb,
+				   const gchar * name);
+		Sheet * add_new_sheet (Workbook * wb,
+				       const gchar * label,
+				       gint rows,
+				       gint cols);
 
 GTKWORKBOOK
 
@@ -20,6 +146,14 @@ GTKWORKBOOK
 	`F2' - "Record view" transposes rows to columns from any number of 
 	selected rows. A new window, as well as workbook, is created to 
 	facilitate this feature. 
+
+	`F3' - "Selection freezing" stops any cells that are selected from
+	receiving *any* updates whatsoever. They will remain static until a
+	thawing procedure is applied to them.
+
+	`F4' - "Selection thawing" allows any frozen cells to begin to
+	receive updates once again. Any updates that would have been applied
+	to the cell *are not* applied retroactively.
 
 LARGEFILE
 
@@ -61,3 +195,71 @@ REALTIME
 		streams CSV information.
 
 	PACKET FORMAT
+
+		(Overview)
+		^sequence or timestamp^packet type^sheet name^ ...
+
+		* These first three parameters are required for all packets 
+		sent to the control program. The sequence (or timestamp) 
+		identifier is merely for logging purposes and does not have a 
+		specified format requirement.
+
+		* The packet types can be found as static integers inside of 
+		the <src/realtime/Packet.hpp> file. These integers are used all
+		thoughout to identify the packets inside of the parser.
+
+		* The sheet name references the [sheet->name] parameter inside
+		of the actual sheet structure. This is what you will see as 
+		the tab label inside of GTKWorkbook for that specific sheet.
+
+		(Load a sheet from disk)
+		^time^6^sheet_name^loadpath
+
+		* This command will load a sheet attributes file from the 
+		disk. Using an absolute path is generally recommended in this
+		case as a relative path will load from execution path. 
+
+		(Save a sheet to disk)
+		^time^5^sheet_name^savepath
+
+		* This command will save a sheet attributes file to the disk.
+		Using an absolute path is generally recommended in this case
+		as a relative path will save from execution path. 
+
+		(Moving a sheet after/before another sheet)
+		^time^4^target_sheet^static_sheet^after [before]
+
+		* This command will move a sheet after (or before) another
+		inside of the workbook structure. The tabs will move position
+		and will be accessible when clicked on. [0 .. n-1]
+
+		(Moving a sheet to a specific tab index position)
+		^time^3^target_sheet^index
+
+		* This command moves a sheet to a specific tab index inside
+		of the workbook structure. [0 .. n-1]
+
+		(Removing a sheet from the workbook)
+		^time^2^sheet_name
+
+		* This command removes a sheet from the workbook structure and
+		destroys it from memory immediately.
+
+		(Adding a sheet to the workbook)
+		^time^1^sheet_name^max_row^max_column
+
+		* This command will add a sheet with the specified parameters:
+		(a) sheet name will be the reference name, (b) max rows will
+		be the maximum number of rows _visible_ inside of the panel,
+		and (c) max columns will be the maximum number of columns
+		_visible_ inside of the panel.
+
+		(Updating a cell inside of a sheet)
+		^time^0^sheet_name^row^column^format^data
+
+		* This command updates an individual row with the specified
+		parameters: (a) row index from [0 .. n] where 
+		n = [sheet->max_rows], (b) column index from [0 .. m] where
+		m = [sheet->max_columns], (c) format specifiers which currently
+		include (bgcolor=#eee,fgcolor=black, etc) and (d) data that
+		can be any ASCII string.
