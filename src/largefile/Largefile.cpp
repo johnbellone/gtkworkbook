@@ -232,11 +232,13 @@ Largefile::Largefile (Application * appstate, Handle * platform)
 	
 	std::string logname = std::string (logpath->value).append("/");
 	logname.append (AppendProcessId("largefile.").append(".log"));
-	
+
+	/*
 	if ((pktlog = fopen (logname.c_str(), "w")) == NULL) {
 		g_critical ("Failed opening file '%s' for packet logging", logname.c_str());
     }
-
+	*/
+	 
 	gtk_signal_connect (GTK_OBJECT (this->wb->gtk_window), "key_press_event",
 							  GTK_SIGNAL_FUNC (LargefileKeypressCallback), this);
 }
@@ -324,7 +326,7 @@ Largefile::Readpercent (Sheet * sheet, guint percent_int, off64_t N) {
 	}
 
 	FileDispatcher * fd = it->second;
-	bool result = fd->Readpercent (percent, N);
+	bool result = fd->Readpercent ( (unsigned int)percent, N);
 	this->unlock();
 	return result;
 }

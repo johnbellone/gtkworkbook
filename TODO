@@ -2,15 +2,12 @@ GTKWorkbook -- Todo List
 John Bellone <jvb4@njit.edu>
 
 LIBGTKWORKBOOK
-
-	(1) 	Row/column freezing.
+	(1)	Unit test framework (Google test)
 	(2)	Column location changes.
 	(3)	Converting "sheet" GTK methods to use Row/Cell structures
 
 APPLICATION
-
 	(1)	Moving column locations inside of individual workbook sheets.
-	(2) 	Freezing rows (and columns) from receiving updates.
 	(3)	"View" menu item to allow switching between multiple workbooks.
 	(4)	Ability to load plugins concurrently.
 
