@@ -230,8 +230,6 @@ sheet_method_load (Sheet * sheet, const gchar * filepath)
 	return TRUE;
 }
 
-
-
 static gboolean
 sheet_method_save (Sheet * sheet, const gchar * filepath) {
 	ASSERT (sheet != NULL);
@@ -457,6 +455,9 @@ sheet_method_apply_cellarray (Sheet * sheet,
 	for (gint ii = 0; ii < size; ii++) {
 		Cell * cell = array[ii];
 
+		if (sheet->cells[cell->row][cell->column]->attributes.editable == FALSE)
+			continue;
+		
 		gtk_sheet_set_cell_text (gtksheet,
 										 cell->row,
 										 cell->column,
@@ -486,10 +487,11 @@ sheet_method_apply_cell (Sheet * sheet, const Cell * cell)
 {
 	ASSERT (sheet != NULL);
 	g_return_if_fail (cell != NULL);
-
+	g_return_if_fail (sheet->cells[cell->row][cell->column]->attributes.editable == TRUE);
+		
 	if (sheet->has_focus == FALSE)
 		sheet->notices++;
-
+	
 	gtk_sheet_set_cell (GTK_SHEET (sheet->gtk_sheet),
 							  cell->row,
 							  cell->column,
@@ -587,7 +589,8 @@ sheet_method_set_cell (Sheet * sheet,
 							  const gchar * value)
 {
 	ASSERT (sheet != NULL);
-
+	g_return_if_fail (sheet->cells[row][column]->attributes.editable == TRUE);
+	
 	if (sheet->has_focus == FALSE)
 		sheet->notices++;
 
