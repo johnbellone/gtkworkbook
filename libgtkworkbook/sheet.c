@@ -158,7 +158,7 @@ sheet_object_init (Workbook * book,
 	sheet->freeze_selection = sheet_method_freeze_selection;
 	sheet->thaw_selection = sheet_method_thaw_selection;
 	sheet->highlight_selection = sheet_method_highlight_selection;
-	sheet->dehighlight_selection = sheet_method_dehiglight_selection;
+	sheet->dehighlight_selection = sheet_method_dehighlight_selection;
 	
 	/* Connect any signals that we need to. */
 	if (!IS_NULL (sheet->workbook->signals[SIG_WORKBOOK_CHANGED]))
@@ -340,7 +340,7 @@ sheet_method_freeze_selection (Sheet * sheet) {
 }
 
 static void
-sheet_method_hightlight_selection (Sheet * sheet) {
+sheet_method_highlight_selection (Sheet * sheet) {
   ASSERT (sheet != NULL);
   GtkSheet * gtksheet = GTK_SHEET (sheet->gtk_sheet);
 
@@ -358,7 +358,7 @@ sheet_method_hightlight_selection (Sheet * sheet) {
 }
 
 static void
-sheet_method_dehightlight_selection (Sheet * sheet) {
+sheet_method_dehighlight_selection (Sheet * sheet) {
   ASSERT (sheet != NULL);
   GtkSheet * gtksheet = GTK_SHEET (sheet->gtk_sheet);
 

@@ -14,12 +14,12 @@ AC_CONFIG_FILES([Makefile])
 
 # Initialize Automake with basic options.
 AM_INIT_AUTOMAKE([1.9 foreign subdir-objects])
-AM_PROG_CC_C_O
 
 # Check for programs and requirements for GTKWorkbook
 AC_PROG_CC
 AC_PROG_CXX
 AC_PROG_LIBTOOL
+AM_PROG_CC_C_O
 
 # End of the line: output all the files and let's get ready to rock!
 AC_OUTPUT
