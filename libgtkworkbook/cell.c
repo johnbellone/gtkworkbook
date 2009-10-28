@@ -56,6 +56,7 @@ cell_object_init (void)
 	obj->attributes.bgcolor = g_string_new_len ("", 1024);
 	obj->attributes.fgcolor = g_string_new_len ("", 1024);
 	obj->attributes.editable = TRUE;
+	obj->attributes.highlighted = FALSE;
 	
 	if (!obj->value || !obj->attributes.bgcolor || !obj->attributes.fgcolor) {
 		g_critical ("failed allocating space for g_string structure");

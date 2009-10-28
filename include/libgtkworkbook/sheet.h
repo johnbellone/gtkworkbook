@@ -87,6 +87,8 @@ extern "C" {
 		void (*set_row_title) (Sheet * sheet, gint row, const char * title);
 		void (*freeze_selection) (Sheet * sheet);
 		void (*thaw_selection) (Sheet * sheet);
+		void (*highlight_selection) (Sheet * sheet);
+		void (*dehighlight_selection) (Sheet * sheet);
 	};
 
 	/* sheet.c */

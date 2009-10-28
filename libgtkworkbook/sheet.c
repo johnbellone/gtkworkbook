@@ -40,6 +40,8 @@ static void sheet_method_set_column_title (Sheet *, gint, const gchar *);
 static void sheet_method_set_row_title (Sheet *, gint, const gchar *);
 static void sheet_method_freeze_selection (Sheet *);
 static void sheet_method_thaw_selection (Sheet *);
+static void sheet_method_highlight_selection (Sheet *);
+static void sheet_method_dehighlight_selection (Sheet *);
 
 struct geometryFileHeader {
 	gint fileVersion;
@@ -155,6 +157,8 @@ sheet_object_init (Workbook * book,
 	sheet->set_row_title = sheet_method_set_row_title;
 	sheet->freeze_selection = sheet_method_freeze_selection;
 	sheet->thaw_selection = sheet_method_thaw_selection;
+	sheet->highlight_selection = sheet_method_highlight_selection;
+	sheet->dehighlight_selection = sheet_method_dehiglight_selection;
 	
 	/* Connect any signals that we need to. */
 	if (!IS_NULL (sheet->workbook->signals[SIG_WORKBOOK_CHANGED]))
@@ -333,6 +337,42 @@ sheet_method_freeze_selection (Sheet * sheet) {
 			cell->attributes.editable = FALSE;
 		} while (jj < gtksheet->range.coli);
 	}
+}
+
+static void
+sheet_method_hightlight_selection (Sheet * sheet) {
+  ASSERT (sheet != NULL);
+  GtkSheet * gtksheet = GTK_SHEET (sheet->gtk_sheet);
+
+  sheet->range_set_background (sheet, &gtksheet->range, "");
+
+  for (int ii = gtksheet->range.row0; ii < gtksheet->range.rowi; ii++) {
+    register int jj = gtksheet->range.col0;
+
+    do {
+      Cell * cell = sheet->cells[ii][jj++];
+      cell->attributes.highlighted = TRUE;
+    }
+    while (jj < gtksheet->range.coli);
+  }
+}
+
+static void
+sheet_method_dehightlight_selection (Sheet * sheet) {
+  ASSERT (sheet != NULL);
+  GtkSheet * gtksheet = GTK_SHEET (sheet->gtk_sheet);
+
+  sheet->range_set_background (sheet, &gtksheet->range, "#ffffff");
+
+  for (int ii = gtksheet->range.row0; ii < gtksheet->range.rowi; ii++) {
+    register int jj = gtksheet->range.col0;
+
+    do {
+      Cell * cell = sheet->cells[ii][jj++];
+      cell->attributes.highlighted = FALSE;
+    }
+    while (jj < gtksheet->range.coli);
+  }
 }
 
 static void
