@@ -21,6 +21,16 @@ AC_PROG_CXX
 AC_PROG_LIBTOOL
 AM_PROG_CC_C_O
 
+PYTHON=  
+AC_PATH_PROG([PYTHON],[python],[:])
+AS_IF([test "$PYTHON" != ":"],
+      [AM_PYTHON_CHECK_VERSION([$PYTHON],[2.3],[:],[PYTHON=":"])])
+AM_CONDITIONAL([HAVE_PYTHON],[test "$PYTHON" != ":"])
+
+GTEST=
+AC_PATH_PROG([GTEST], [gtest-config], [:])
+AM_CONDITIONAL([HAVE_GTEST], [test "$GTEST" != ":"])
+
 # End of the line: output all the files and let's get ready to rock!
 AC_OUTPUT
 
