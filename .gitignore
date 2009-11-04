@@ -1,5 +1,7 @@
 lib
 build-aux/config.h
+build-aux/config.h.in
+build-aux/stamp-h1
 .dirstamp
 gmon.out
 CHANGES

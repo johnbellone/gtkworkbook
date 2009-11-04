@@ -10,6 +10,10 @@ echo "#!/bin/sh" > autoregen.sh
 echo "./autogen.sh $@ \$@" >> autoregen.sh
 chmod +x autoregen.sh
 
+# stop autotools from complaining
+touch build-aux/config.h.in
+touch build-aux/stamp-h1
+
 if test `uname` = FreeBSD -a -e macros/$package.0.m4 ; then
 	echo
 	echo -n 'FreeBSD patch: removing "macros/$package.0.m4"... '
