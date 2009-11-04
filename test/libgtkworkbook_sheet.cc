@@ -1,19 +1,37 @@
+/*
+  The GTKWorkbook Project <http://gtkworkbook.sourceforge.net/>
+  Copyright (C) 2009 John Bellone, Jr. <jvb4@njit.edu>
+
+  This library is free software; you can redistribute it and/or
+  modify it under the terms of the GNU Lesser General Public
+  License as published by the Free Software Foundation; either
+  version 2.1 of the License, or (at your option) any later version.
+
+  This library is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PRACTICAL PURPOSE. See the GNU
+  Lesser General Public License for more details.
+
+  You should have received a copy of the GNU Lesser General Public
+  License along with the library; if not, write to the Free Software
+  Foundation, Inc., 51 Franklin Street, Fifth Floor Boston, MA 02110-1301 USA
+*/
 #include "SheetTest.h"
 
-/* Basic sanity checks to make sure the underlying fixture is working. */
+// Basic sanity checks to make sure the underlying fixture is working.
 TEST_F (SheetTest, FixtureIsWorking) {
 	ASSERT_TRUE (gtk_window != NULL);
 	EXPECT_TRUE (workbook != NULL);
 	EXPECT_TRUE (sheet->workbook != NULL);
 }
 
-/* Sanity check to verify that the pointer to the associated Workbook
-	object is equal. */
+// Sanity check to verify that the pointer to the associated Workbook
+//	object is equal.
 TEST_F (SheetTest, WorkbookPtrIsEqual) {
 	EXPECT_EQ (sheet->workbook, workbook);	
 }
 
-/* Make sure that the "focus" property of the sheet is correct. */
+// Make sure that the "focus" property of the sheet is correct.
 TEST_F (SheetTest, SheetHasFocus) {
 	EXPECT_TRUE (sheet->has_focus == TRUE);
 	EXPECT_EQ (sheet, workbook->focus_sheet);
@@ -25,9 +43,9 @@ TEST_F (SheetTest, SheetHasFocus) {
 	EXPECT_EQ (sheet, workbook->focus_sheet);
 }
 
-/* The first sheet added inside of the fixture gains the UI "focus" and any additional
-	sheet must be switched by clicking on the tab inside of the GtkNotebook widget. Notices
-	only accumulate when a sheet is not in focus. */
+// The first sheet added inside of the fixture gains the UI "focus" and any additional
+//	sheet must be switched by clicking on the tab inside of the GtkNotebook widget. Notices
+//	only accumulate when a sheet is not in focus.
 TEST_F (SheetTest, NoticeCountWorks) {
 	Sheet * a = workbook->add_new_sheet (workbook, "two", 5, 5);
 
@@ -47,8 +65,8 @@ TEST_F (SheetTest, NoticeCountWorks) {
 	EXPECT_EQ (3, a->notices);
 }
 
-/* This method verifies that the "set_cell" method does indeed change the textual
-	data for the underlying GtkSheet widget. */
+// This method verifies that the "set_cell" method does indeed change the textual
+//	data for the underlying GtkSheet widget.
 TEST_F (SheetTest, MethodSetCellWorks) {
 	sheet->set_cell (sheet, 0, 0, "0,0");
 	sheet->set_cell (sheet, 1, 1, "1,1");
@@ -65,7 +83,7 @@ TEST_F (SheetTest, MethodSetCellWorks) {
 	EXPECT_STREQ ("2,4", gtksheet->data[0][0]->text);
 }
 
-/* This just verifies that the "set_attention" method properly does its job. */
+// This just verifies that the "set_attention" method properly does its job.
 TEST_F (SheetTest, MethodSetAttentionWorks) {
 	EXPECT_EQ (0, sheet->attention);
 
@@ -78,15 +96,15 @@ TEST_F (SheetTest, MethodSetAttentionWorks) {
 	EXPECT_EQ (25, sheet->attention);
 }
 
-/* This test shows that when a range is "frozen" cell updates cannot be applied, and when
-	the range is "thawed" that updates will once again be active. */
+// This test shows that when a range is "frozen" cell updates cannot be applied, and when
+//	the range is "thawed" that updates will once again be active. 
 TEST_F (SheetTest, MethodFreezeAndThawSelectionWorks) {
 	GtkSheet * gtksheet = GTK_SHEET (sheet->gtk_sheet);
 	gtksheet->range.row0 = gtksheet->range.rowi =
 		gtksheet->range.col0 = gtksheet->range.coli = 0;
 
-	/* TODO(jb): Add tests for other areas of cell attributes that cannot be updated while
-		the cell is frozen. */
+	// TODO(jb): Add tests for other areas of cell attributes that cannot be updated while
+	//	the cell is frozen.
 	
 	sheet->set_cell (sheet, 0, 0, "Foo");
 
@@ -110,8 +128,8 @@ TEST_F (SheetTest, MethodFreezeAndThawSelectionWorks) {
 	EXPECT_STREQ ("Foo", gtksheet->data[1][1]->text);
 }
 
-/* This test checks to make sure that the Sheet object's "apply_cell" method will take
-	the parameters from a Cell object pointer and apply it to the GtkSheet widget. */
+// This test checks to make sure that the Sheet object's "apply_cell" method will take
+//	the parameters from a Cell object pointer and apply it to the GtkSheet widget.
 TEST_F (SheetTest, MethodApplyCellWorks) {
 	GtkSheet * gtksheet = GTK_SHEET (sheet->gtk_sheet);
 	Cell * cell = cell_new();
