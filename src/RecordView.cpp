@@ -82,7 +82,6 @@ RecordView::AddSheetRecord (Sheet * sheet) {
 												  sheet->row_titles->cells[range.row0]->value->str);
 		
 		for (int ii = 0; ii < tuple->size; ii++) {
-
 			// We only need to change the row titles once. This can happen on our last iteration.
 			if (range.row0 == range.rowi) {
 				record_sheet->set_row_title (record_sheet,
@@ -96,6 +95,12 @@ RecordView::AddSheetRecord (Sheet * sheet) {
 											column,
 											tuple->cells[ii]->value->str);
 
+			if (sheet->cells[range.row0][ii]->attributes.highlighted == TRUE) {
+				record_sheet->set_cell_background (record_sheet, ii, column, "#ffffcc");
+			}
+			else if (((ii + 1) % 2) == 0) {
+				record_sheet->set_cell_background (record_sheet, ii, column, "#f9f7f9");
+			}
 		}
 		
 		range.row0++; column++; row++;

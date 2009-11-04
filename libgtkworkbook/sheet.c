@@ -42,6 +42,7 @@ static void sheet_method_freeze_selection (Sheet *);
 static void sheet_method_thaw_selection (Sheet *);
 static void sheet_method_highlight_selection (Sheet *);
 static void sheet_method_dehighlight_selection (Sheet *);
+static void sheet_method_set_cell_background (Sheet *, gint, gint, const gchar *);
 
 struct geometryFileHeader {
 	gint fileVersion;
@@ -159,6 +160,7 @@ sheet_object_init (Workbook * book,
 	sheet->thaw_selection = sheet_method_thaw_selection;
 	sheet->highlight_selection = sheet_method_highlight_selection;
 	sheet->dehighlight_selection = sheet_method_dehighlight_selection;
+	sheet->set_cell_background = sheet_method_set_cell_background;
 	
 	/* Connect any signals that we need to. */
 	if (!IS_NULL (sheet->workbook->signals[SIG_WORKBOOK_CHANGED]))
@@ -343,11 +345,12 @@ static void
 sheet_method_highlight_selection (Sheet * sheet) {
   ASSERT (sheet != NULL);
   GtkSheet * gtksheet = GTK_SHEET (sheet->gtk_sheet);
-
+  register int ii, jj;
+  
   sheet->range_set_background (sheet, &gtksheet->range, "#ffffcc");
 
-  for (int ii = gtksheet->range.row0; ii < gtksheet->range.rowi; ii++) {
-    register int jj = gtksheet->range.col0;
+  for (ii = gtksheet->range.row0; ii <= gtksheet->range.rowi; ii++) {
+    jj = gtksheet->range.col0;
 
     do {
       Cell * cell = sheet->cells[ii][jj++];
@@ -361,11 +364,12 @@ static void
 sheet_method_dehighlight_selection (Sheet * sheet) {
   ASSERT (sheet != NULL);
   GtkSheet * gtksheet = GTK_SHEET (sheet->gtk_sheet);
-
+  register int ii, jj;
+  
   sheet->range_set_background (sheet, &gtksheet->range, "#ffffff");
 
-  for (int ii = gtksheet->range.row0; ii < gtksheet->range.rowi; ii++) {
-    register int jj = gtksheet->range.col0;
+  for (ii = gtksheet->range.row0; ii <= gtksheet->range.rowi; ii++) {
+    jj = gtksheet->range.col0;
 
     do {
       Cell * cell = sheet->cells[ii][jj++];
@@ -640,3 +644,19 @@ sheet_method_set_cell (Sheet * sheet,
 							  GTK_JUSTIFY_LEFT, 
 							  value);
 }
+
+static void
+sheet_method_set_cell_background (Sheet * sheet,
+											 gint row,
+											 gint column,
+											 const gchar * color) {
+	ASSERT (sheet != NULL);
+	g_return_if_fail (sheet->cells[row][column]->attributes.editable == TRUE);
+
+	GtkSheetRange range = {row,column,row,column};
+	sheet->range_set_background (sheet, &range, color);
+	
+	if (sheet->has_focus == FALSE)
+		sheet->notices++;
+}
+
