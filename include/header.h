@@ -61,22 +61,32 @@
 			if (next == item) break; }											\
 		prev->next = item->next; }
 
-#define UNLINK_OBJECT(current) if (current && current->next && current->prev) \
-	{																							\
-      current->prev->next = current->next;										\
-      current->next->prev = current->prev;										\
-      current->next = NULL;															\
-      current->prev = NULL;															\
-	}																							\
-	else if (current && current->next)												\
-	{																							\
-      current->next->prev = NULL;													\
-      current->next = NULL;															\
-	}																							\
-	else if (current && current->prev)												\
-	{																							\
-      current->prev->next = NULL;													\
-      current->prev = NULL;															\
+#define UNLINK_OBJECT(first, last, current) if (current) {					\
+		if (current->next && current->prev) {										\
+			if (first == current)														\
+				first = current->next;													\
+			if (last == current)															\
+				last = current->prev;													\
+			current->prev->next = current->next;									\
+			current->next->prev = current->prev;									\
+			current->next = NULL;														\
+			current->prev = NULL;														\
+		} else if (current->next) {													\
+			if (first == current)														\
+				first = current->next;													\
+			current->next->prev = NULL;												\
+			current->next = NULL;														\
+		} else if (current->prev) {													\
+			if (last == current)															\
+				last = current->prev;													\
+			current->prev->next = NULL;												\
+			current->prev = NULL;														\
+		} else {																				\
+			if (first == current)														\
+				first = NULL;																\
+			if (last == current)															\
+				last = NULL;																\
+		}																						\
 	}
 
 #define LINK_OBJECT(first, last, current) if (!first)	\
@@ -106,7 +116,7 @@
 	}
 
 #define DOUBLE_LINK(head, tail, item) LINK_OBJECT(head, tail, item)
-#define DOUBLE_UNLINK(item) UNLINK_OBJECT(item)
+#define DOUBLE_UNLINK(head,tail,item) UNLINK_OBJECT(head,tail,item)
 
 #endif /*HPP_GTKWORKBOOK_HEADER*/
 

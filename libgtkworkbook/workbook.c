@@ -132,8 +132,13 @@ workbook_method_remove_sheet (Workbook * wb, Sheet * sheet)
 	ITERATE_BEGIN (Sheet, wb->sheet_first);
 	{
 		/* Remove the sheet from the GtkNotebook */
-		if (it == sheet)
-      {
+		if (it == sheet) {
+			if (wb->focus_sheet == sheet) {
+				wb->focus_sheet = sheet->prev;
+			}
+
+			DOUBLE_UNLINK (wb->sheet_first, wb->sheet_last, sheet);
+			
 			gint page = gtk_notebook_page_num (GTK_NOTEBOOK (wb->gtk_notebook),
 														  sheet->gtk_box);
 			gtk_notebook_remove_page (GTK_NOTEBOOK (wb->gtk_notebook), page); 
@@ -259,7 +264,8 @@ workbook_method_destroy (Workbook * book)
       current = next;
 	}
 
-	UNLINK_OBJECT (book);
+	/* TODO(jb): Fix this hack. */
+	UNLINK_OBJECT (book, book, book);
 	workbook_object_free (book);
 }
 

@@ -319,7 +319,9 @@ static void
 sheet_method_destroy (Sheet * sheet) {
 	ASSERT (sheet != NULL);
 
-	DOUBLE_UNLINK (sheet);
+	DOUBLE_UNLINK (sheet->workbook->sheet_first,
+						sheet->workbook->sheet_last,
+						sheet);
 
 	sheet_object_free (sheet);
 }
