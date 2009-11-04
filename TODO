@@ -12,7 +12,6 @@ APPLICATION
 	(4)	Ability to load plugins concurrently.
 
 LARGEFILE 
-
 	(1)	Opening compressed CSV files from disk; gzip and bz2 compression.
 	(2)	Saving out individual file/workbook settings.
 

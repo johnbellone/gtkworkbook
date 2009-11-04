@@ -63,6 +63,26 @@ lib_gtkworkbook_SOURCES = src/Application.cpp \
 		          src/shared/proactor/Worker.cpp \
 		          src/shared/workers/CsvParser.cpp
 
+if HAVE_GTEST
+check_PROGRAMS=
+TESTS=
+
+TESTS += test/libgtkworkbook_workbook
+check_PROGRAMS += test/libgtkworkbook_workbook
+test_libgtkworkbook_workbook_SOURCES = test/main.cc test/libgtkworkbook_workbook.cc
+test_libgtkworkbook_workbook_CPPFLAGS = -g -Wall $(C_FLAGS) 
+test_libgtkworkbook_workbook_LFLAGS = $(L_FLAGS) -lgtkworkbook -lgtest
+test_libgtkworkbook_workbook_LDFLAGS = $(L_FLAGS) -lgtkworkbook -lgtest
+
+TESTS += test/libgtkworkbook_sheet
+check_PROGRAMS += test/libgtkworkbook_sheet
+test_libgtkworkbook_sheet_SOURCES = test/main.cc test/libgtkworkbook_sheet.cc
+test_libgtkworkbook_sheet_CPPFLAGS = -g -Wall $(C_FLAGS)
+test_libgtkworkbook_sheet_LFLAGS = $(L_FLAGS) -lgtkworkbook -lgtest
+test_libgtkworkbook_sheet_LDFLAGS = $(L_FLAGS) -lgtkworkbook -lgtest
+
+endif
+
 install-data-hook:
 	mkdir -p $(cfgdir)
 	cp $(top_srcdir)/cfg/application.cfg $(cfgdir)/application.cfg

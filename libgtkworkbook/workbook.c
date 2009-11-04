@@ -132,8 +132,13 @@ workbook_method_remove_sheet (Workbook * wb, Sheet * sheet)
 	ITERATE_BEGIN (Sheet, wb->sheet_first);
 	{
 		/* Remove the sheet from the GtkNotebook */
-		if (it == sheet)
-      {
+		if (it == sheet) {
+			if (wb->focus_sheet == sheet) {
+				wb->focus_sheet = sheet->prev;
+			}
+
+			DOUBLE_UNLINK (wb->sheet_first, wb->sheet_last, sheet);
+			
 			gint page = gtk_notebook_page_num (GTK_NOTEBOOK (wb->gtk_notebook),
 														  sheet->gtk_box);
 			gtk_notebook_remove_page (GTK_NOTEBOOK (wb->gtk_notebook), page); 
@@ -259,7 +264,13 @@ workbook_method_destroy (Workbook * book)
       current = next;
 	}
 
-	UNLINK_OBJECT (book);
+	if (book->next && book->prev) {
+		book->prev->next = book->next;
+		book->next->prev = book->prev;
+	}
+
+	book->next = book->prev = NULL;
+	
 	workbook_object_free (book);
 }
 
@@ -267,8 +278,7 @@ workbook_method_destroy (Workbook * book)
    been using. This is only able to be called from book->destroy()
    @book: The Workbook object we are freeing. */
 static Workbook *
-workbook_object_free (Workbook * book)
-{
+workbook_object_free (Workbook * book) {
 	ASSERT (book != NULL);
 
 	book->sheet_first = book->sheet_last = NULL;

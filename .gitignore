@@ -21,13 +21,11 @@ libtool
 ChangeLog
 autoregen.sh
 aclocal.m4
-cfg/Makefile.in
 autom4te.cache/
 config.guess
 config.status
 config.sub
 configure
-src/OBJS/gtkworkbook
 .libs
 .deps
 .DS_Store
@@ -37,4 +35,5 @@ massif*
 *.log
 \#*\#
 .\#*
-
+test/libgtkworkbook_sheet
+test/libgtkworkbook_workbook

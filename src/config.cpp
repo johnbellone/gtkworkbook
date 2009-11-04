@@ -514,8 +514,10 @@ configpair_method_destroy (ConfigPair * pair)
 {
 	ASSERT (pair != NULL);
 
-	DOUBLE_UNLINK (pair);
-
+	DOUBLE_UNLINK (pair->row->pair_head,
+						pair->row->pair_tail,
+						pair);
+	
 	configpair_object_free (pair);
 }
 
@@ -722,7 +724,9 @@ configvector_method_destroy (ConfigVector * vec)
 {
 	ASSERT (vec != NULL);
 
-	DOUBLE_UNLINK (vec);
+	DOUBLE_UNLINK (vec->row->vector_head,
+						vec->row->vector_tail,
+						vec);
 
 	configvector_object_free (vec);
 }
