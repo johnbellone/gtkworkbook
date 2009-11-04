@@ -61,7 +61,6 @@ extern "C" {
 		GtkWidget * gtk_sheet;
 		GtkWidget * gtk_box;
 		GtkWidget * gtk_scrolledwindow;
-		gint x;
 		gint page;
 		gint attention;
 		gint notices;
@@ -89,6 +88,7 @@ extern "C" {
 		void (*thaw_selection) (Sheet * sheet);
 		void (*highlight_selection) (Sheet * sheet);
 		void (*dehighlight_selection) (Sheet * sheet);
+		void (*set_cell_background) (Sheet * sheet, gint row, gint column, const gchar * color);
 	};
 
 	/* sheet.c */
