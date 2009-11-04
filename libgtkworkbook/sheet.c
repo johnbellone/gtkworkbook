@@ -330,16 +330,17 @@ static void
 sheet_method_freeze_selection (Sheet * sheet) {
 	ASSERT (sheet != NULL);
 	GtkSheet * gtksheet = GTK_SHEET (sheet->gtk_sheet);
+	register int ii, jj;
 
 	sheet->range_set_background (sheet, &gtksheet->range, "#eeeeee");
 
-	for (int ii = gtksheet->range.row0; ii < gtksheet->range.rowi; ii++) {
-		register int jj = gtksheet->range.col0;
+	for (ii = gtksheet->range.row0; ii <= gtksheet->range.rowi; ii++) {
+		jj = gtksheet->range.col0;
 
 		do {
 			Cell * cell = sheet->cells[ii][jj++];
 			cell->attributes.editable = FALSE;
-		} while (jj < gtksheet->range.coli);
+		} while (jj <= gtksheet->range.coli);
 	}
 }
 
@@ -358,7 +359,7 @@ sheet_method_highlight_selection (Sheet * sheet) {
       Cell * cell = sheet->cells[ii][jj++];
       cell->attributes.highlighted = TRUE;
     }
-    while (jj < gtksheet->range.coli);
+    while (jj <= gtksheet->range.coli);
   }
 }
 
@@ -377,7 +378,7 @@ sheet_method_dehighlight_selection (Sheet * sheet) {
       Cell * cell = sheet->cells[ii][jj++];
       cell->attributes.highlighted = FALSE;
     }
-    while (jj < gtksheet->range.coli);
+    while (jj <= gtksheet->range.coli);
   }
 }
 
@@ -385,16 +386,17 @@ static void
 sheet_method_thaw_selection (Sheet * sheet) {
 	ASSERT (sheet != NULL);
 	GtkSheet * gtksheet = GTK_SHEET (sheet->gtk_sheet);
-
+	register int ii, jj;
+	
 	sheet->range_set_background (sheet, &gtksheet->range, "#ffffff");
 
-	for (int ii = gtksheet->range.row0; ii < gtksheet->range.rowi; ii++) {
-		register int jj = gtksheet->range.col0;
+	for (ii = gtksheet->range.row0; ii <= gtksheet->range.rowi; ii++) {
+		jj = gtksheet->range.col0;
 
 		do {
 			Cell * cell = sheet->cells[ii][jj++];
 			cell->attributes.editable = TRUE;
-		} while (jj < gtksheet->range.coli);
+		} while (jj <= gtksheet->range.coli);
 	}
 }
 
@@ -635,7 +637,7 @@ sheet_method_set_cell (Sheet * sheet,
 							  const gchar * value)
 {
 	ASSERT (sheet != NULL);
-	g_return_if_fail (sheet->cells[row][column]->attributes.editable == TRUE);
+	if (sheet->cells[row][column]->attributes.editable == FALSE) return;
 	
 	if (sheet->has_focus == FALSE)
 		sheet->notices++;
