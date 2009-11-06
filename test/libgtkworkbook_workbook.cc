@@ -26,7 +26,7 @@ TEST_F (WorkbookTest, FixtureIsWorking) {
 }
 
 // The Sheet object linked list should be empty because none have been added. This
-	is a mere sanity check. 
+//	is a mere sanity check. 
 TEST_F (WorkbookTest, SheetListIsEmpty) {
 	EXPECT_TRUE (workbook->sheet_first == NULL);
 	EXPECT_TRUE (workbook->sheet_last == NULL);
