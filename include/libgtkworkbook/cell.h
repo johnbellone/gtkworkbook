@@ -82,6 +82,8 @@ extern "C" {
 		void (*set_justification) (Cell * cell, GtkJustification justification);
 		void (*set_fgcolor) (Cell * cell, const gchar * color);
 		void (*set_bgcolor) (Cell * cell, const gchar * color);
+		void (*set_editable) (Cell * cell, gboolean editable);
+		void (*set_highlighted) (Cell * cell, gboolean highlighted);
 		void (*set_attributes) (Cell * cell, const CellAttributes * attrib);
 		void (*destroy) (Cell * cell);
 	};
