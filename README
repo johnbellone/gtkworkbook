@@ -65,3 +65,26 @@ SOURCE CONTROL MANAGEMENT
 				 test out any new features this would be the
 				 branch to do so in.
 
+UNIT TESTING
+
+	This project uses the Google Test Framework which is available from 
+	Google Code <http://code.google.com/p/googletest/> and is licensed 
+	under a BSD variant. In order to run the tests you *MUST* have this
+	library installed and configured properly. Also, if you install this
+	after you first installed GTKWorkbook you must re-run the autogen.sh
+	script so it can build the Makefile for the tests.
+
+	Once the Google Test framework is installed you should be able to
+	run the tests by performing the following command:
+
+	    make check
+
+	At this point the test cases inside of the `test' directory will be
+	compiled and run through the framework. You'll get details on any
+	tests that failed. If you decide to add a plugin to the system and
+	wish to add your own tests open up Makefile.am and find the section
+	dealing with tests (grep for HAVE_GTEST), copy a block, and add any
+	test files that you create.
+
+	Documentation on the framework is available from the website (above)
+	as well as a mailing list and forum for any questions you may have. 
