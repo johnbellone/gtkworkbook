@@ -32,6 +32,8 @@ static void cell_method_set_bgcolor (Cell *, const gchar *);
 static void cell_method_set_fgcolor (Cell *, const gchar *);
 static void cell_method_set_attributes (Cell *, const CellAttributes *);
 static void cell_method_set_range (Cell *, const GtkSheetRange *);
+static void cell_method_set_editable (Cell *, gboolean);
+static void cell_method_set_highlighted (Cell *, gboolean);
 
 /* @description: The function returns a pointer to a Cell object. */
 Cell *
@@ -67,6 +69,8 @@ cell_object_init (void)
 	/* Methods */
 	obj->set_fgcolor = cell_method_set_fgcolor;
 	obj->set_bgcolor = cell_method_set_bgcolor;
+	obj->set_editable = cell_method_set_editable;
+	obj->set_highlighted = cell_method_set_highlighted;
 	obj->set_attributes = cell_method_set_attributes;
 	obj->set_range = cell_method_set_range;
 	obj->set_value = cell_method_set_value;
@@ -163,6 +167,22 @@ cell_method_set_fgcolor (Cell * cell,
 	ASSERT (cell != NULL);
   
 	g_string_assign (cell->attributes.fgcolor, color);
+}
+
+static void
+cell_method_set_editable (Cell * cell,
+								  gboolean editable) {
+	ASSERT (cell != NULL);
+
+	cell->attributes.editable = editable;
+}
+
+static void
+cell_method_set_highlighted (Cell * cell,
+									  gboolean highlighted) {
+	ASSERT (cell != NULL);
+
+	cell->attributes.highlighted = highlighted;
 }
 
 /* @description: This method sets the range of the Cell object.

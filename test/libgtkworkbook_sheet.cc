@@ -155,3 +155,59 @@ TEST_F (SheetTest, MethodApplyCellWorks) {
 	cell->destroy (cell);
 }
 
+TEST_F (SheetTest, MethodGetRowWorks) {
+	GtkSheet * gtksheet = GTK_SHEET (sheet->gtk_sheet);
+	
+	// We are going to need the same number of cell objects that a single row would have.
+	Cell ** row = (Cell **)malloc (sizeof (Cell *) * gtksheet->maxcol);
+	for (int ii = 0; ii < gtksheet->maxcol; ii++) {
+		sheet->set_cell (sheet, 0, ii, "asdfkasdgjkasdf");
+		row[ii] = cell_new();
+	}
+	
+	sheet->get_row (sheet, 0, row, gtksheet->maxcol);
+	
+	// Tear everything down and make sure we don't leak any memory.
+	for (int ii = 0; ii < gtksheet->maxcol; ii++) {
+		EXPECT_STREQ ("asdfkasdgjkasdf", row[ii]->value->str) << "Assertion failure in column "<<ii;
+		row[ii]->destroy (row[ii]);
+	}
+	free (row);
+}
+
+TEST_F (SheetTest, MethodApplyArrayWorks) {
+	GtkSheet * gtksheet = GTK_SHEET (sheet->gtk_sheet);
+	
+	// We are going to need the same number of cell objects that a single row would have.
+	Cell ** row = (Cell **)malloc (sizeof (Cell *) * gtksheet->maxcol);
+	for (int ii = 0; ii < gtksheet->maxcol; ii++) {
+		row[ii] = cell_new();
+		row[ii]->set (row[ii], 0, ii, "asdfkasdgjkasdf");
+		sheet->set_cell (sheet, 0, ii, ""); /* Columns need to be allocated inside of the widget. */
+		EXPECT_STREQ ("", gtksheet->data[0][ii]->text) << "Assertion failure in column "<<ii;
+	}
+
+	sheet->apply_array (sheet, row, gtksheet->maxcol);
+
+	for (int ii = 0; ii < gtksheet->maxcol; ii++) {
+		EXPECT_STREQ ("asdfkasdgjkasdf", gtksheet->data[0][ii]->text) << "Assertion failure in column "<<ii;
+		row[ii]->destroy (row[ii]);
+	}
+	free (row);
+}
+
+TEST_F (SheetTest, MethodApplyRowWorks) {
+	GtkSheet * gtksheet = GTK_SHEET (sheet->gtk_sheet);
+
+	for (int ii = 0; ii < gtksheet->maxcol; ii++) {
+		sheet->set_cell (sheet, 0, ii, "");
+		EXPECT_STREQ ("", gtksheet->data[0][ii]->text) << "Assertion failure in column "<<ii;
+		g_string_assign (sheet->cells[0][ii]->value, "asdfkjglasdf");
+	}
+
+	sheet->apply_row (sheet, 0);
+	
+	for (int ii = 0; ii < gtksheet->maxcol; ii++) {
+		EXPECT_STREQ ("asdfkjglasdf", gtksheet->data[0][ii]->text) << "Assertion failure in column "<<ii;
+	}
+}

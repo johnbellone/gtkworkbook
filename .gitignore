@@ -37,3 +37,4 @@ massif*
 .\#*
 test/libgtkworkbook_sheet
 test/libgtkworkbook_workbook
+test/libgtkworkbook_cell
