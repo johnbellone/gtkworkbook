@@ -81,6 +81,13 @@ test_libgtkworkbook_sheet_CPPFLAGS = -g -Wall $(C_FLAGS)
 test_libgtkworkbook_sheet_LFLAGS = $(L_FLAGS) -lgtkworkbook -lgtest
 test_libgtkworkbook_sheet_LDFLAGS = $(L_FLAGS) -lgtkworkbook -lgtest
 
+TESTS += test/libgtkworkbook_cell
+check_PROGRAMS += test/libgtkworkbook_cell
+test_libgtkworkbook_cell_SOURCES = test/main.cc test/libgtkworkbook_cell.cc
+test_libgtkworkbook_cell_CPPFLAGS = -g -Wall $(C_FLAGS)
+test_libgtkworkbook_cell_LFLAGS = $(L_FLAGS) -lgtkworkbook -lgtest
+test_libgtkworkbook_cell_LDFLAGS = $(L_FLAGS) -lgtkworkbook -lgtest
+
 endif
 
 install-data-hook:
