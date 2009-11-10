@@ -10,9 +10,17 @@ echo "#!/bin/sh" > autoregen.sh
 echo "./autogen.sh $@ \$@" >> autoregen.sh
 chmod +x autoregen.sh
 
-# stop autotools from complaining
-touch build-aux/config.h.in
-touch build-aux/stamp-h1
+if [ ! -d build-aux ]; then
+    mkdir build-aux
+fi
+
+if [ ! -f build-aux/config.h.in ]; then 
+    touch build-aux/config.h.in
+fi
+
+if [ ! -f build-aux/stamp-h1 ]; then 
+    touch build-aux/stamp-h1
+fi
 
 if test `uname` = FreeBSD -a -e macros/$package.0.m4 ; then
 	echo
