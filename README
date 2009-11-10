@@ -43,6 +43,8 @@ PROJECT DIRECTORY STRUCTURE
 
 `src'			this directory holds the application's source files. 
 
+`test'			this directory holds all unit tests
+
 SOURCE CONTROL MANAGEMENT
 
 	This project uses git <http://www.git-scm.org> for source control and 

@@ -2,7 +2,7 @@
 # Version string for various different purposes. None I have found to be
 # actually useful yet.
 AC_INIT([GTKWorkbook],
-        [0.2.2], 
+        [0.2.3], 
 	[jvb4@njit.edu],
 	[gtkworkbook])
 
