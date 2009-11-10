@@ -59,6 +59,7 @@ cell_object_init (void)
 	obj->attributes.fgcolor = g_string_new_len ("", 1024);
 	obj->attributes.editable = TRUE;
 	obj->attributes.highlighted = FALSE;
+	obj->attributes.justification = GTK_JUSTIFY_LEFT;
 	
 	if (!obj->value || !obj->attributes.bgcolor || !obj->attributes.fgcolor) {
 		g_critical ("failed allocating space for g_string structure");
@@ -211,6 +212,9 @@ cell_method_set_attributes (Cell * cell,
  
 	g_string_assign (cell->attributes.fgcolor, attrib->fgcolor->str);
 	g_string_assign (cell->attributes.bgcolor, attrib->bgcolor->str);
+
+	cell->attributes.editable = attrib->editable;
+	cell->attributes.highlighted = attrib->highlighted;
 }
 
 /* @description: This method sets the text value of the Cell object.

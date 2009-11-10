@@ -82,7 +82,11 @@ TEST_F (CellTest, MethodSetRangeWorks) {
 }
 
 TEST_F (CellTest, MethodSetJustificationWorks) {
-	// TODO(jb): Add the proper test depending on the actual justification values.
+	EXPECT_EQ (GTK_JUSTIFY_LEFT, cell->attributes.justification);
+
+	cell->set_justification (cell, GTK_JUSTIFY_RIGHT);
+
+	EXPECT_EQ (GTK_JUSTIFY_RIGHT, cell->attributes.justification);
 }
 
 TEST_F (CellTest, MethodSetFgColorWorks) {
@@ -105,7 +109,7 @@ TEST_F (CellTest, MethodSetEditableWorks) {
 	cell->attributes.editable = FALSE;
 	EXPECT_EQ (FALSE, cell->attributes.editable);
 
-	cell->attributes.editable = TRUE;
+	cell->set_editable (cell, TRUE);
 	EXPECT_EQ (TRUE, cell->attributes.editable);
 }
 
@@ -113,6 +117,32 @@ TEST_F (CellTest, MethodSetHighlightedWorks) {
 	cell->attributes.highlighted = FALSE;
 	EXPECT_EQ (FALSE, cell->attributes.highlighted);
 
-	cell->attributes.highlighted = TRUE;
+	cell->set_highlighted (cell, TRUE);
 	EXPECT_EQ (TRUE, cell->attributes.highlighted);
+}
+
+TEST_F (CellTest, MethodSetAttributesWorks) {
+	CellAttributes attrib;
+	attrib.bgcolor = g_string_new_len ("black", 1024);
+	attrib.fgcolor = g_string_new_len ("white", 1024);
+	attrib.editable = FALSE;
+	attrib.highlighted = TRUE;
+	attrib.justification = GTK_JUSTIFY_FILL;
+	
+	EXPECT_STREQ ("", cell->attributes.fgcolor->str);
+	EXPECT_STREQ ("", cell->attributes.bgcolor->str);
+	EXPECT_EQ (TRUE, cell->attributes.editable);
+	EXPECT_EQ (FALSE, cell->attributes.highlighted);
+	EXPECT_EQ (GTK_JUSTIFY_LEFT, cell->attributes.justification);
+	
+	cell->set_attributes (cell, &attrib);
+
+	EXPECT_STREQ ("white", cell->attributes.fgcolor->str);
+	EXPECT_STREQ ("black", cell->attributes.bgcolor->str);
+	EXPECT_EQ (FALSE, cell->attributes.editable);
+	EXPECT_EQ (TRUE, cell->attributes.highlighted);
+	EXPECT_EQ (GTK_JUSTIFY_FILL, cell->attributes.justification);
+	
+	g_string_free (attrib.fgcolor, TRUE);
+	g_string_free (attrib.bgcolor, TRUE);
 }
