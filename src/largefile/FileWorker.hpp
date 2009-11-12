@@ -38,7 +38,6 @@ namespace largefile {
 	class AbstractFileWorker : public proactor::Worker {
 	protected:
 		FileIndex * marks;
-		FILE * fp;
 		std::string filename;
 	public:
 		/// Constructor with the required filename and fileindex parameters.

@@ -21,10 +21,36 @@
 
 #include <proactor/Proactor.hpp>
 #include <proactor/InputDispatcher.hpp>
+#include "FileDispatcher.hpp"
 #include "FileWorker.hpp"
 
 namespace largefile {
 
+	/***
+	 * \class PlaintextDispatcher
+	 * \ingroup Largefile
+	 * \author jb (jvb4@njit.edu)
+	 * \brief
+	 */
+	class PlaintextDispatcher : public AbstractFileDispatcher {
+	public:
+		/// Constructor.
+		PlaintextDispatcher (int e);
+
+		/// Destructor.
+		virtual ~PlaintextDispatcher (void);
+
+		bool Openfile (const std::string & filename);
+		bool Closefile (void);
+
+		bool Readline (off64_t start, off64_t N);
+		bool Readoffset (off64_t start, off64_t N);
+		bool Readpercent (unsigned int percent, off64_t N);
+		void Index (void);
+		
+		void * run (void * null);
+	};
+	
 	/***
 	 * \class PlaintextFileWorker
 	 * \ingroup Largefile
@@ -32,6 +58,8 @@ namespace largefile {
 	 * \brief
 	 */
 	class PlaintextFileWorker : public AbstractFileWorker {
+	protected:
+		FILE * fp;
 	public:
 		PlaintextFileWorker (const std::string & filename, FileIndex * marks);
 		virtual ~PlaintextFileWorker (void);

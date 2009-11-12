@@ -287,7 +287,7 @@ Largefile::Readline (Sheet * sheet, off64_t start, off64_t N) {
 		return false;
 	}
 
-	FileDispatcher * fd = it->second;
+	AbstractFileDispatcher * fd = it->second;
 	bool result = fd->Readline (start, N);
 	this->unlock();
 	return result;
@@ -304,7 +304,7 @@ Largefile::Readoffset (Sheet * sheet, off64_t offset, off64_t N) {
 		return false;
 	}
 
-	FileDispatcher * fd = it->second;
+	AbstractFileDispatcher * fd = it->second;
 	bool result = fd->Readoffset (offset, N);
 	this->unlock();
 	return result;
@@ -324,7 +324,7 @@ Largefile::Readpercent (Sheet * sheet, guint percent_int, off64_t N) {
 		return false;
 	}
 
-	FileDispatcher * fd = it->second;
+	AbstractFileDispatcher * fd = it->second;
 	bool result = fd->Readpercent ( (unsigned int)percent, N);
 	this->unlock();
 	return result;
@@ -335,9 +335,9 @@ Largefile::OpenFile (Sheet * sheet, const std::string & filename) {
 	this->lock();
 	
 	int fdEventId = proactor::Event::uniqueEventId();
-	FileDispatcher * fd = new FileDispatcher (fdEventId);
+	AbstractFileDispatcher * fd = AbstractFileDispatcher::CreateFromExtension (filename, fdEventId);
 	CsvParser * csv = new CsvParser (sheet, this->pktlog, 0);
-
+	
 	if (appstate->proactor()->addWorker (fdEventId, csv) == false) {
 		g_critical ("Failed starting CsvParser for file %s", filename.c_str());
 		this->unlock();

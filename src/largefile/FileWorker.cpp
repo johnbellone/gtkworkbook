@@ -38,7 +38,6 @@ AbstractFileWorker::WorkerFromExtension (const std::string & filename, FileIndex
 
 AbstractFileWorker::AbstractFileWorker (const std::string & filename, FileIndex * marks)
 	: marks (marks), filename (filename) {
-	this->fp = NULL;
 }
 
 AbstractFileWorker::~AbstractFileWorker (void) {

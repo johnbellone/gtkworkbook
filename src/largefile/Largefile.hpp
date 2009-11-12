@@ -39,7 +39,7 @@ namespace largefile {
 	 */
 	class Largefile : public Plugin {
 	private:
-		typedef std::map<std::string,FileDispatcher *> FilenameMap;
+		typedef std::map<std::string,AbstractFileDispatcher *> FilenameMap;
 
 		GotoDialog goto_dialog;
 		FILE * pktlog;
