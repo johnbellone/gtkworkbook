@@ -18,6 +18,7 @@
 */
 #include "File.hpp"
 #include <iostream>
+#include <fstream>
 #include <concurrent/ThreadPool.hpp>
 #include <concurrent/ScopedMemoryLock.hpp>
 #include <cstdio>
@@ -75,18 +76,20 @@ namespace largefile {
 	FileDispatcher::Openfile (const std::string & filename) {
 		if (filename.length() == 0)
 			return false;
-		
-		FILE * fp = NULL;
-		if ((fp = fopen64 (filename.c_str(), "r")) == NULL) {
+
+		std::ifstream stream (filename.c_str());
+		if (false == stream.is_open()) {
 			// stub: throw an error somewhere
 			return false;
 		}
-
+		
 		// Take the relative byte position, e.g. .75 * byte_end, and we now have the a relative
 		// line at that byte position for indexing at a later point in time.
-		fseeko64 (fp, 0L, SEEK_END);
-		off64_t byte_end = ftello64 (fp);
+		stream.seekg (0, std::ios_base::end);
+		off64_t byte_end = stream.tellg();
 
+		std::cout << stream.tellg();
+		
 		this->marks.get(0).byte = 0;
 		this->marks.get(0).line = 0;
 		
@@ -97,9 +100,7 @@ namespace largefile {
 			this->marks.get(ii).line = -1;
 		}
 
-		fseeko64 (fp, 0L, SEEK_SET);
-
-		fclose(fp);
+		stream.close();
 		
 		this->filename = filename;
 		return true;
@@ -131,7 +132,7 @@ namespace largefile {
 	
 	FileWorker::FileWorker (const std::string & filename, FileIndex * marks)
 		: marks (marks), filename (filename) {
-		this->fp = NULL;
+		this->fs = NULL;
 	}
 
 	FileWorker::~FileWorker (void) {
@@ -140,9 +141,10 @@ namespace largefile {
 	
 	bool
 	FileWorker::Openfile (void) {
-		if (this->fp != NULL) return false;
+		if (this->fs != NULL) return false;
 
-		if ((this->fp = fopen64 (this->filename.c_str(), "r")) == NULL) {
+		this->fs = new std::ifstream (this->filename.c_str());
+		if (! this->fs || (false == this->fs->is_open())) {
 			// stub: throw an error somewhere
 			return false;
 		}
@@ -151,9 +153,11 @@ namespace largefile {
 
 	bool
 	FileWorker::Closefile (void) {
-		if (this->fp == NULL) return false;
+		if (this->fs == NULL) return false;
 
-		fclose (this->fp); this->fp = NULL;
+		this->fs->close();
+		delete this->fs;
+		this->fs = NULL;
 		return true;
 	}
 	
@@ -181,28 +185,29 @@ namespace largefile {
 			return NULL;
 		}
 		
-		off64_t start = ftello64 (this->fp);
 		off64_t offset = 0;
 		off64_t read_max = this->numberOfLinesToRead;
 
-		fseeko64 (this->fp, this->startOffset, SEEK_SET);
-		
+		this->fs->seekg (this->startOffset, std::ios_base::beg);
+				
 		// We need to go to the beginning of the (next) line.
-		while ((ch = fgetc (this->fp)) != EOF) {
+		while (true == this->fs->good()) {
+			ch = this->fs->get();
+			
 			if (ch == '\n') {
-				offset = ftello64 (this->fp);
+				offset = this->fs->tellg();
 				break;
 			}
 		}
 			
 		for (off64_t ii = 0; ii < read_max; ii++) {
-			if (std::fgets (buf, 4096, this->fp) == NULL)		
+			this->fs->getline (buf, 4096);
+			
+			if (false == this->fs->good())
 				break;
-      
+			
 			this->dispatcher->onReadComplete (buf);
 		}
-
-		fseeko64 (this->fp, start, SEEK_SET);
 		
 		this->dispatcher->removeWorker (this);
 		this->Closefile();
@@ -238,7 +243,9 @@ namespace largefile {
 		// We need to get a absoltue line number from the relative position. We're not
 		// going to get away from having to sequentially read this file in, but once we
 		// have line numbers we can jump throughout the file pretty quickly.
-		while ((ch = fgetc(this->fp)) != EOF) {
+		while (true == this->fs->good()) {
+			ch = this->fs->get();
+			
 			if (ch=='\n') {
 				byte_beg = cursor;
 				count++;
@@ -301,7 +308,6 @@ namespace largefile {
 			return NULL;
 		}
 		
-		off64_t start = ftello64 (this->fp);
 		off64_t offset = 0, delta = 0;
 		off64_t read_max = this->numberOfLinesToRead, line_max = this->startLine + read_max;
 
@@ -319,24 +325,27 @@ namespace largefile {
 			}
 			this->marks->unlock();
 		}
-		
-		fseeko64 (this->fp, offset, SEEK_SET);
 
+		this->fs->seekg (offset, std::ios_base::beg);
+		
 		// Munch lines to get to our starting point.
 		while (delta > 0) {
-			if (std::fgets (buf, 4096, this->fp) == NULL)		
+			this->fs->getline (buf, 4096);
+			
+			if (false == this->fs->good())
 				break;
+			
 			--delta;
       }
 		
 		for (off64_t ii = 0; ii < read_max; ii++) {
-			if (std::fgets (buf, 4096, this->fp) == NULL)		
+			this->fs->getline (buf, 4096);
+			
+			if (false == this->fs->good())
 				break;
-      
+			      
 			this->dispatcher->onReadComplete (buf);
 		}
-
-		fseeko64 (this->fp, start, SEEK_SET);
 		
 		this->dispatcher->removeWorker (this);
 		this->Closefile();

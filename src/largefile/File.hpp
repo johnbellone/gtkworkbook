@@ -23,6 +23,7 @@
 #include <proactor/InputDispatcher.hpp>
 #include <proactor/Proactor.hpp>
 #include <proactor/Worker.hpp>
+#include <fstream>
 #include <cstdio>
 #include <vector>
 #include <string>
@@ -69,7 +70,7 @@ namespace largefile {
 	class FileWorker : public proactor::Worker {
 	protected:
 		FileIndex * marks;
-		FILE * fp;
+		std::ifstream * fs;
 		std::string filename;
 	public:
 		FileWorker (const std::string & filename, FileIndex * marks);
