@@ -24,12 +24,14 @@
 #include <algorithm>
 
 namespace concurrent {
-  
-  /* @description: This object wraps the existing std::queue container with
-     the custom Mutex object from the concurrent namespace. The single lock
-     may be placed in the future with a read/write lock in order to gain a
-     speed advantage.
-     @author: John `jb Bellone <jvb4@njit.edu> */
+
+	/***
+	 * \class Queue
+	 * \ingroup Concurrent
+	 * \author jb (jvb4@njit.edu)
+	 * \brief This object wraps the existing std::queue container with
+	 * the custom Mutex object from the concurrent namespace.
+	 */
   template <typename T>
   class Queue : public RecursiveMutex {
   private:
