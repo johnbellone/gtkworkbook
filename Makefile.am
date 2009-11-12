@@ -3,8 +3,8 @@
 
 cfgdir= $(prefix)/cfg
 
-CFLAGS= -g -O0
-CXXFLAGS= -g -O0
+CFLAGS= -g -O0 -D_FILE_OFFSET_BITS=64
+CXXFLAGS= -g -O0 -D_FILE_OFFSET_BITS=64
 
 C_FLAGS= -I/usr/local/include -I/usr/include -I./include -I./src/shared `pkg-config gtk+-2.0 glib-2.0 --cflags` \
 -I$(prefix)/include -I$(prefix)/include/gtkextra-2.0 -I/usr/local/include/gtkextra-2.0
