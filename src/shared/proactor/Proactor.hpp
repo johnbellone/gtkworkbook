@@ -32,7 +32,7 @@ namespace proactor {
 
 	class Dispatcher;
 	
-	class Proactor : public concurrent::Thread {
+	class Proactor : public Dispatcher {
 	private:
 		typedef concurrent::List<Worker *> WorkerListType;
 		typedef concurrent::List<Dispatcher *> DispatcherList;

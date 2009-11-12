@@ -26,10 +26,12 @@
 namespace proactor {
 
 	class Dispatcher;
+	class Proactor;
 	class InputDispatcher;
 
 	class Worker : public concurrent::Thread {
 		friend class Dispatcher;
+		friend class Proactor;
 	protected:
 		typedef concurrent::Queue<std::string> InputQueueType;
 

@@ -28,6 +28,7 @@ FileDispatcher::FileDispatcher (int e) {
 }
 
 FileDispatcher::~FileDispatcher (void) {
+	
 }
 
 bool
@@ -101,7 +102,7 @@ FileDispatcher::Openfile (const std::string & filename) {
 }
   
 void *
-FileDispatcher::run (void * data) {
+FileDispatcher::run (void * null) {
 	this->Readline(0,1000);
 	this->Index();
 		
