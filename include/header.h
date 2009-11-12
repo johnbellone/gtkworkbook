@@ -30,7 +30,12 @@
 #define IS_NULLSTR(s) (!s || (*s == '\0'))
 #define IS_NULL(p) (p == NULL)
 
-#define FCLOSE(fp) { if (fp != NULL) { fflush(fp); fclose(fp); fp = NULL; } }
+#define FCLOSE(fp) { if (NULL != fp) { fflush(fp); fclose(fp); fp = NULL; } }
+#define FSEEK_END(fp) fseeko64 (fp, 0L, SEEK_END)
+#define FSEEK_BEG(fp) fseeko64 (fp, 0L, SEEK_BEG)
+#define FSEEK(fp,byte) fseeko64 (fp, byte, SEEK_CUR)
+#define FOPEN(filename,mode) fopen64 (filename,mode)
+#define FTELL(fp) ftello64 (fp)
 #define PCLOSE(fp) { if (fp != NULL) { pclose(fp); fp = NULL; } }
 
 #define ITERATE_BEGIN(TYPE, head) if (head) {	\

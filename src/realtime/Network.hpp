@@ -33,7 +33,7 @@ namespace realtime {
 	public:
 		typedef std::auto_ptr <NetworkDispatcher> AutoPtr;
 	public:
-		NetworkDispatcher (int e, proactor::Proactor * pro);
+		NetworkDispatcher (int e);
 		virtual ~NetworkDispatcher (void);
 
 		void * run (void * null);
@@ -44,8 +44,8 @@ namespace realtime {
 		bool purge_socket;
 		network::TcpSocket * socket;
 	public:
-		ConnectionThread (proactor::InputDispatcher * d, int newfd);
-		ConnectionThread (proactor::InputDispatcher * d, network::TcpSocket * s);
+		ConnectionThread (int newfd);
+		ConnectionThread (network::TcpSocket * s);
 		virtual ~ConnectionThread (void);
   
 		void * run (void * null);
@@ -57,8 +57,7 @@ namespace realtime {
 	private:
 		network::TcpServerSocket::Acceptor * acceptor;
 	public:
-		AcceptThread (network::TcpServerSocket::Acceptor * acceptor,
-						  proactor::InputDispatcher * dispatcher);
+		AcceptThread (network::TcpServerSocket::Acceptor * acceptor);
 		virtual ~AcceptThread (void);
 
 		void * run (void * null);

@@ -25,21 +25,23 @@
 
 namespace proactor {
 
-  class InputDispatcher;
+	class Dispatcher;
+	class InputDispatcher;
 
-  class Worker : public concurrent::Thread {
-  protected:
-    typedef concurrent::Queue<std::string> InputQueueType;
+	class Worker : public concurrent::Thread {
+		friend class Dispatcher;
+	protected:
+		typedef concurrent::Queue<std::string> InputQueueType;
 
-    InputDispatcher * dispatcher;
-    InputQueueType inputQueue;
-  public:
-    virtual ~Worker (void);
+		Dispatcher * dispatcher;
+		InputQueueType inputQueue;
+	public:
+		virtual ~Worker (void);
 
-    inline void pushInputQueue (const std::string & buf) {
-		 this->inputQueue.push (std::string (buf));
-    }
-  };
+		inline void pushInputQueue (const std::string & buf) {
+			this->inputQueue.push (std::string (buf));
+		}
+	};
 
 } // end of namespace
 
