@@ -24,19 +24,22 @@
 
 namespace proactor {
 
-  class Worker;
+	class Proactor;
+	class Worker;
 
-  class Dispatcher : public concurrent::Thread {
-  protected:
-    typedef concurrent::List<Worker *> WorkerListType;
+	class Dispatcher : public concurrent::Thread {
+		friend class Proactor;
+	protected:
+		typedef concurrent::List<Worker *> WorkerListType;
 
-    WorkerListType workers;
-  public:
-    virtual ~Dispatcher (void);
+		Proactor * pro;
+		WorkerListType workers;
+	public:
+		virtual ~Dispatcher (void);
 
-    bool addWorker (Worker * w);
-    bool removeWorker (Worker * w);
-  };
+		bool addWorker (Worker * w);
+		bool removeWorker (Worker * w);
+	};
 
 } // end of namespace
 

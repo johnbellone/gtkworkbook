@@ -25,13 +25,16 @@
 #include "../concurrent/List.hpp"
 #include "Worker.hpp"
 #include "Event.hpp"
-#include "Dispatcher.hpp"
+/*#include "Dispatcher.hpp"*/
 #include "InputDispatcher.hpp"
 
 namespace proactor {
 
-	class Proactor : public Dispatcher {
+	class Dispatcher;
+	
+	class Proactor : public concurrent::Thread {
 	private:
+		typedef concurrent::List<Worker *> WorkerListType;
 		typedef concurrent::List<Dispatcher *> DispatcherList;
 		typedef concurrent::Map<int, WorkerListType *> EventMapType;
 		typedef concurrent::Queue<Event> EventQueueType;

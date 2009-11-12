@@ -30,7 +30,6 @@ namespace proactor {
 	protected:
 		typedef concurrent::Queue<Event> InputQueueType;
 
-		Proactor * pro;
 		InputQueueType inputQueue;
 	public:
 		virtual ~InputDispatcher (void);

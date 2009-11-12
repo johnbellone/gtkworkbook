@@ -27,7 +27,6 @@
 #include <sstream>
 #include "GotoDialog.hpp"
 #include "Largefile.hpp"
-#include "File.hpp"
 
 using namespace largefile;
 
@@ -336,7 +335,7 @@ Largefile::OpenFile (Sheet * sheet, const std::string & filename) {
 	this->lock();
 	
 	int fdEventId = proactor::Event::uniqueEventId();
-	FileDispatcher * fd = new FileDispatcher (fdEventId, appstate->proactor());
+	FileDispatcher * fd = new FileDispatcher (fdEventId);
 	CsvParser * csv = new CsvParser (sheet, this->pktlog, 0);
 
 	if (appstate->proactor()->addWorker (fdEventId, csv) == false) {

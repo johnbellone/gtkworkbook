@@ -24,32 +24,34 @@
 
 namespace proactor {
 
-  class Event {
-  private:
-    static int numEvents;
-  public:
-    int id;
-    std::string buf;
+	class Proactor;
+	
+	class Event {
+	private:
+		static int numEvents;
+	public:
+		int id;
+		std::string buf;
 
-    Event (int id, const std::string & buf);
+		Event (int id, const std::string & buf);
 
-    static int uniqueEventId (void);
-  };
+		static int uniqueEventId (void);
+	};
 
-  class EventDispatcher : public Dispatcher {
-  private:
-    int eventId;
-  public:
-    virtual ~EventDispatcher (void);
+	class EventDispatcher : public Dispatcher {
+	private:
+		int eventId;
+	public:
+		virtual ~EventDispatcher (void);
 
-    inline void setEventId (int e) { 
-      this->eventId = e;
-    }
+		inline void setEventId (int e) { 
+			this->eventId = e;
+		}
 
-    inline int getEventId (void) { 
-      return this->eventId;
-    }
-  };
+		inline int getEventId (void) { 
+			return this->eventId;
+		}
+	};
 
 }
 
