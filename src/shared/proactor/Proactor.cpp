@@ -69,6 +69,8 @@ namespace proactor {
 		}
 		this->eventsToHandlers.unlock();
 
+		job->dispatcher = this;
+		
 		return job->start();
 	}
 
@@ -100,14 +102,14 @@ namespace proactor {
 			}
 		}
 		this->eventsToHandlers.unlock();
-   
+
+		job->dispatcher = NULL;
 		return result;
 	}
 
 	void
 	Proactor::addDispatcher (Dispatcher * d) {
 		d->pro = this;
-		
 		this->dispatchers.push_back (d);
 	}
 
@@ -123,7 +125,6 @@ namespace proactor {
 		this->dispatchers.erase (it);
 
 		d->pro = NULL;
-		
 		return true;
 	}
 

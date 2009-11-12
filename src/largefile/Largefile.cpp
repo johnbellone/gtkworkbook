@@ -344,6 +344,8 @@ Largefile::OpenFile (Sheet * sheet, const std::string & filename) {
 		return false;
 	}
 
+	appstate->proactor()->addDispatcher (fd);
+
 	if (fd->Openfile (filename) == false) {
 		g_critical ("Failed opening %s", filename.c_str());
 		this->unlock();
