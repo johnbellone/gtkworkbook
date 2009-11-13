@@ -18,6 +18,7 @@
 */
 #include "Gzip.hpp"
 #include <sys/time.h>
+#include <proactor/Proactor.hpp>
 
 using namespace largefile;
 
@@ -30,40 +31,50 @@ GnuzipDispatcher::~GnuzipDispatcher (void) {
 
 bool
 GnuzipDispatcher::Openfile (const std::string & filename) {
+	unsigned char gzheader[10];
+
+	// Just make sure that we are dealing with a stable release. This was the tagged release that
+	// ships with RHEL / CentOS 5.0; also happens to be the release with Ubuntu 9.10. 
 	if (0 != strcmp (ZLIB_VERSION, "1.2.3")) {
 		if (ZLIB_VERNUM < 0x1230) {
 			std::cout << "Invalid ZLIB_VERSION ("<<ZLIB_VERSION<<") needs to be 1.2.3 or higher\n";
 			return false;
 		}
 	}
-
-	gzFile fp = NULL;
-	if (NULL == (fp = gzopen (filename.c_str(), "rb"))) {
+	
+	FILE * fp = NULL;
+	if (NULL == (fp = FOPEN (filename.c_str(), "rb"))) {
+		std::cerr << "Failed opening "<<filename<<" for binary gzip reading.\n";
 		return false;
 	}
 
-	gzseek (fp, 0L, SEEK_END);
-	z_off_t byte_end = gztell (fp);
-	
-	std::cout << byte_end << "\n";
-	
-	this->marks.get(0).byte = 0;
-	this->marks.get(0).line = 0;
+	// Make sure that we are dealing with a gzip compressed file. If it is some other type of file
+	// we should not attempt to open or index it. 
+	fread (gzheader, 1, 10, fp);
 
-	// Compute fuzzy relative position, and set line to -1 for indexing.
-	for (int ii = 1; ii < LINE_INDEX_MAX; ii++) {
-		double N = ii, K = LINE_PRECISION;
-		this->marks.get(ii).byte = (off64_t)((N/K) * byte_end);
-		this->marks.get(ii).line = -1;
+	// (1) Check to make sure the file's identification bytes indicate that it is a gzip file.
+	// (2) Be sure that the compression method used inside of the file is the DEFLATE so that we
+	// know it can be uncompressed using zlib - this should never, ever, fail. But just in case.
+	// From Gzip RFC: http://www.gzip.org/zlib/rfc-gzip.html
+	if (0x1f != gzheader[0] || 0x8b != gzheader[1]) {
+		std::cerr << "Input file "<<filename<<" is not gzip formatted.\n";
+		return false;
 	}
 
-	gzclose (fp); fp = NULL;
+	if (8 != gzheader[2]) {
+		std::cerr << "Input file "<<filename<<" uses compression method other than deflate.\n";
+		return false;
+	}
+
+	// At this point we know that we have a gzip file that was compressed with the DEFLATE algorithm.
+	// We now want to check to see if we nee
 	this->filename = filename;
 	return true;
 }
 
 bool
 GnuzipDispatcher::Closefile (void) {
+	// STUB: Write out the file index to the end of the Gzip file on disk.
 	return true;
 }
 
@@ -84,6 +95,7 @@ GnuzipDispatcher::Readpercent (unsigned int percent, off64_t N) {
 
 void
 GnuzipDispatcher::Index (void) {
+	
 }
 
 GnuzipFileWorker::GnuzipFileWorker (const std::string & filename, FileIndex * marks)
@@ -101,19 +113,32 @@ GnuzipFileWorker::Openfile (void) {
 		// whatever reason someone attempted to call this method twice. That doesn't work.
 		return false;
 	}
-
+	
 	// A .gz file needs to be opened as "read-only binary" because we are going to be reading the compressed
-	// data directly. The reader (and indexer) will handle decompression before it does its work.
-	if (NULL == (this->fp = gzopen (this->filename.c_str(), "rb"))) {
+	// data directly from disk and using the libraries inflate algorithm to decompress.
+	if (NULL == (this->fp = FOPEN (this->filename.c_str(), "ab"))) {
 		// STUB: Throw an error eventually to inform the user (in the GUI) of the problem.
 		return false;
 	}
 
+	// We can forego any explicit checks here because we already performed that inside of the GnuzipDispatcher
+	// Openfile method. 
 	return true;
 }
 
 void *
 GnuzipDispatcher::run (void * null) {
+	
+	while (true == this->isRunning()) {
+		while (0 == this->inputQueue.size()) {
+			if (false == this->isRunning())
+				return NULL;
+			concurrent::Thread::sleep(1);
+		}
+
+		this->pro->onReadComplete (this->inputQueue.pop());
+	}
+	
 	return NULL;
 }
 
@@ -134,8 +159,6 @@ GnuzipLineIndexer::~GnuzipLineIndexer (void) {
 
 void *
 GnuzipLineIndexer::run (void * null) {
-	int ch, index = 0;
-	z_off_t cursor = 0, count = 0, byte_beg = 0;
 	struct timeval start, end;
 	
 	if (false == GnuzipFileWorker::Openfile()) {
@@ -144,4 +167,6 @@ GnuzipLineIndexer::run (void * null) {
 	}
 
 	gettimeofday (&start, NULL);
+
+	gettimeofday (&end, NULL);
 }

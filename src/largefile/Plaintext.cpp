@@ -38,6 +38,7 @@ PlaintextDispatcher::Readline (off64_t start, off64_t N) {
 	// If the user is requesting to read a line that we have not indexed yet then it
 	// is not possible to do so. So just return false and they will get prompted with
 	// some sort of GUI notification that their request has failed.
+	/*
 	this->marks.lock();
 	
 	if (start > this->marks.get(this->marks.size())->line) {
@@ -46,7 +47,7 @@ PlaintextDispatcher::Readline (off64_t start, off64_t N) {
 	}
 
 	this->marks.unlock();
-	 
+	*/
 	PlaintextLineReader * reader = new PlaintextLineReader (this->filename, &this->marks, start, N);
 	this->addWorker (reader);
 	return true;

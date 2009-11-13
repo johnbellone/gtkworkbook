@@ -23,7 +23,7 @@
 
 class ILockable {
 public:
-  virtual ~ILockable (void) { }
+	virtual ~ILockable (void) = 0;
 
 	virtual void lock (void) { }
 	virtual void unlock (void) { }

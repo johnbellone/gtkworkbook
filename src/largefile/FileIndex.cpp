@@ -21,7 +21,7 @@
 using namespace largefile;
 
 FileIndex::FileIndex (void) {
-	this->index = NULL;
+	this->table = NULL;
 }
 
 FileIndex::~FileIndex (void) {
@@ -32,11 +32,11 @@ void
 FileIndex::Free (void) {
 	this->lock();
 	
-	if (NULL != this->index) {
-		free (this->index->list);
-		free (this->index);
+	if (NULL != this->table) {
+		free (this->table->list);
+		free (this->table);
 	}
-	this->index = NULL;
+	this->table = NULL;
 
 	this->unlock();
 }
@@ -50,38 +50,40 @@ FileIndex::Add (off64_t byte, off64_t line) {
 	// If the index was not allocated we're going to do it this first time around.
 	// Most of this procedure was taken from Mark Adler's zran.c example inside of the
 	// zlib distribution. 
-	if (NULL == this->index) {
+	if (NULL == this->table) {
 		// Allocate the lookup table.
-		if (NULL == (this->index = (LookupTable *)malloc (sizeof (LookupTable)))) return NULL;
+		if (NULL == (this->table = (LookupTable *)malloc (sizeof (LookupTable)))) return NULL;
 
 		// Pre-allocate the first eight entries inside of the list.
-		if (NULL == (this->index->list = (LineIndex *)malloc (sizeof (LineIndex) << 3))) return NULL;
+		if (NULL == (this->table->list = (LineIndex *)malloc (sizeof (LineIndex) << 3))) return NULL;
 	
-		this->index->have = 0;
-		this->index->size = 8;
+		this->table->have = 0;
+		this->table->size = 8;
+
+		this->Add (0, 0, -1, -1);
 	}
 	// The list is currently full: we need to realloc some more space for additional entries.
-	else if (this->index->have == this->index->size) {
-		index->size <<= 1;
+	else if (this->table->have == this->table->size) {
+		this->table->size <<= 1;
 
-		if (NULL == (next = (LineIndex *)realloc (this->index->list, sizeof (LineIndex) * index->size))) {
+		if (NULL == (next = (LineIndex *)realloc (this->table->list, sizeof (LineIndex) * this->table->size))) {
 			Free();
 			return NULL;
 		}
 
-		this->index->list = next;
+		this->table->list = next;
 	}
 
-	next = this->index->list + this->index->have;
+	next = this->table->list + this->table->have;
 	next->zbits = -1;
 	next->zin = -1;
 	next->byte = byte;
 	next->line = line;
 
-	this->index->have++;
+	this->table->have++;
 
 	this->unlock();
-	return this->index;
+	return this->table;
 }
 
 LookupTable *
@@ -92,11 +94,11 @@ FileIndex::Add (off64_t byte, off64_t line, off64_t zin, int bits) {
 
 	if (NULL == Add (byte, line)) return NULL;
 
-	x = this->index->list + this->index->have;
+	x = this->table->list + this->table->have;
 	x->zin   = zin;
 	x->zbits = bits;
 
 	this->unlock();
 	
-	return this->index;
+	return this->table;
 }

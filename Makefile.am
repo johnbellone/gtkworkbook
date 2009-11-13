@@ -59,6 +59,7 @@ lib_gtkworkbook_SOURCES = src/Application.cpp \
 		          src/shared/concurrent/Thread.cpp \
 		          src/shared/concurrent/ThreadGroup.cpp \
 		          src/shared/concurrent/ThreadPool.cpp \
+			  src/shared/concurrent/Lockable.cpp \
 		          src/shared/network/Tcp.cpp \
 		          src/shared/proactor/Dispatcher.cpp \
 		          src/shared/proactor/Event.cpp \

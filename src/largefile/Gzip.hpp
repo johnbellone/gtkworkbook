@@ -58,7 +58,7 @@ namespace largefile {
 	 */
 	class GnuzipFileWorker : public AbstractFileWorker {
 	protected:
-		gzFile fp;
+		FILE * fp;
 	public:
 		GnuzipFileWorker (const std::string & filename, FileIndex * marks);
 		virtual ~GnuzipFileWorker (void);

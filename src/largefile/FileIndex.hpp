@@ -49,7 +49,7 @@ namespace largefile {
 	 */
 	class FileIndex : public concurrent::RecursiveMutex {
 	private:
-		LookupTable * index;
+		LookupTable * table;
 	public:
 		/// Default constructor (and only) constructor for the object.
 		FileIndex (void);
@@ -61,8 +61,8 @@ namespace largefile {
 		LookupTable * Add (off64_t byte, off64_t line);
 		LookupTable * Add (off64_t byte, off64_t line, off64_t zin, int bits);
 
-		inline int size (void) const { return this->index->have; }
-		inline LineIndex * get (int ii) { return this->index->list + ii; }
+		inline int size (void) const { return this->table->have; }
+		inline LineIndex * get (int ii) { return this->table->list + ii; }
 	};
 
 }
