@@ -35,8 +35,18 @@ PlaintextDispatcher::~PlaintextDispatcher (void) {
 
 bool
 PlaintextDispatcher::Readline (off64_t start, off64_t N) {
-	if (start > this->marks.get(LINE_INDEX_MAX-1).byte) return false;
-		
+	// If the user is requesting to read a line that we have not indexed yet then it
+	// is not possible to do so. So just return false and they will get prompted with
+	// some sort of GUI notification that their request has failed.
+	this->marks.lock();
+	
+	if (start > this->marks.get(this->marks.size())->line) {
+		this->marks.unlock();
+		return false;
+	}
+
+	this->marks.unlock();
+	 
 	PlaintextLineReader * reader = new PlaintextLineReader (this->filename, &this->marks, start, N);
 	this->addWorker (reader);
 	return true;
@@ -44,8 +54,18 @@ PlaintextDispatcher::Readline (off64_t start, off64_t N) {
 
 bool
 PlaintextDispatcher::Readoffset (off64_t offset, off64_t N) {
-	if (offset > this->marks.get(LINE_INDEX_MAX-1).byte) return false;
-		
+	// If the user is requesting to read an offset that is larger than the total size
+	// of the file then we obviously can't do that. Return false and have the GUI inform
+	// them of their wrong choice to do so.
+	this->marks.lock();
+	
+	if (offset > this->marks.get(this->marks.size())->byte) {
+		this->marks.unlock();
+		return false;
+	}
+
+	this->marks.unlock();
+	
 	PlaintextOffsetReader * reader = new PlaintextOffsetReader (this->filename, offset, N);
 	this->addWorker (reader);
 	return true;
@@ -53,12 +73,21 @@ PlaintextDispatcher::Readoffset (off64_t offset, off64_t N) {
 
 bool
 PlaintextDispatcher::Readpercent (unsigned int percent, off64_t N) {
-	if (percent > 100) return false;
-	if (this->marks.get(percent * 10).byte == -1) return false;
+	if (percent > 99) return false;
+
+	this->marks.lock();
+	
+	if (this->marks.get(percent)->byte == -1) {
+		this->marks.unlock();
+		return false;
+	}
 
 	PlaintextOffsetReader * reader = new PlaintextOffsetReader (this->filename,
-																					this->marks.get(percent * 10).byte,
+																					this->marks.get(percent)->byte,
 																					N);
+
+	this->marks.unlock();
+	
 	this->addWorker (reader);
 	return true;
 }
@@ -83,15 +112,14 @@ PlaintextDispatcher::Openfile (const std::string & filename) {
 	// line at that byte position for indexing at a later point in time.
 	FSEEK_END (fp);
 	off64_t byte_end = FTELL (fp);
-	
-	this->marks.get(0).byte = 0;
-	this->marks.get(0).line = 0;
-		
+	off64_t byte;
+			
 	// Compute fuzzy relative position, and set line to -1 for indexing.
 	for (int ii = 1; ii < LINE_INDEX_MAX; ii++) {
 		double N = ii, K = LINE_PRECISION;
-		this->marks.get(ii).byte = (off64_t)((N/K) * byte_end);
-		this->marks.get(ii).line = -1;
+		byte = (off64_t)((N/K) * byte_end);
+
+		this->marks.Add (byte, -1);
 	}
 
 	FCLOSE (fp);
@@ -238,9 +266,9 @@ PlaintextLineIndexer::run (void * null) {
 			count++;
 		}
 						
-		if (this->marks->get(index).byte == cursor++) {
-			this->marks->get(index).line = count;
-			this->marks->get(index).byte = byte_beg;
+		if (this->marks->get(index)->byte == cursor++) {
+			this->marks->get(index)->line = count;
+			this->marks->get(index)->byte = byte_beg;
 			
 			index++;
 
@@ -299,9 +327,9 @@ PlaintextLineReader::run (void * null) {
 		while (this->marks->trylock() == false)
 			Thread::sleep(1);
 			
-		if (line_max < this->marks->get(index).line) {
-			delta = this->startLine - this->marks->get(index-1).line;
-			offset = this->marks->get(index-1).byte;
+		if (line_max < this->marks->get(index)->line) {
+			delta = this->startLine - this->marks->get(index-1)->line;
+			offset = this->marks->get(index-1)->byte;
 			this->marks->unlock();
 			break;
 		}

@@ -26,6 +26,9 @@
 
 namespace largefile {
 
+	const int LINE_INDEX_MAX = 1001;
+	const int LINE_PRECISION = 1000;
+	
 	/***
 	 * \class PlaintextDispatcher
 	 * \ingroup Largefile
