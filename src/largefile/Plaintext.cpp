@@ -71,9 +71,6 @@ PlaintextDispatcher::Index (void) {
 
 bool
 PlaintextDispatcher::Openfile (const std::string & filename) {
-	if (filename.length() == 0)
-		return false;
-
 	FILE * fp = NULL;
 	if (NULL == (fp = FOPEN (filename.c_str(), "r"))) {
 		// STUB: Throw an exception, error, or something to tell the caller that we need
