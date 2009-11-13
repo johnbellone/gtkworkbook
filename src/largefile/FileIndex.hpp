@@ -19,24 +19,24 @@
 #ifndef FILEINDEX_HPP
 #define FILEINDEX_HPP
 
+#include <tr1/memory>
 #include <concurrent/Mutex.hpp>
 #include <fcntl.h>
 #include <cstdio>
 
-#define LINE_INDEX_MAX 1001
-#define LINE_PRECISION 1000 
-
 namespace largefile {
 
-	/***
-	 * \class LineIndex
-	 * \ingroup Largefile
-	 * \author jb (jvb4@njit.edu)
-	 * \brief Simple structure for containing byte and line values.
-	 */
 	struct LineIndex {
 		off64_t byte;
 		off64_t line;
+		off64_t zin;
+		off64_t zbits;
+	};
+
+	struct LookupTable {
+		int have;
+		int size;
+		LineIndex * list;
 	};
 	
 	/***
@@ -49,7 +49,7 @@ namespace largefile {
 	 */
 	class FileIndex : public concurrent::RecursiveMutex {
 	private:
-		LineIndex marks [LINE_INDEX_MAX];
+		LookupTable * index;
 	public:
 		/// Default constructor (and only) constructor for the object.
 		FileIndex (void);
@@ -57,8 +57,12 @@ namespace largefile {
 		/// Destructor for the object.
 		virtual ~FileIndex (void);
 
-		/// Method to obtain a specific value from the line index.
-		inline LineIndex & get (int index) { return this->marks[index]; }
+		void Free (void);
+		LookupTable * Add (off64_t byte, off64_t line);
+		LookupTable * Add (off64_t byte, off64_t line, off64_t zin, int bits);
+
+		inline int size (void) const { return this->index->have; }
+		inline LineIndex * get (int ii) { return this->index->list + ii; }
 	};
 
 }
