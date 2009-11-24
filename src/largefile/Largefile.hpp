@@ -22,7 +22,7 @@
 #include <libgtkworkbook/workbook.h>
 #include <map>
 #include <string>
-#include "File.hpp"
+#include "FileDispatcher.hpp"
 #include "GotoDialog.hpp"
 #include "../Plugin.hpp"
 #include "../Application.hpp"
@@ -30,6 +30,13 @@
 
 namespace largefile {
 
+	/***
+	 * \class Largefile
+	 * \defgroup Largefile
+	 * \ingroup Largefile
+	 * \author jb (jvb4@njit.edu)
+	 * \brief
+	 */
 	class Largefile : public Plugin {
 	private:
 		typedef std::map<std::string,FileDispatcher *> FilenameMap;

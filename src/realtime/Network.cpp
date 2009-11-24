@@ -23,8 +23,7 @@
 
 namespace realtime {
 	
-	NetworkDispatcher::NetworkDispatcher (int e, proactor::Proactor * pro) {
-		this->pro = pro;
+	NetworkDispatcher::NetworkDispatcher (int e) {
 		setEventId (e);
 	}
 
@@ -51,16 +50,12 @@ namespace realtime {
 		return NULL;
 	}
 	
-	ConnectionThread::ConnectionThread (proactor::InputDispatcher * d, 
-													int newfd) {
+	ConnectionThread::ConnectionThread (int newfd) {
 		this->socket = new network::TcpClientSocket (newfd);
-		this->dispatcher = d;
 	}
 
-	ConnectionThread::ConnectionThread (proactor::InputDispatcher * d,
-													network::TcpSocket * s) {
+	ConnectionThread::ConnectionThread (network::TcpSocket * s) {
 		this->socket = s;
-		this->dispatcher = d;
 	}
 
 	ConnectionThread::~ConnectionThread (void) {
@@ -97,7 +92,7 @@ namespace realtime {
 						break;
 
 					std::string str = packet.substr (0, pos);
-					this->dispatcher->onReadComplete (str);
+					((proactor::InputDispatcher *)this->dispatcher)->onReadComplete (str);
 					packet = packet.substr (pos+1, packet.length());
 				}
 			}
@@ -110,9 +105,7 @@ namespace realtime {
 		return NULL;
 	}
 
-	AcceptThread::AcceptThread (network::TcpServerSocket::Acceptor * acceptor,
-										 proactor::InputDispatcher * dispatcher) {
-		this->dispatcher = dispatcher;
+	AcceptThread::AcceptThread (network::TcpServerSocket::Acceptor * acceptor) {
 		this->acceptor = acceptor;
 	}
 
@@ -129,7 +122,7 @@ namespace realtime {
 				break;
 			}
 
-			ConnectionThread * c = new ConnectionThread (this->dispatcher, newfd);
+			ConnectionThread * c = new ConnectionThread (newfd);
       
 			if (this->dispatcher->addWorker (c) == false) {
 				// Failed for some reason; cut out and quit for now.

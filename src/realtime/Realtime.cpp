@@ -168,7 +168,7 @@ Realtime::CreateNewClientConnection (network::TcpClientSocket * socket, CsvParse
 	this->threads.push_back ( ActiveThread (socket, csv) );
 	this->threads.push_back ( ActiveThread (NULL, nd) );  // this is a hack
 
-	ConnectionThread * reader = new ConnectionThread (nd, socket);
+	ConnectionThread * reader = new ConnectionThread (socket);
 	if (nd->addWorker (reader) == false) {
 		g_critical ("Failed starting the client reader");
 		delete reader;
@@ -192,7 +192,7 @@ Realtime::OpenTcpServer (int port) {
 	// Packet Parser is created as well. 
 	if (this->tcp_server == NULL) {
 		int eventId = proactor::Event::uniqueEventId();
-		NetworkDispatcher * nd = new NetworkDispatcher (eventId, this->app()->proactor());
+		NetworkDispatcher * nd = new NetworkDispatcher (eventId);
 		PacketParser * pp = new PacketParser (this->workbook(), this->pktlog, 0);
 		
 		if (nd->start() == false) {
@@ -215,7 +215,7 @@ Realtime::OpenTcpServer (int port) {
 		return false;
 	}
 
-	AcceptThread * accept_thread = new AcceptThread (socket->newAcceptor(), this->tcp_server);
+	AcceptThread * accept_thread = new AcceptThread (socket->newAcceptor());
 	return this->CreateNewServerConnection (socket, accept_thread);
 }
 
@@ -232,7 +232,7 @@ Realtime::OpenTcpClient (Sheet * sheet, const std::string & address, int port) {
 	// that is a separate project in and of itself. For now a list of dispatchers must be
 	// kept so that we do not lose track.
 	int eventId = proactor::Event::uniqueEventId();
-	NetworkDispatcher * dispatcher = new NetworkDispatcher (eventId, this->app()->proactor());
+	NetworkDispatcher * dispatcher = new NetworkDispatcher (eventId);
 	if (dispatcher->start() == false) {
 		g_critical ("Failed starting network dispatcher for %s:%d", address.c_str(), port);
 		delete dispatcher;

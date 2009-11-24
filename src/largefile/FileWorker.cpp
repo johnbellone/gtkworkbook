@@ -16,31 +16,32 @@
    License along with the library; if not, write to the Free Software
    Foundation, Inc., 51 Franklin Street, Fifth Floor Boston, MA 02110-1301 USA
 */
-#ifndef HPP_PROACTOR_DISPATCHER
-#define HPP_PROACTOR_DISPATCHER
+#include <string>
+#include "FileWorker.hpp"
+#include "Plaintext.hpp"
 
-#include "../concurrent/Thread.hpp"
-#include "../concurrent/List.hpp"
+using namespace largefile;
 
-namespace proactor {
+/*
+static AbstractFileWorker *
+AbstractFileWorker::WorkerFromExtension (const std::string & filename, FileIndex * marks) {
+	AbstractFileWorker * worker = NULL;
+	std::string ext = filename.substr (filename.find_last_of ('.'), filename.length());
 
-	class Proactor;
-	class Worker;
+	// Return the proper worker depending on the file's extension. This is so that we can
+	// support automatically opening .gz, .lz and .bz2 extensions automatically in the future.
+	if (0 == ext.compare (".csv"))
+		return new PlaintextFileWorker (filename, marks);
+	return NULL;
+}
+*/
 
-	class Dispatcher : public concurrent::Thread {
-		friend class Proactor;
-	protected:
-		typedef concurrent::List<Worker *> WorkerListType;
+AbstractFileWorker::AbstractFileWorker (const std::string & filename, FileIndex * marks)
+	: marks (marks), filename (filename) {
+	this->fp = NULL;
+}
 
-		Proactor * pro;
-		WorkerListType workers;
-	public:
-		virtual ~Dispatcher (void);
-
-		bool addWorker (Worker * w);
-		bool removeWorker (Worker * w);
-	};
-
-} // end of namespace
-
-#endif
+AbstractFileWorker::~AbstractFileWorker (void) {
+	this->Closefile();
+}
+	

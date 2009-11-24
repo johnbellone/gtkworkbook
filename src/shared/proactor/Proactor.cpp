@@ -106,6 +106,8 @@ namespace proactor {
 
 	void
 	Proactor::addDispatcher (Dispatcher * d) {
+		d->pro = this;
+		
 		this->dispatchers.push_back (d);
 	}
 
@@ -119,6 +121,9 @@ namespace proactor {
 			return false;
   
 		this->dispatchers.erase (it);
+
+		d->pro = NULL;
+		
 		return true;
 	}
 

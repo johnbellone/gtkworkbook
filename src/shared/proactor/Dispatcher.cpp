@@ -36,6 +36,9 @@ namespace proactor {
 		if (it == this->workers.end()) {
 			this->workers.push_back (w);
 			this->workers.unlock();
+
+			w->dispatcher = this;
+			
 			return w->start();
       }
 		this->workers.unlock();
@@ -55,6 +58,9 @@ namespace proactor {
 			result = true;
 		}
 		this->workers.unlock();
+
+		w->dispatcher = NULL;
+		
 		return result;
 	}
 

@@ -16,31 +16,13 @@
    License along with the library; if not, write to the Free Software
    Foundation, Inc., 51 Franklin Street, Fifth Floor Boston, MA 02110-1301 USA
 */
-#ifndef HPP_PROACTOR_DISPATCHER
-#define HPP_PROACTOR_DISPATCHER
+#include "FileIndex.hpp"
 
-#include "../concurrent/Thread.hpp"
-#include "../concurrent/List.hpp"
+using namespace largefile;
 
-namespace proactor {
+FileIndex::FileIndex (void) {
+}
 
-	class Proactor;
-	class Worker;
+FileIndex::~FileIndex (void) {
 
-	class Dispatcher : public concurrent::Thread {
-		friend class Proactor;
-	protected:
-		typedef concurrent::List<Worker *> WorkerListType;
-
-		Proactor * pro;
-		WorkerListType workers;
-	public:
-		virtual ~Dispatcher (void);
-
-		bool addWorker (Worker * w);
-		bool removeWorker (Worker * w);
-	};
-
-} // end of namespace
-
-#endif
+}
