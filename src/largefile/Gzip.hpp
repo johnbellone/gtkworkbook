@@ -19,12 +19,39 @@
 #ifndef GNUZIP_HPP
 #define GNUZIP_HPP
 
+#include "FileIndex.hpp"
 #include "FileWorker.hpp"
 #include "FileDispatcher.hpp"
 #include <zlib.h>
 
 namespace largefile {
 
+#define GZIP_SPAN 1048576L
+#define GZIP_WINSIZE 32768U
+#define GZIP_CHUNK 16384
+	
+	struct GzipBlockData : public OffsetData {
+		off64_t zin;
+		off64_t zbits;
+		unsigned char window [GZIP_WINSIZE];
+	};
+	
+	/***
+	 * \class GzipIndex
+	 * \ingroup Largefile
+	 * \author jb (jvb4@njit.edu)
+	 * \brief
+	 */
+	class GzipIndex : public FileIndex {
+	public:
+		LookupTable * Add (off64_t byte,
+								 off64_t line,
+								 off64_t zin,
+								 int bits,
+								 unsigned int left,
+								 unsigned char * window);
+	};
+	
 	/***
 	 * \class GnuzipDispatcher
 	 * \ingroup Largefile
@@ -74,7 +101,6 @@ namespace largefile {
 	 * \brief
 	 */
 	class GnuzipLineIndexer : public GnuzipFileWorker {
-	private:
 	public:
 		/// Constructor.
 		GnuzipLineIndexer (const std::string & filename, FileIndex * marks);

@@ -48,7 +48,7 @@ PlaintextDispatcher::Readline (off64_t start, off64_t N) {
 
 	this->marks.unlock();
 	*/
-	PlaintextLineReader * reader = new PlaintextLineReader (this->filename, &this->marks, start, N);
+	PlaintextLineReader * reader = new PlaintextLineReader (this->filename, this->marks, start, N);
 	this->addWorker (reader);
 	return true;
 }
@@ -58,14 +58,14 @@ PlaintextDispatcher::Readoffset (off64_t offset, off64_t N) {
 	// If the user is requesting to read an offset that is larger than the total size
 	// of the file then we obviously can't do that. Return false and have the GUI inform
 	// them of their wrong choice to do so.
-	this->marks.lock();
+	this->marks->lock();
 	
-	if (offset > this->marks.get(this->marks.size())->byte) {
-		this->marks.unlock();
+	if (offset > this->marks->get(this->marks->size())->byte) {
+		this->marks->unlock();
 		return false;
 	}
 
-	this->marks.unlock();
+	this->marks->unlock();
 	
 	PlaintextOffsetReader * reader = new PlaintextOffsetReader (this->filename, offset, N);
 	this->addWorker (reader);
@@ -76,18 +76,18 @@ bool
 PlaintextDispatcher::Readpercent (unsigned int percent, off64_t N) {
 	if (percent > 99) return false;
 
-	this->marks.lock();
+	this->marks->lock();
 	
-	if (this->marks.get(percent)->byte == -1) {
-		this->marks.unlock();
+	if (this->marks->get(percent)->byte == -1) {
+		this->marks->unlock();
 		return false;
 	}
 
 	PlaintextOffsetReader * reader = new PlaintextOffsetReader (this->filename,
-																					this->marks.get(percent)->byte,
+																					this->marks->get(percent)->byte,
 																					N);
 
-	this->marks.unlock();
+	this->marks->unlock();
 	
 	this->addWorker (reader);
 	return true;
@@ -95,7 +95,7 @@ PlaintextDispatcher::Readpercent (unsigned int percent, off64_t N) {
 
 void
 PlaintextDispatcher::Index (void) {
-	PlaintextLineIndexer * indexer = new PlaintextLineIndexer (this->filename, &this->marks);
+	PlaintextLineIndexer * indexer = new PlaintextLineIndexer (this->filename, this->marks);
 	this->addWorker (indexer);
 }
 
@@ -120,7 +120,7 @@ PlaintextDispatcher::Openfile (const std::string & filename) {
 		double N = ii, K = LINE_PRECISION;
 		byte = (off64_t)((N/K) * byte_end);
 
-		this->marks.Add (byte, -1);
+		this->marks->Add (byte, -1);
 	}
 
 	FCLOSE (fp);

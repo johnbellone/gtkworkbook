@@ -35,14 +35,15 @@ namespace largefile {
 	 */
 	class AbstractFileDispatcher : public proactor::InputDispatcher {
 	protected:
-		FileIndex marks;
+		FileIndex * marks;
 		std::string filename;
 	public:
 		static AbstractFileDispatcher * CreateFromExtension (const std::string & filename, int e);
 		
 		/// Constructor.
 		AbstractFileDispatcher (int e);
-
+		AbstractFileDispatcher (int e, FileIndex * marks);
+		
 		/// Destructor.
 		virtual ~AbstractFileDispatcher (void);
 

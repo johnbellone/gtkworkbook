@@ -37,8 +37,16 @@ AbstractFileDispatcher::CreateFromExtension (const std::string & filename, int e
 
 AbstractFileDispatcher::AbstractFileDispatcher (int e) {
 	setEventId (e);
+
+	this->marks = new FileIndex;
+}
+
+AbstractFileDispatcher::AbstractFileDispatcher (int e, FileIndex * marks) {
+	setEventId (e);
+	
+	this->marks = marks;
 }
 
 AbstractFileDispatcher::~AbstractFileDispatcher (void) {
-	
+	delete this->marks;
 }
