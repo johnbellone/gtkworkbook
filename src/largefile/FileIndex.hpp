@@ -26,17 +26,19 @@
 
 namespace largefile {
 
-	struct LineIndex {
+	struct OffsetData {
+	};
+	
+	struct LineOffset {
 		off64_t byte;
 		off64_t line;
-		off64_t zin;
-		off64_t zbits;
+		OffsetData * extra;
 	};
 
 	struct LookupTable {
 		int have;
 		int size;
-		LineIndex * list;
+		LineOffset * list;
 	};
 	
 	/***
@@ -48,7 +50,7 @@ namespace largefile {
 	 * populated it contains a relative byte position (to the total file size).
 	 */
 	class FileIndex : public concurrent::RecursiveMutex {
-	private:
+	protected:
 		LookupTable * table;
 	public:
 		/// Default constructor (and only) constructor for the object.
@@ -59,10 +61,9 @@ namespace largefile {
 
 		void Free (void);
 		LookupTable * Add (off64_t byte, off64_t line);
-		LookupTable * Add (off64_t byte, off64_t line, off64_t zin, int bits);
 
+		LineOffset * get (int ii);
 		inline int size (void) const { return this->table->have; }
-		inline LineIndex * get (int ii) { return this->table->list + ii; }
 	};
 
 }
