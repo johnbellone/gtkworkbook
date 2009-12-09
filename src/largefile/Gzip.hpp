@@ -71,7 +71,7 @@ namespace largefile {
 
 		bool Readline (off64_t start, off64_t N);
 		bool Readoffset (off64_t start, off64_t N);
-		bool Readpercent (unsigned int percent, off64_t N);
+		bool Readpercent (float percent, off64_t N);
 		void Index (void);
 		
 		void * run (void * null);
@@ -95,18 +95,36 @@ namespace largefile {
 	};
 
 	/***
-	 * \class GnuzipLineIndexer
+	 * \class GnuzipLineReader
 	 * \ingroup Largefile
 	 * \author jb (jvb4@njit.edu)
 	 * \brief
 	 */
-	class GnuzipLineIndexer : public GnuzipFileWorker {
+	class GnuzipLineReader : public GnuzipFileWorker {
+	private:
+		off64_t numberOfLinesToRead;
+		off64_t startLine;
+	public:
+		GnuzipLineReader (const std::string & filename, FileIndex * marks, off64_t start, off64_t N);
+
+		virtual ~GnuzipLineReader (void);
+
+		void * run (void * null);
+	};
+	
+	/***
+	 * \class GnuzipBlockIndexer
+	 * \ingroup Largefile
+	 * \author jb (jvb4@njit.edu)
+	 * \brief
+	 */
+	class GnuzipBlockIndexer : public GnuzipFileWorker {
 	public:
 		/// Constructor.
-		GnuzipLineIndexer (const std::string & filename, FileIndex * marks);
+		GnuzipBlockIndexer (const std::string & filename, FileIndex * marks);
 
 		/// Destructor.
-		virtual ~GnuzipLineIndexer (void);
+		virtual ~GnuzipBlockIndexer (void);
 
 		/// Method that acts as "main" for thread of execution.
 		void * run (void * null);

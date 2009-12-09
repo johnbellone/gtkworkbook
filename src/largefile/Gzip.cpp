@@ -58,7 +58,8 @@ GnuzipDispatcher::~GnuzipDispatcher (void) {
 bool
 GnuzipDispatcher::Openfile (const std::string & filename) {
 	unsigned char gzheader[10];
-
+	FILE * fp = NULL;
+	
 	// Just make sure that we are dealing with a stable release. This was the tagged release that
 	// ships with RHEL / CentOS 5.0; also happens to be the release with Ubuntu 9.10. 
 	if (0 != strcmp (ZLIB_VERSION, "1.2.3")) {
@@ -68,7 +69,6 @@ GnuzipDispatcher::Openfile (const std::string & filename) {
 		}
 	}
 	
-	FILE * fp = NULL;
 	if (NULL == (fp = FOPEN (filename.c_str(), "rb"))) {
 		std::cerr << "Failed opening "<<filename<<" for binary gzip reading.\n";
 		return false;
@@ -94,7 +94,6 @@ GnuzipDispatcher::Openfile (const std::string & filename) {
 
 	// At this point we know that we have a gzip file that was compressed with the DEFLATE algorithm.
 	
-	
 	this->filename = filename;
 	return true;
 }
@@ -107,6 +106,8 @@ GnuzipDispatcher::Closefile (void) {
 
 bool
 GnuzipDispatcher::Readline (off64_t start, off64_t N) {
+	GnuzipLineReader * reader = new GnuzipLineReader (this->filename, this->marks, start, N);
+	this->addWorker (reader);
 	return true;
 }
 
@@ -116,13 +117,25 @@ GnuzipDispatcher::Readoffset (off64_t start, off64_t N) {
 }
 
 bool
-GnuzipDispatcher::Readpercent (unsigned int percent, off64_t N) {
+GnuzipDispatcher::Readpercent (float percent, off64_t N) {
+	if (percent > 99) return false;
+
+	this->marks->lock();
+
+	int index = this->marks->size() * ((int)(percent / 100));
+	off64_t byte = this->marks->get(index)->byte;
+
+	this->marks->unlock();
+	/*
+	GnuzipOffsetReader * reader = new GnuzipOffsetReader (this->filename, byte, N);	
+	this->addWorker (reader);
+	*/
 	return true;
 }
 
 void
 GnuzipDispatcher::Index (void) {
-	GnuzipLineIndexer * indexer = new GnuzipLineIndexer (this->filename, this->marks);
+	GnuzipBlockIndexer * indexer = new GnuzipBlockIndexer (this->filename, this->marks);
 	this->addWorker (indexer);
 }
 
@@ -179,21 +192,56 @@ GnuzipFileWorker::Closefile (void) {
 	return false;
 }
 
-GnuzipLineIndexer::GnuzipLineIndexer (const std::string & filename, FileIndex * marks)
+GnuzipLineReader::GnuzipLineReader (const std::string & filename, FileIndex * marks, off64_t start, off64_t N)
 	: GnuzipFileWorker (filename, marks) {
+	this->numberOfLinesToRead = N;
+	this->startLine = start;
 }
 
-GnuzipLineIndexer::~GnuzipLineIndexer (void) {
+GnuzipLineReader::~GnuzipLineReader (void) {
 }
 
 void *
-GnuzipLineIndexer::run (void * null) {
+GnuzipLineReader::run (void * null) {
+
+	if (false == GnuzipFileWorker::Openfile ()) {
+		// STUB: Spawn some kind of worker that produces an error on the GUI.
+		g_critical ("Failed opening");
+	}
+
+	off64_t offset = 0, delta = 0, line = -1;
+	off64_t read_max = this->marks->size(), line_max = this->startLine + read_max;
+
+	for (off64_t index = 1; index < read_max; index++) {
+		while (!this->marks || false == this->marks->trylock()) {
+			if (false == this->isRunning())
+				goto thread_teardown;
+			Thread::sleep(1);
+		}
+
+		line = this->marks->get(index-1)->line;
+
+		this->marks->unlock();
+	}
+
+ thread_teardown:
+	return NULL;
+}
+
+GnuzipBlockIndexer::GnuzipBlockIndexer (const std::string & filename, FileIndex * marks)
+	: GnuzipFileWorker (filename, marks) {
+}
+
+GnuzipBlockIndexer::~GnuzipBlockIndexer (void) {
+}
+
+void *
+GnuzipBlockIndexer::run (void * null) {
 	GzipIndex * index = static_cast <GzipIndex *> (this->marks);
 	double ms;
 	struct timeval start, end;
 	int ret;
-	off64_t total_in = 0, total_out = 0;
-	off64_t last = 0; 
+	off64_t total_in = 0, total_out = 0, last = 0;
 	LookupTable * table = NULL;
 	z_stream zstrm;
 	unsigned char input[GZIP_CHUNK];
@@ -215,33 +263,39 @@ GnuzipLineIndexer::run (void * null) {
 	if (Z_OK != (ret = inflateInit2 (&zstrm, 47)))
 		return NULL;
 
-	std::cout << "index starting...";
+	std::cout << "index starting..." << std::flush;
 	
 	gettimeofday (&start, NULL);
 
+	// The below code has been taken from Mark Adler's Zlib Random Access code found in the
+	// example zran.c within the Zlib distribution. This builds a random access index from
+	// compressed blocks of a Gzip file. The size of the index is determined by the number
+	// of reset points inside of a Gzip file.
+	// Mark explains this much better than I could in the Zlib zran.c header comments.
 	do {
-		while (false == this->marks->trylock())
+		while (!this->marks || false == this->marks->trylock()) {
+			if (false == this->isRunning())
+				goto thread_teardown;
 			Thread::sleep(1);
-
-		if (false == this->isRunning())
-			return NULL;
+		}
 		
 		if (0 == (zstrm.avail_in = fread (input, 1, GZIP_CHUNK, this->fp))) {
 			ret = Z_DATA_ERROR;
-			goto build_index_error;
+			this->marks->unlock();
+			goto thread_teardown;
 		}
 
 		if (ferror (this->fp)) {
 			ret = Z_ERRNO;
-			goto build_index_error;
+			this->marks->unlock();
+			goto thread_teardown;
 		}
 
 		zstrm.next_in = input;
 
 		// Process all of the data that was just read in from [this->fp]
 		do {
-			
-			if (0 == zstrm.avail_out) {
+				if (0 == zstrm.avail_out) {
 				zstrm.avail_out = GZIP_WINSIZE;
 				zstrm.next_out = window;
 			}
@@ -253,14 +307,15 @@ GnuzipLineIndexer::run (void * null) {
 				ret = Z_DATA_ERROR;
 			}
 			else if (Z_MEM_ERROR == ret || Z_DATA_ERROR == ret) {
-				goto build_index_error;
+				this->marks->unlock();
+				goto thread_teardown;
 			}
 			else if (Z_STREAM_END == ret)
 				break;
 
 			total_in -= zstrm.avail_in;
 			total_out -= zstrm.avail_out;
-
+			
 			if ((zstrm.data_type & 128) && !(zstrm.data_type & 64) &&
 				 (0 == total_out || (total_out - last > GZIP_SPAN))) {
 				// Add the point to our GzipFileIndex which will in turn do all the fancy things underneath.
@@ -272,8 +327,10 @@ GnuzipLineIndexer::run (void * null) {
 										  window);
 				if (NULL == table) {
 					ret = Z_MEM_ERROR;
-					goto build_index_error;
+					this->marks->unlock();
+					goto thread_teardown;
 				}
+				
 				last = total_out;
 			}
 		} while (zstrm.avail_in != 0);
@@ -286,15 +343,12 @@ GnuzipLineIndexer::run (void * null) {
 
 	ms = ((((end.tv_sec-start.tv_sec) * 1000) + ((end.tv_usec-start.tv_usec)/1000.0)) + 0.5);
 	std::cout<<"ready (ms:"<<ms<<")!\n"<<std::flush;
-
-	std::cout << ((table->have * sizeof (GzipBlockData) * sizeof (LineOffset))) << "\n";
 	
 	inflateEnd (&zstrm);
 	return NULL;
 	
-	build_index_error:
+ thread_teardown:
 	std::cerr << "Failed indexing!\n";
 	inflateEnd (&zstrm);
-	this->marks->Free();
 	return NULL;
 }
