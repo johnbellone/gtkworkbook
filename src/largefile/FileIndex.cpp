@@ -98,5 +98,5 @@ FileIndex::Add (off64_t byte, off64_t line) {
 
 LineOffset *
 FileIndex::get (int ii) {
-	return this->table->list + ii;
+	return (NULL == table) ? NULL : table->list + ii;
 }

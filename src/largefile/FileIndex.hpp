@@ -19,7 +19,6 @@
 #ifndef FILEINDEX_HPP
 #define FILEINDEX_HPP
 
-#include <tr1/memory>
 #include <concurrent/Mutex.hpp>
 #include <fcntl.h>
 #include <cstdio>
@@ -65,7 +64,6 @@ namespace largefile {
 		LineOffset * get (int ii);
 		inline int size (void) const { return this->table->have; }
 	};
-
 }
 
 #endif
