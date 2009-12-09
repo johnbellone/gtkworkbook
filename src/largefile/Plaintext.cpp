@@ -270,7 +270,7 @@ PlaintextLineIndexer::run (void * null) {
 		
 		while (*ch) {
 
-			while (this->marks && false == this-marks->trylock()) {
+			while (!this->marks || false == this-marks->trylock()) {
 				if (false == this->isRunning())
 					goto thread_teardown;
 				Thread::sleep(1);
