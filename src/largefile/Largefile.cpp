@@ -71,10 +71,8 @@ GotoDialogResponseCallback (GtkWidget * gtkdialog, gint response, gpointer data)
 
 				// relative percentage
 				case 2: {
-					unsigned int perc_value = (unsigned int) (atof ( entry_value ) * 10);
-					
 					dialog->lf->Readpercent (dialog->lf->workbook()->focus_sheet,
-													 perc_value,
+													 atof (entry_value),
 													 1000);
 				}
 				break;
@@ -311,13 +309,10 @@ Largefile::Readoffset (Sheet * sheet, off64_t offset, off64_t N) {
 }
 
 bool
-Largefile::Readpercent (Sheet * sheet, guint percent_int, off64_t N) {
+Largefile::Readpercent (Sheet * sheet, float percent, off64_t N) {
 	this->lock();
 	std::string key = sheet->name;
 
-	// (input value) 75.5 = 755 * 0.10
-	double percent = (double)percent_int * 0.10;
-	
 	FilenameMap::iterator it = this->mapping.find (key);
 	if (it == this->mapping.end()) {
 		this->unlock();
@@ -325,7 +320,7 @@ Largefile::Readpercent (Sheet * sheet, guint percent_int, off64_t N) {
 	}
 
 	AbstractFileDispatcher * fd = it->second;
-	bool result = fd->Readpercent ( (unsigned int)percent, N);
+	bool result = fd->Readpercent (percent, N);
 	this->unlock();
 	return result;
 }
