@@ -48,7 +48,7 @@ namespace largefile {
 
 		bool Readline (off64_t start, off64_t N);
 		bool Readoffset (off64_t start, off64_t N);
-		bool Readpercent (unsigned int percent, off64_t N);
+		bool Readpercent (float percent, off64_t N);
 		void Index (void);
 		
 		void * run (void * null);

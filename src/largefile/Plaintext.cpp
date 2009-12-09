@@ -73,22 +73,17 @@ PlaintextDispatcher::Readoffset (off64_t offset, off64_t N) {
 }
 
 bool
-PlaintextDispatcher::Readpercent (unsigned int percent, off64_t N) {
-	if (percent > 99) return false;
+PlaintextDispatcher::Readpercent (float percent, off64_t N) {
+	if (percent > 100.0f) return false;
 
 	this->marks->lock();
-	
-	if (this->marks->get(percent)->byte == -1) {
-		this->marks->unlock();
-		return false;
-	}
 
-	PlaintextOffsetReader * reader = new PlaintextOffsetReader (this->filename,
-																					this->marks->get(percent)->byte,
-																					N);
+	int index = (this->marks->size() * (percent / 100));
+	off64_t byte = this->marks->get(index)->byte;
 
 	this->marks->unlock();
-	
+
+	PlaintextOffsetReader * reader = new PlaintextOffsetReader (this->filename, byte, N);
 	this->addWorker (reader);
 	return true;
 }
@@ -244,10 +239,16 @@ PlaintextLineIndexer::~PlaintextLineIndexer (void) {
 
 void *
 PlaintextLineIndexer::run (void * null) {
-	int ch, index = 0;
+	int index = 0;
 	off64_t cursor = 0, count = 0, byte_beg = 0;
 	struct timeval start, end;
-
+	const int CHUNK = 16384;
+	unsigned char * ch;
+	LineOffset * x = NULL;
+	unsigned char input[CHUNK+1];
+	double ms = 0.0f;
+	input[CHUNK] = 0;
+	
 	if (PlaintextFileWorker::Openfile() == false) {
 		// STUB: throw some kind of error here; we failed opening the file.
 		g_critical ("Failed opening file descriptor in line indexer");
@@ -261,41 +262,52 @@ PlaintextLineIndexer::run (void * null) {
 	// We need to get a absoltue line number from the relative position. We're not
 	// going to get away from having to sequentially read this file in, but once we
 	// have line numbers we can jump throughout the file pretty quickly.
-	while (EOF != (ch = fgetc (this->fp))) {
-		if (ch=='\n') {
-			byte_beg = cursor;
-			count++;
-		}
-						
-		if (this->marks->get(index)->byte == cursor++) {
-			this->marks->get(index)->line = count;
-			this->marks->get(index)->byte = byte_beg;
+	while (0 != fread (input, 1, CHUNK, this->fp)) {
+		if (ferror (this->fp) || false == this->isRunning())
+			goto thread_teardown;
+		
+		ch = input;
+		
+		while (*ch) {
+
+			while (this->marks && false == this-marks->trylock()) {
+				if (true == this->isRunning())
+					Thread::sleep(1);
+			}
 			
-			index++;
+			if ((false == this->isRunning()) ||
+				 ((NULL == (x = this->marks->get(index))))) {
+				this->marks->unlock();
+				goto thread_teardown;
+			}
+					
+			if (*ch=='\n') {
+				byte_beg = cursor;
+				count++;
+			}
+										
+			if (x->byte == cursor++) {
+				x->line = count;
+				x->byte = byte_beg;
+			
+				index++;
+								
+				if (index == this->marks->size()) {
+					break;
+				}
+			}
 
 			this->marks->unlock();
-				
-			if (index == LINE_INDEX_MAX) {
-				break;
-			}
-			else {
-				Thread::sleep(1);								  
-			}
-				
-			// Crude implementation of a spinlock. Wait while another thread is doing
-			// some reading before we begin indexing again.
-			while (this->marks->trylock() == false)
-				Thread::sleep(1);
 		}
 	}
-
-	this->marks->unlock();
 		
 	gettimeofday (&end, NULL);
 
-	double ms = ((((end.tv_sec-start.tv_sec) * 1000) + ((end.tv_usec-start.tv_usec)/1000.0)) + 0.5);
+	ms = ((((end.tv_sec-start.tv_sec) * 1000) + ((end.tv_usec-start.tv_usec)/1000.0)) + 0.5);
 	std::cout<<"ready (ms:"<<ms<<")!\n"<<std::flush;
 	this->dispatcher->removeWorker (this);
+
+ thread_teardown:
 	this->Closefile();
 	return NULL;
 }
@@ -323,8 +335,10 @@ PlaintextLineReader::run (void * null) {
 	off64_t read_max = this->numberOfLinesToRead, line_max = this->startLine + read_max;
 
 	for (off64_t index = 1; index < LINE_INDEX_MAX; index++) {
-		// Crude implementation of a spinlock. Wait while another thread is doing
-		// some reading before we begin indexing again.
+
+		if (! this->marks)
+			goto thread_teardown;
+		
 		while (this->marks->trylock() == false)
 			Thread::sleep(1);
 			
@@ -355,6 +369,8 @@ PlaintextLineReader::run (void * null) {
 	}
 		
 	this->dispatcher->removeWorker (this);
+
+ thread_teardown:
 	this->Closefile();
 	return NULL;
 }
