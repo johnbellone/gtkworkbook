@@ -271,12 +271,12 @@ PlaintextLineIndexer::run (void * null) {
 		while (*ch) {
 
 			while (this->marks && false == this-marks->trylock()) {
-				if (true == this->isRunning())
-					Thread::sleep(1);
+				if (false == this->isRunning())
+					goto thread_teardown;
+				Thread::sleep(1);
 			}
-			
-			if ((false == this->isRunning()) ||
-				 ((NULL == (x = this->marks->get(index))))) {
+
+			if (NULL == (x = this->marks->get(index))) {
 				this->marks->unlock();
 				goto thread_teardown;
 			}
