@@ -249,6 +249,8 @@ Application::~Application (void) {
 		it++;
 	}
 
+	FREE (this->cfg);
+	
 	FREE (this->absolute_path);
 }
 
