@@ -30,11 +30,11 @@ GzipIndex::Add (off64_t byte, off64_t line, off64_t zin, int bits, unsigned int 
 
 	if (NULL == FileIndex::Add (byte, line)) return NULL;
 
-	x = this->table->list + this->table->have;
+	x = this->table->list + this->table->have - 1;
 
-	GzipBlockData * block = reinterpret_cast <GzipBlockData *> (malloc (sizeof (GzipBlockData))); 
+	GzipBlockData * block = (GzipBlockData *) malloc (sizeof (GzipBlockData)); 
 	
-	x->extra = static_cast<OffsetData *> (block);
+	x->extra = block;
 	block->zin   = zin;
 	block->zbits = bits;
 
