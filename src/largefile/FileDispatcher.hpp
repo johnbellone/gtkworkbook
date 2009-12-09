@@ -52,7 +52,7 @@ namespace largefile {
 
 		virtual bool Readline (off64_t start, off64_t N) = 0;
 		virtual bool Readoffset (off64_t start, off64_t N) = 0;
-		virtual bool Readpercent (unsigned int percent, off64_t N) = 0;
+		virtual bool Readpercent (float percent, off64_t N) = 0;
 		virtual void Index (void) = 0;
 	};
 	

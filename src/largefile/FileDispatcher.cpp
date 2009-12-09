@@ -21,6 +21,7 @@
 #include "Gzip.hpp"
 #include <proactor/Proactor.hpp>
 #include <cstdio>
+#include <iostream>
 
 using namespace largefile;
 
@@ -48,5 +49,7 @@ AbstractFileDispatcher::AbstractFileDispatcher (int e, FileIndex * marks) {
 }
 
 AbstractFileDispatcher::~AbstractFileDispatcher (void) {
+	this->marks->lock();
 	delete this->marks;
+	this->marks = NULL;
 }
