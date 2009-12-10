@@ -48,6 +48,7 @@ PlaintextDispatcher::Readline (off64_t start, off64_t N) {
 
 	this->marks.unlock();
 	*/
+	
 	PlaintextLineReader * reader = new PlaintextLineReader (this->filename, this->marks, start, N);
 	this->addWorker (reader);
 	return true;
@@ -147,8 +148,13 @@ PlaintextDispatcher::run (void * null) {
 	return NULL;
 }
 
-PlaintextFileWorker::PlaintextFileWorker (const std::string & filename, FileIndex * marks) 
+PlaintextFileWorker::PlaintextFileWorker (const std::string & filename, FileIndexPtr marks) 
 	: AbstractFileWorker (filename, marks) {
+	this->fp = NULL;
+}
+
+PlaintextFileWorker::PlaintextFileWorker (const std::string & filename)
+	: AbstractFileWorker (filename) {
 	this->fp = NULL;
 }
 
@@ -186,7 +192,7 @@ PlaintextFileWorker::Closefile (void) {
 }
 
 PlaintextOffsetReader::PlaintextOffsetReader (const std::string & filename, off64_t offset, off64_t N)
-	: PlaintextFileWorker (filename, NULL) {
+	: PlaintextFileWorker (filename) {
 	this->startOffset = offset;
 	this->numberOfLinesToRead = N;
 }
@@ -230,7 +236,7 @@ PlaintextOffsetReader::run (void * null) {
 	return NULL;
 }
 		
-PlaintextLineIndexer::PlaintextLineIndexer (const std::string & filename, FileIndex * marks)
+PlaintextLineIndexer::PlaintextLineIndexer (const std::string & filename, FileIndexPtr marks)
 	: PlaintextFileWorker (filename, marks) {
 }
 
@@ -269,8 +275,7 @@ PlaintextLineIndexer::run (void * null) {
 		ch = input;
 		
 		while (*ch) {
-
-			while (!this->marks || false == this-marks->trylock()) {
+			while (false == this->marks->trylock()) {
 				if (false == this->isRunning())
 					goto thread_teardown;
 				Thread::sleep(1);
@@ -312,7 +317,10 @@ PlaintextLineIndexer::run (void * null) {
 	return NULL;
 }
 
-PlaintextLineReader::PlaintextLineReader (const std::string & filename, FileIndex * marks, off64_t start, off64_t N)
+PlaintextLineReader::PlaintextLineReader (const std::string & filename,
+														FileIndexPtr marks,
+														off64_t start,
+														off64_t N)
 	: PlaintextFileWorker (filename, marks) {
 	this->startLine = start;
 	this->numberOfLinesToRead = N;
@@ -334,23 +342,18 @@ PlaintextLineReader::run (void * null) {
 	off64_t offset = 0, delta = 0;
 	off64_t read_max = this->numberOfLinesToRead, line_max = this->startLine + read_max;
 
+	this->marks->lock();
+	
 	for (off64_t index = 1; index < LINE_INDEX_MAX; index++) {
-
-		if (! this->marks)
-			goto thread_teardown;
-		
-		while (this->marks->trylock() == false)
-			Thread::sleep(1);
-			
 		if (line_max < this->marks->get(index)->line) {
 			delta = this->startLine - this->marks->get(index-1)->line;
 			offset = this->marks->get(index-1)->byte;
-			this->marks->unlock();
 			break;
 		}
-		this->marks->unlock();
 	}
 
+	this->marks->unlock();
+	
 	FSEEK (this->fp, offset);
 		
 	// Munch lines to get to our starting point.

@@ -64,7 +64,8 @@ namespace largefile {
 	protected:
 		FILE * fp;
 	public:
-		PlaintextFileWorker (const std::string & filename, FileIndex * marks);
+		PlaintextFileWorker (const std::string & filename, FileIndexPtr marks);
+		PlaintextFileWorker (const std::string & filename);
 		virtual ~PlaintextFileWorker (void);
 
 		bool Openfile (void);
@@ -80,7 +81,7 @@ namespace largefile {
 	class PlaintextLineIndexer : public PlaintextFileWorker {
 	public:
 		/// Constructor.
-		PlaintextLineIndexer (const std::string & filename, FileIndex * marks);
+		PlaintextLineIndexer (const std::string & filename, FileIndexPtr marks);
 
 		/// Destructor.
 		virtual ~PlaintextLineIndexer (void);
@@ -122,7 +123,7 @@ namespace largefile {
 		off64_t startLine;
 	public:
 		/// Constructor.
-		PlaintextLineReader (const std::string & filename, FileIndex * marks, off64_t start, off64_t N);
+		PlaintextLineReader (const std::string & filename, FileIndexPtr marks, off64_t start, off64_t N);
 
 		/// Destructor.
 		virtual ~PlaintextLineReader (void);

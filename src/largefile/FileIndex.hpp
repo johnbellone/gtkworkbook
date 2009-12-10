@@ -20,6 +20,7 @@
 #define FILEINDEX_HPP
 
 #include <concurrent/Mutex.hpp>
+#include <tr1/memory>
 #include <fcntl.h>
 #include <cstdio>
 
@@ -64,6 +65,8 @@ namespace largefile {
 		LineOffset * get (int ii);
 		inline int size (void) const { return this->table->have; }
 	};
+
+	typedef std::tr1::shared_ptr<FileIndex> FileIndexPtr;
 }
 
 #endif

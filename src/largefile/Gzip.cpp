@@ -48,6 +48,23 @@ GzipIndex::Add (off64_t byte, off64_t line, off64_t zin, int bits, unsigned int 
 	return this->table;
 }
 
+void
+GzipIndex::Relax (void) {
+	this->lock();
+	
+	if (this->table) {
+		LineOffset * index = NULL;
+
+		if (NULL != (index = (LineOffset *)realloc (this->table->list,
+																  sizeof (LineOffset) * this->table->have))) {
+			this->table->list = index;
+			this->table->size = this->table->have;
+		}
+	}
+
+	this->unlock();
+}
+
 GnuzipDispatcher::GnuzipDispatcher (int e)
 	: AbstractFileDispatcher (e, new GzipIndex) {
 }
@@ -139,12 +156,22 @@ GnuzipDispatcher::Index (void) {
 	this->addWorker (indexer);
 }
 
-GnuzipFileWorker::GnuzipFileWorker (const std::string & filename, FileIndex * marks)
+GnuzipFileWorker::GnuzipFileWorker (const std::string & filename, FileIndexPtr marks)
 	: AbstractFileWorker (filename, marks) {
 	this->fp = NULL;
 }
 
+GnuzipFileWorker::GnuzipFileWorker (const std::string & filename)
+	: AbstractFileWorker (filename) {
+	this->fp = NULL;
+}
+
 GnuzipFileWorker::~GnuzipFileWorker (void) {
+}
+
+bool
+GnuzipFileWorker::InflateBlockAtOffset (off64_t offset, char * buf, size_t size) {
+	return false;
 }
 
 bool
@@ -192,7 +219,7 @@ GnuzipFileWorker::Closefile (void) {
 	return false;
 }
 
-GnuzipLineReader::GnuzipLineReader (const std::string & filename, FileIndex * marks, off64_t start, off64_t N)
+GnuzipLineReader::GnuzipLineReader (const std::string & filename, FileIndexPtr marks, off64_t start, off64_t N)
 	: GnuzipFileWorker (filename, marks) {
 	this->numberOfLinesToRead = N;
 	this->startLine = start;
@@ -203,32 +230,53 @@ GnuzipLineReader::~GnuzipLineReader (void) {
 
 void *
 GnuzipLineReader::run (void * null) {
-
+	off64_t offset = 0, delta = 0, index = 0, line = -1, zin = -1;
+	off64_t read_max = this->marks->size(), line_max = this->startLine + read_max;
+	char buf[GZIP_CHUNK+1]; buf[GZIP_CHUNK] = 0;
+	
 	if (false == GnuzipFileWorker::Openfile ()) {
 		// STUB: Spawn some kind of worker that produces an error on the GUI.
 		g_critical ("Failed opening");
+		goto thread_teardown;
+	}
+	
+	this->marks->lock();
+
+	// If the value is marked as a negative one then we have not indexed it yet. Thus
+	// we should exit now and begin our inflating at this block. 
+	while (-1 != (line = this->marks->get(index)->line)) {
+		if (line_max < line) {
+			delta = this->startLine - line;
+			offset = this->marks->get(index)->byte;
+			zin = ((GzipBlockData *)this->marks->get(index)->extra)->zin;
+			break;
+		}
+		index++;
 	}
 
-	off64_t offset = 0, delta = 0, line = -1;
-	off64_t read_max = this->marks->size(), line_max = this->startLine + read_max;
+	this->marks->unlock();
 
-	for (off64_t index = 1; index < read_max; index++) {
-		while (!this->marks || false == this->marks->trylock()) {
-			if (false == this->isRunning())
-				goto thread_teardown;
-			Thread::sleep(1);
+	// The Line Indexer has not reached this point yet. Since we have no way of knowing
+	// how much further needs to be indexed (or we could do it) just pull out.
+	if (-1 == line || -1 == zin) {
+		// STUB: Throw some kind of exception or spawn something to tell the user in the GUI.
+		goto thread_teardown;
+	}
+	
+	// At this point we will inflate each block at will, count the number of lines until
+	// we reach the one we're looking for.
+	while (delta > 0) {
+
+		if (false == InflateBlockAtOffset (zin, buf, GZIP_CHUNK)) {
+			break;
 		}
-
-		line = this->marks->get(index-1)->line;
-
-		this->marks->unlock();
 	}
 
  thread_teardown:
 	return NULL;
 }
 
-GnuzipBlockIndexer::GnuzipBlockIndexer (const std::string & filename, FileIndex * marks)
+GnuzipBlockIndexer::GnuzipBlockIndexer (const std::string & filename, FileIndexPtr marks)
 	: GnuzipFileWorker (filename, marks) {
 }
 
@@ -237,7 +285,7 @@ GnuzipBlockIndexer::~GnuzipBlockIndexer (void) {
 
 void *
 GnuzipBlockIndexer::run (void * null) {
-	GzipIndex * index = static_cast <GzipIndex *> (this->marks);
+	GzipIndexPtr index = std::tr1::dynamic_pointer_cast <GzipIndex> (this->marks);
 	double ms;
 	struct timeval start, end;
 	int ret;
@@ -343,7 +391,8 @@ GnuzipBlockIndexer::run (void * null) {
 
 	ms = ((((end.tv_sec-start.tv_sec) * 1000) + ((end.tv_usec-start.tv_usec)/1000.0)) + 0.5);
 	std::cout<<"ready (ms:"<<ms<<")!\n"<<std::flush;
-	
+
+	index->Relax();
 	inflateEnd (&zstrm);
 	return NULL;
 	
@@ -352,3 +401,4 @@ GnuzipBlockIndexer::run (void * null) {
 	inflateEnd (&zstrm);
 	return NULL;
 }
+

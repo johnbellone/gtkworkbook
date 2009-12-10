@@ -22,6 +22,7 @@
 #include "FileIndex.hpp"
 #include "FileWorker.hpp"
 #include "FileDispatcher.hpp"
+#include <tr1/memory>
 #include <zlib.h>
 
 namespace largefile {
@@ -50,7 +51,10 @@ namespace largefile {
 								 int bits,
 								 unsigned int left,
 								 unsigned char * window);
+		void Relax (void);
 	};
+
+	typedef std::tr1::shared_ptr<GzipIndex> GzipIndexPtr;
 	
 	/***
 	 * \class GnuzipDispatcher
@@ -86,8 +90,11 @@ namespace largefile {
 	class GnuzipFileWorker : public AbstractFileWorker {
 	protected:
 		FILE * fp;
+	
+		bool InflateBlockAtOffset (off64_t offset, char * buf, size_t size);
 	public:
-		GnuzipFileWorker (const std::string & filename, FileIndex * marks);
+		GnuzipFileWorker (const std::string & filename, FileIndexPtr marks);
+		GnuzipFileWorker (const std::string & filename);
 		virtual ~GnuzipFileWorker (void);
 
 		bool Openfile (void);
@@ -105,7 +112,7 @@ namespace largefile {
 		off64_t numberOfLinesToRead;
 		off64_t startLine;
 	public:
-		GnuzipLineReader (const std::string & filename, FileIndex * marks, off64_t start, off64_t N);
+		GnuzipLineReader (const std::string & filename, FileIndexPtr marks, off64_t start, off64_t N);
 
 		virtual ~GnuzipLineReader (void);
 
@@ -121,7 +128,7 @@ namespace largefile {
 	class GnuzipBlockIndexer : public GnuzipFileWorker {
 	public:
 		/// Constructor.
-		GnuzipBlockIndexer (const std::string & filename, FileIndex * marks);
+		GnuzipBlockIndexer (const std::string & filename, FileIndexPtr marks);
 
 		/// Destructor.
 		virtual ~GnuzipBlockIndexer (void);

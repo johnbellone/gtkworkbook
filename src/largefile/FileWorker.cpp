@@ -36,8 +36,12 @@ AbstractFileWorker::WorkerFromExtension (const std::string & filename, FileIndex
 }
 */
 
-AbstractFileWorker::AbstractFileWorker (const std::string & filename, FileIndex * marks)
+AbstractFileWorker::AbstractFileWorker (const std::string & filename, FileIndexPtr marks)
 	: marks (marks), filename (filename) {
+}
+
+AbstractFileWorker::AbstractFileWorker (const std::string & filename)
+	: filename (filename) {
 }
 
 AbstractFileWorker::~AbstractFileWorker (void) {
