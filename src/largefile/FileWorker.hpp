@@ -37,13 +37,13 @@ namespace largefile {
 	 */
 	class AbstractFileWorker : public proactor::Worker {
 	protected:
-		FileIndex * marks;
-		FILE * fp;
+		FileIndexPtr marks;
 		std::string filename;
 	public:
 		/// Constructor with the required filename and fileindex parameters.
-		AbstractFileWorker (const std::string & filename, FileIndex * marks);
-
+		AbstractFileWorker (const std::string & filename, FileIndexPtr marks);
+		AbstractFileWorker (const std::string & filename);
+		
 		/// Destructor needed for a clean teardown.
 		virtual ~AbstractFileWorker (void);
 

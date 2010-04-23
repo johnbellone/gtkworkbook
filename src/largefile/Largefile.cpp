@@ -71,10 +71,8 @@ GotoDialogResponseCallback (GtkWidget * gtkdialog, gint response, gpointer data)
 
 				// relative percentage
 				case 2: {
-					unsigned int perc_value = (unsigned int) (atof ( entry_value ) * 10);
-					
 					dialog->lf->Readpercent (dialog->lf->workbook()->focus_sheet,
-													 perc_value,
+													 atof (entry_value),
 													 1000);
 				}
 				break;
@@ -287,7 +285,7 @@ Largefile::Readline (Sheet * sheet, off64_t start, off64_t N) {
 		return false;
 	}
 
-	FileDispatcher * fd = it->second;
+	AbstractFileDispatcher * fd = it->second;
 	bool result = fd->Readline (start, N);
 	this->unlock();
 	return result;
@@ -304,28 +302,25 @@ Largefile::Readoffset (Sheet * sheet, off64_t offset, off64_t N) {
 		return false;
 	}
 
-	FileDispatcher * fd = it->second;
+	AbstractFileDispatcher * fd = it->second;
 	bool result = fd->Readoffset (offset, N);
 	this->unlock();
 	return result;
 }
 
 bool
-Largefile::Readpercent (Sheet * sheet, guint percent_int, off64_t N) {
+Largefile::Readpercent (Sheet * sheet, float percent, off64_t N) {
 	this->lock();
 	std::string key = sheet->name;
 
-	// (input value) 75.5 = 755 * 0.10
-	double percent = (double)percent_int * 0.10;
-	
 	FilenameMap::iterator it = this->mapping.find (key);
 	if (it == this->mapping.end()) {
 		this->unlock();
 		return false;
 	}
 
-	FileDispatcher * fd = it->second;
-	bool result = fd->Readpercent ( (unsigned int)percent, N);
+	AbstractFileDispatcher * fd = it->second;
+	bool result = fd->Readpercent (percent, N);
 	this->unlock();
 	return result;
 }
@@ -335,9 +330,9 @@ Largefile::OpenFile (Sheet * sheet, const std::string & filename) {
 	this->lock();
 	
 	int fdEventId = proactor::Event::uniqueEventId();
-	FileDispatcher * fd = new FileDispatcher (fdEventId);
+	AbstractFileDispatcher * fd = AbstractFileDispatcher::CreateFromExtension (filename, fdEventId);
 	CsvParser * csv = new CsvParser (sheet, this->pktlog, 0);
-
+	
 	if (appstate->proactor()->addWorker (fdEventId, csv) == false) {
 		g_critical ("Failed starting CsvParser for file %s", filename.c_str());
 		this->unlock();

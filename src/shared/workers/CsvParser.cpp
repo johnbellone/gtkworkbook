@@ -99,9 +99,12 @@ CsvParser::run (void * null) {
 	// The first this is run we are going to want to grab the header row and set it
 	// appropriately. Right now there is no better way to do this. In the future it'll
 	// merely be a separate instance of the CsvParser on the running queue. 
-	while (this->inputQueue.size() == 0)
+	while (this->inputQueue.size() == 0) {
+		if (false == this->isRunning())
+			return NULL;
 		concurrent::Thread::sleep(1);
-
+	}
+	
 	this->process(queue, csv, column);
 
 	// Assign the first row of the input to our header row.

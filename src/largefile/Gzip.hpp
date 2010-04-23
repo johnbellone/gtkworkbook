@@ -1,6 +1,6 @@
 /* 
    The GTKWorkbook Project <http://gtkworkbook.sourceforge.net/>
-   Copyright (C) 2008,2009 John Bellone, Jr. <jvb4@njit.edu>
+   Copyright (C) 2008, 2009 John Bellone, Jr. <jvb4@njit.edu>
 
    This library is free software; you can redistribute it and/or
    modify it under the terms of the GNU Lesser General Public
@@ -16,32 +16,59 @@
    License along with the library; if not, write to the Free Software
    Foundation, Inc., 51 Franklin Street, Fifth Floor Boston, MA 02110-1301 USA
 */
-#ifndef PLAINTEXT_HPP
-#define PLAINTEXT_HPP
+#ifndef GNUZIP_HPP
+#define GNUZIP_HPP
 
-#include <proactor/Proactor.hpp>
-#include <proactor/InputDispatcher.hpp>
-#include "FileDispatcher.hpp"
+#include "FileIndex.hpp"
 #include "FileWorker.hpp"
+#include "FileDispatcher.hpp"
+#include <tr1/memory>
+#include <zlib.h>
 
 namespace largefile {
 
-	const int LINE_INDEX_MAX = 1001;
-	const int LINE_PRECISION = 1000;
+#define GZIP_SPAN 1048576L
+#define GZIP_WINSIZE 32768U
+#define GZIP_CHUNK 16384
+	
+	struct GzipBlockData : public OffsetData {
+		off64_t zin;
+		off64_t zbits;
+		unsigned char window [GZIP_WINSIZE];
+	};
 	
 	/***
-	 * \class PlaintextDispatcher
+	 * \class GzipIndex
 	 * \ingroup Largefile
 	 * \author jb (jvb4@njit.edu)
 	 * \brief
 	 */
-	class PlaintextDispatcher : public AbstractFileDispatcher {
+	class GzipIndex : public FileIndex {
+	public:
+		LookupTable * Add (off64_t byte,
+								 off64_t line,
+								 off64_t zin,
+								 int bits,
+								 unsigned int left,
+								 unsigned char * window);
+		void Relax (void);
+	};
+
+	typedef std::tr1::shared_ptr<GzipIndex> GzipIndexPtr;
+	
+	/***
+	 * \class GnuzipDispatcher
+	 * \ingroup Largefile
+	 * \author jb (jvb4@njit.edu)
+	 * \brief
+	 */
+	class GnuzipDispatcher : public AbstractFileDispatcher {
 	public:
 		/// Constructor.
-		PlaintextDispatcher (int e);
+		GnuzipDispatcher (int e);
 
 		/// Destructor.
-		virtual ~PlaintextDispatcher (void);
+		virtual ~GnuzipDispatcher (void);
 
 		bool Openfile (const std::string & filename);
 		bool Closefile (void);
@@ -55,78 +82,56 @@ namespace largefile {
 	};
 	
 	/***
-	 * \class PlaintextFileWorker
+	 * \class GnuzipFileWorker
 	 * \ingroup Largefile
 	 * \author jb (jvb4@njit.edu)
 	 * \brief
 	 */
-	class PlaintextFileWorker : public AbstractFileWorker {
+	class GnuzipFileWorker : public AbstractFileWorker {
 	protected:
 		FILE * fp;
+	
+		bool InflateBlockAtOffset (off64_t offset, char * buf, size_t size);
 	public:
-		PlaintextFileWorker (const std::string & filename, FileIndexPtr marks);
-		PlaintextFileWorker (const std::string & filename);
-		virtual ~PlaintextFileWorker (void);
+		GnuzipFileWorker (const std::string & filename, FileIndexPtr marks);
+		GnuzipFileWorker (const std::string & filename);
+		virtual ~GnuzipFileWorker (void);
 
 		bool Openfile (void);
 		bool Closefile (void);
 	};
-	
+
 	/***
-	 * \class PlaintextLineIndexer
+	 * \class GnuzipLineReader
 	 * \ingroup Largefile
 	 * \author jb (jvb4@njit.edu)
 	 * \brief
 	 */
-	class PlaintextLineIndexer : public PlaintextFileWorker {
-	public:
-		/// Constructor.
-		PlaintextLineIndexer (const std::string & filename, FileIndexPtr marks);
-
-		/// Destructor.
-		virtual ~PlaintextLineIndexer (void);
-
-		/// Method that acts as "main" for thread of execution.
-		void * run (void * null);
-	};
-
-	/***
-	 * \class PlaintextOffsetReader
-	 * \ingroup Largefile
-	 * \author jb (jvb4@njit.edu)
-	 * \brief
-	 */
-	class PlaintextOffsetReader : public PlaintextFileWorker {
-	private:
-		off64_t numberOfLinesToRead;
-		off64_t startOffset;
-	public:
-		/// Constructor.
-		PlaintextOffsetReader (const std::string & filename, off64_t offset, off64_t N);
-
-		/// Destructor.
-		virtual ~PlaintextOffsetReader (void);
-
-		/// Method that acts as "main" for thread of execution.
-		void * run (void * null);
-	};
-
-	/***
-	 * \class PlaintextLineReader
-	 * \ingroup Largefile
-	 * \author jb (jvb4@njit.edu)
-	 * \brief
-	 */
-	class PlaintextLineReader : public PlaintextFileWorker {
+	class GnuzipLineReader : public GnuzipFileWorker {
 	private:
 		off64_t numberOfLinesToRead;
 		off64_t startLine;
 	public:
+		GnuzipLineReader (const std::string & filename, FileIndexPtr marks, off64_t start, off64_t N);
+
+		virtual ~GnuzipLineReader (void);
+
+		void * run (void * null);
+	};
+	
+	/***
+	 * \class GnuzipBlockIndexer
+	 * \ingroup Largefile
+	 * \author jb (jvb4@njit.edu)
+	 * \brief
+	 */
+	class GnuzipBlockIndexer : public GnuzipFileWorker {
+	public:
 		/// Constructor.
-		PlaintextLineReader (const std::string & filename, FileIndexPtr marks, off64_t start, off64_t N);
+		GnuzipBlockIndexer (const std::string & filename, FileIndexPtr marks);
 
 		/// Destructor.
-		virtual ~PlaintextLineReader (void);
+		virtual ~GnuzipBlockIndexer (void);
 
 		/// Method that acts as "main" for thread of execution.
 		void * run (void * null);

@@ -39,7 +39,7 @@ namespace largefile {
 	 */
 	class Largefile : public Plugin {
 	private:
-		typedef std::map<std::string,FileDispatcher *> FilenameMap;
+		typedef std::map<std::string,AbstractFileDispatcher *> FilenameMap;
 
 		GotoDialog goto_dialog;
 		FILE * pktlog;
@@ -58,7 +58,7 @@ namespace largefile {
 		bool CloseFile (const std::string & filename);
 		bool Readline (Sheet * sheet, off64_t start, off64_t N);
 		bool Readoffset (Sheet * sheet, off64_t offset, off64_t N);
-		bool Readpercent (Sheet * sheet, guint percent, off64_t N);
+		bool Readpercent (Sheet * sheet, float percent, off64_t N);
 		
 		inline void setGotoDialogRadioGroup (GSList * group) { this->gtk_togglegroup = group; }
 		inline GotoDialog * gotodialog() { return &this->goto_dialog; }

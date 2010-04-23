@@ -34,13 +34,14 @@ lib_realtime_la_SOURCES = src/realtime/Network.cpp \
 # largefile
 lib_largefile_la_CPPFLAGS = -fPIC -Wall -Wno-write-strings $(C_FLAGS) 
 lib_largefile_la_LFLAGS = $(L_FLAGS) -lgtkworkbook -lcsv -lgthread-2.0
-lib_largefile_la_LDFLAGS = $(L_FLAGS) -lgtkworkbook -lcsv -module -export-dynamic -lgthread-2.0
+lib_largefile_la_LDFLAGS = $(L_FLAGS) -lgtkworkbook -lcsv -lz -module -export-dynamic -lgthread-2.0
 lib_largefile_la_SOURCES = src/largefile/Largefile.cpp \
 		           src/largefile/FileDispatcher.cpp \
 			   src/largefile/FileWorker.cpp \
 			   src/largefile/FileIndex.cpp \
 			   src/largefile/Plaintext.cpp \
-		           src/largefile/PluginFactory.cpp 
+			   src/largefile/Gzip.cpp \
+		           src/largefile/PluginFactory.cpp  
 
 # gtkworkbook
 lib_gtkworkbook_CPPFLAGS= -Wall  -rdynamic $(C_FLAGS)
@@ -58,6 +59,7 @@ lib_gtkworkbook_SOURCES = src/Application.cpp \
 		          src/shared/concurrent/Thread.cpp \
 		          src/shared/concurrent/ThreadGroup.cpp \
 		          src/shared/concurrent/ThreadPool.cpp \
+			  src/shared/concurrent/Lockable.cpp \
 		          src/shared/network/Tcp.cpp \
 		          src/shared/proactor/Dispatcher.cpp \
 		          src/shared/proactor/Event.cpp \

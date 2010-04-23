@@ -27,43 +27,34 @@
 namespace largefile {
 
 	/***
-	 * \class FileDispatcher
+	 * \class AbstractFileDispatcher
 	 * \ingroup Largefile
 	 * \author jb (jvb4@njit.edu)
 	 * \brief Front end interface to all of the file operations. This dispatcher will spawn separate
 	 * threads for dealing with indexing and reading of the supported file types.
 	 */
-	class FileDispatcher : public proactor::InputDispatcher {
-	private:
-		FileIndex marks;
+	class AbstractFileDispatcher : public proactor::InputDispatcher {
+	protected:
+		FileIndexPtr marks;
 		std::string filename;
 	public:
+		static AbstractFileDispatcher * CreateFromExtension (const std::string & filename, int e);
+		
 		/// Constructor.
-		FileDispatcher (int e);
-
+		AbstractFileDispatcher (int e);
+		AbstractFileDispatcher (int e, FileIndex * marks);
+		AbstractFileDispatcher (int e, FileIndexPtr marks);
+		
 		/// Destructor.
-		virtual ~FileDispatcher (void);
+		virtual ~AbstractFileDispatcher (void);
 
-		/// Method which spawns the appropriate file opener as per the type.
-		bool Openfile (const std::string & filename);
+		virtual bool Openfile (const std::string & filename) = 0;
+		virtual bool Closefile (void) = 0;
 
-		/// Method which closes the file down inside of the system.
-		bool Close (void);
-
-		/// Method that is the "main loop" of the FileDispatcher's execution thread.
-		void * run (void * null);
-
-		/// Method that spawns a line reader with the appropriate start and number of lines.
-		bool Readline (off64_t start, off64_t N);
-
-		/// Method that spawns a offset reader with the appropriate start and number of lines.
-		bool Readoffset (off64_t start, off64_t N);
-
-		/// Method that spawns a percentage reader with the appropriate percent and number of lines.
-		bool Readpercent (unsigned int percent, off64_t N);
-
-		/// Method that starts the "index" operation for the file in question.
-		void Index (void);
+		virtual bool Readline (off64_t start, off64_t N) = 0;
+		virtual bool Readoffset (off64_t start, off64_t N) = 0;
+		virtual bool Readpercent (float percent, off64_t N) = 0;
+		virtual void Index (void) = 0;
 	};
 	
 }
